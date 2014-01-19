@@ -19,6 +19,12 @@ Techincal details:
 	* GantWidget, which is the main widget that connector uses 
 	* TimelineWidget, which is a standalone widget.
 
+## Demo
+
+Online demo available @ http://tomivirtanen.app.fi/gantt-demo/
+
+Code can be found under /gantt-demo folder.
+
 ## Building and running demo
 
 * git clone <url of the Gantt repository>
