@@ -2,7 +2,7 @@
 
 Gantt is an UI component add-on for Vaadin 7.
 
-This simple Gantt Chart (http://en.wikipedia.org/wiki/Gantt_chart) has a minimal feature set implemented. 
+You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
 
 List of features that are supported:
 * Server side API gives you tools to change timeline options and step options like start/end date, caption, color and adding/removing steps
@@ -16,7 +16,7 @@ Techincal details:
 * server side class name is Gantt, it extends AbstractComponent
 * client side connector class name is GanttConnector
 * client side widgets (pure GWT) are 
-	* GantWidget, which is the main widget that connector uses 
+	* GanttWidget, which is the main widget that connector uses 
 	* TimelineWidget, which is a standalone widget.
 
 ## Demo
