@@ -75,9 +75,9 @@ import com.google.gwt.user.client.ui.Widget;
  * First of all, after constructing this widget, you need to initialize it by
  * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
  * that, if client uses IE, make sure to call
- * {@link #setIEInfo(boolean, boolean, boolean)} to let this widget know that.
- * And if client supports touch events, let this widget know that by calling
- * {@link #setTouchSupportted(boolean)} method before initWidget.
+ * {@link #setBrowserInfo(boolean, boolean, boolean)} to let this widget know
+ * that. And if client supports touch events, let this widget know that by
+ * calling {@link #setTouchSupportted(boolean)} method before initWidget.
  * <p>
  * Sample code snippet:
  * 
@@ -342,6 +342,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         timeline.update(resolution, startDate, endDate, firstDayOfRange,
                 localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
+        updateContentWidth();
 
         contentHeight = 0; // reset content height
 
@@ -355,6 +356,12 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         wasTimelineOverflowingHorizontally = timeline
                 .isTimelineOverflowingHorizontally();
+    }
+
+    private void updateContentWidth() {
+        if (timeline.isAlwaysCalculatePixelWidths()) {
+            content.getStyle().setWidth(timeline.getResolutionWidth(), Unit.PX);
+        }
     }
 
     /**
@@ -473,8 +480,9 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyWidthChanged(int width) {
         if (timeline != null) {
 
-            if (wasTimelineOverflowingHorizontally != timeline
-                    .isTimelineOverflowingHorizontally()) {
+            if (timeline.isAlwaysCalculatePixelWidths()
+                    || wasTimelineOverflowingHorizontally != timeline
+                            .isTimelineOverflowingHorizontally()) {
                 // scrollbar has just appeared/disappeared
                 wasTimelineOverflowingHorizontally = timeline
                         .isTimelineOverflowingHorizontally();
@@ -482,6 +490,7 @@ public class GanttWidget extends Widget implements HasEnabled {
                     timeline.setScrollLeft(0);
                 }
                 timeline.updateWidths();
+                updateContentWidth();
             }
         }
     }
@@ -599,8 +608,16 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param ie8
      * @param ie9
      */
-    public void setIEInfo(boolean ie, boolean ie8, boolean ie9) {
-        timeline.setIEInfo(ie, ie8, ie9);
+    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
+        timeline.setBrowserInfo(ie, ie8, ie9);
+    }
+
+    /**
+     * @see {@link TimelineWidget#setAlwaysCalculatePixelWidths(boolean)}
+     * @param calcPx
+     */
+    public void setAlwaysCalculatePixelWidths(boolean calcPx) {
+        timeline.setAlwaysCalculatePixelWidths(calcPx);
     }
 
     @Override

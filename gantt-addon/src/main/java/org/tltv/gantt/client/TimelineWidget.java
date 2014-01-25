@@ -26,6 +26,7 @@ import org.tltv.gantt.client.shared.Resolution;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.DOM;
@@ -38,11 +39,15 @@ import com.google.gwt.user.client.ui.Widget;
  * content width up to fit in the space available.
  * <p>
  * When this component scales up, all widths are calculated as percentages.
- * Pixel widths are used otherwise. Still there's always a minimum width
- * calculated and updated to the timeline element. Percentage values set some
- * limitation for the component's width. Wider the component (> 4000px), bigger
- * the change to get year, month and date blocks not being vertically in-line
- * with each others.
+ * Pixel widths are used otherwise. Some browsers may not support percentages
+ * accurately enough, and for those it's best to call
+ * {@link #setAlwaysCalculatePixelWidths(boolean)} with 'true' to disable
+ * percentage values.
+ * <p>
+ * There's always a minimum width calculated and updated to the timeline
+ * element. Percentage values set some limitation for the component's width.
+ * Wider the component (> 4000px), bigger the change to get year, month and date
+ * blocks not being vertically in-line with each others.
  * <p>
  * Supports setting a scroll left position.
  * <p>
@@ -66,6 +71,7 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_WEEK_MIDDLE = "week-m";
     public static final String STYLE_EVEN = "even";
     public static final String STYLE_WEEKEND = "weekend";
+    public static final String STYLE_SPACER = "spacer";
 
     public static final long DAY_INTERVAL = 24 * 60 * 60 * 1000;
     public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
@@ -92,6 +98,9 @@ public class TimelineWidget extends Widget {
     private boolean lastWeek;
 
     private DivElement resolutionDiv;
+    private DivElement resSpacerDiv;
+    private DivElement yearSpacerBlock;
+    private DivElement monthSpacerBlock;
 
     private final Map<String, Element> years = new LinkedHashMap<String, Element>();
     private final Map<String, Integer> yearLength = new LinkedHashMap<String, Integer>();
@@ -101,6 +110,7 @@ public class TimelineWidget extends Widget {
 
     private int minDayResolutionWidth = -1;
     private int minWidth = -1;
+    private boolean calcPixels = false;
 
     enum Weekday {
         First,
@@ -187,8 +197,25 @@ public class TimelineWidget extends Widget {
         for (Entry<String, Element> entry : years.entrySet()) {
             getElement().appendChild(entry.getValue());
         }
+        if (isAlwaysCalculatePixelWidths()) {
+            yearSpacerBlock = DivElement.as(DOM.createDiv());
+            yearSpacerBlock.setClassName(STYLE_ROW + " " + STYLE_YEAR);
+            yearSpacerBlock.addClassName(STYLE_SPACER);
+            yearSpacerBlock.setInnerText(" ");
+            yearSpacerBlock.getStyle().setDisplay(Display.NONE);
+            getElement().appendChild(yearSpacerBlock);
+        }
+
         for (Entry<String, Element> entry : months.entrySet()) {
             getElement().appendChild(entry.getValue());
+        }
+        if (isAlwaysCalculatePixelWidths()) {
+            monthSpacerBlock = DivElement.as(DOM.createDiv());
+            monthSpacerBlock.setClassName(STYLE_ROW + " " + STYLE_MONTH);
+            monthSpacerBlock.addClassName(STYLE_SPACER);
+            monthSpacerBlock.setInnerText(" ");
+            monthSpacerBlock.getStyle().setDisplay(Display.NONE);
+            getElement().appendChild(monthSpacerBlock);
         }
         getElement().appendChild(resolutionDiv);
 
@@ -231,7 +258,7 @@ public class TimelineWidget extends Widget {
      */
     public double getLeftPositionPercentageForDate(long date) {
         double left = getLeftPositionForDate(date);
-        double width = resolutionDiv.getClientWidth();
+        double width = getResolutionWidth();
         return (100.0 / width) * left;
     }
 
@@ -247,7 +274,7 @@ public class TimelineWidget extends Widget {
      */
     public String getLeftPositionPercentageStringForDate(long date) {
         double left = getLeftPositionForDate(date);
-        double width = resolutionDiv.getClientWidth();
+        double width = getResolutionWidth();
         String calc = createCalcCssValue(width, left);
 
         if (calc != null) {
@@ -284,7 +311,7 @@ public class TimelineWidget extends Widget {
      * @return Left offset in pixels.
      */
     public double getLeftPositionForDate(long date) {
-        double width = resolutionDiv.getClientWidth();
+        double width = getResolutionWidth();
         double range = endDate - startDate;
         if (range <= 0) {
             return 0;
@@ -304,7 +331,7 @@ public class TimelineWidget extends Widget {
      * @return Date in a milliseconds.
      */
     public long getDateForLeftPosition(double left) {
-        double width = resolutionDiv.getClientWidth();
+        double width = getResolutionWidth();
         double range = endDate - startDate;
         if (width <= 0) {
             return 0;
@@ -335,23 +362,34 @@ public class TimelineWidget extends Widget {
             return;
         }
 
+        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
+            resSpacerDiv.removeFromParent();
+        }
+
         int resolutionBlockCount = resolutionDiv.getChildCount();
         setMinWidth(daysInRange * minDayResolutionWidth);
 
         // calculate new block width for day-resolution.
         // Year and month blocks are vertically in-line with days.
-        double dayWidth = 100.0 / daysInRange;
+        double dayWidthPercentage = 100.0 / daysInRange;
+        double dayWidthPx = Math.round(resolutionDiv.getClientWidth()
+                / daysInRange);
+        while ((resolutionDiv.getClientWidth() % (daysInRange * dayWidthPx)) >= daysInRange) {
+            dayWidthPx++;
+        }
 
         // calculate block width for currently selected resolution
         // (day,week,...)
         // resolution div's content may not be vertically in-line with
         // year/month blocks. This is the case for example with Week resolution.
-        double pxWidth = minDayResolutionWidth;
-        double width = 100.0 / resolutionBlockCount;
+        double resBlockMinWidthPx = minDayResolutionWidth;
+        double resBlockWidthPx = dayWidthPx;
+        double resBlockWidthPercentage = 100.0 / resolutionBlockCount;
         String pct = createCalcCssValue(resolutionBlockCount);
         if (resolution == Resolution.Week) {
-            pxWidth = DAYS_IN_WEEK * minDayResolutionWidth;
-            width = dayWidth * DAYS_IN_WEEK;
+            resBlockMinWidthPx = DAYS_IN_WEEK * minDayResolutionWidth;
+            resBlockWidthPx = DAYS_IN_WEEK * dayWidthPx;
+            resBlockWidthPercentage = dayWidthPercentage * DAYS_IN_WEEK;
             pct = createCalcCssValue(daysInRange, DAYS_IN_WEEK);
         }
 
@@ -369,13 +407,14 @@ public class TimelineWidget extends Widget {
             // first and last week blocks may be thinner than other
             // resolution blocks.
             if (firstWeekIsShort && i == 0) {
-                setWidth(daysInRange, dayWidth, resBlock, firstWeekDayCount);
+                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
+                        firstWeekDayCount);
             } else if (lastWeekIsShort && i == lastIndex) {
-                setWidth(daysInRange, dayWidth, resBlock, lastWeekDayCount);
-            } else if (resolution == Resolution.Week) {
-                setWidth(pxWidth, width, pct, resBlock);
+                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
+                        lastWeekDayCount);
             } else {
-                setWidth(width, pct, resBlock);
+                setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
+                        resBlockWidthPx, pct, resBlock);
             }
 
             ieFix(i, lastIndex, resBlock);
@@ -385,8 +424,8 @@ public class TimelineWidget extends Widget {
         i = 0;
         lastIndex = years.size() - 1;
         for (Entry<String, Element> entry : years.entrySet()) {
-            setWidth(daysInRange, dayWidth, entry.getValue(),
-                    yearLength.get(entry.getKey()));
+            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
+                    entry.getValue(), yearLength.get(entry.getKey()));
 
             ieFix(i, lastIndex, entry.getValue());
             i++;
@@ -396,11 +435,39 @@ public class TimelineWidget extends Widget {
         i = 0;
         lastIndex = months.size() - 1;
         for (Entry<String, Element> entry : months.entrySet()) {
-            setWidth(daysInRange, dayWidth, entry.getValue(),
-                    monthLength.get(entry.getKey()));
+            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
+                    entry.getValue(), monthLength.get(entry.getKey()));
 
             ieFix(i, lastIndex, entry.getValue());
             i++;
+        }
+
+        if (isAlwaysCalculatePixelWidths()) {
+            double spaceLeft = resolutionDiv.getClientWidth()
+                    - (daysInRange * dayWidthPx);
+            if (spaceLeft > 0) {
+                if (yearSpacerBlock != null) {
+                    yearSpacerBlock.getStyle().clearDisplay();
+                    yearSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
+                }
+                if (monthSpacerBlock != null) {
+                    monthSpacerBlock.getStyle().clearDisplay();
+                    monthSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
+                }
+
+                resSpacerDiv = createResolutionBLock();
+                resSpacerDiv.addClassName(STYLE_SPACER);
+                resSpacerDiv.getStyle().setWidth(spaceLeft, Unit.PX);
+                resSpacerDiv.setInnerText(" ");
+                resolutionDiv.appendChild(resSpacerDiv);
+            } else {
+                if (yearSpacerBlock != null) {
+                    yearSpacerBlock.getStyle().setDisplay(Display.NONE);
+                }
+                if (monthSpacerBlock != null) {
+                    monthSpacerBlock.getStyle().setDisplay(Display.NONE);
+                }
+            }
         }
 
         GWT.log(getClass().getSimpleName() + " widths are updated.");
@@ -418,10 +485,48 @@ public class TimelineWidget extends Widget {
                 .getClientWidth();
     }
 
-    public void setIEInfo(boolean ie, boolean ie8, boolean ie9) {
+    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
         this.ie = ie;
         this.ie8 = ie8;
         this.ie9 = ie9;
+    }
+
+    /**
+     * Tells this Widget to calculate widths by itself. Percentage widths are
+     * not used. Some browsers may not handle sub-pixel calculating accurately
+     * enough. Setting this to true works as a fallback mode for those browsers.
+     * <p>
+     * Default value is false.
+     * 
+     * @param calcPx
+     * @return
+     */
+    public void setAlwaysCalculatePixelWidths(boolean calcPx) {
+        calcPixels = calcPx;
+    }
+
+    /**
+     * Returns true if Widget is set to calculate widths by itself. Default is
+     * false.
+     * 
+     * @return
+     */
+    public boolean isAlwaysCalculatePixelWidths() {
+        return calcPixels;
+    }
+
+    /**
+     * Get actual width of the timeline.
+     * 
+     * @return
+     */
+    public double getResolutionWidth() {
+        double width = resolutionDiv.getClientWidth();
+        if (isAlwaysCalculatePixelWidths() && resSpacerDiv != null
+                && resSpacerDiv.hasParentElement()) {
+            width = width - resSpacerDiv.getClientWidth();
+        }
+        return width;
     }
 
     private void prepareTimelineForDayResolution(long startDate, long endDate) {
@@ -561,27 +666,32 @@ public class TimelineWidget extends Widget {
         return null;
     }
 
-    private void setWidth(int daysInRange, double width, Element element,
-            int position) {
+    private void setWidth(int daysInRange, double dayWidthPercentage,
+            double dayWidthPx, Element element, int position) {
         if (isTimelineOverflowingHorizontally()) {
             element.getStyle().setWidth(position * minDayResolutionWidth,
                     Unit.PX);
         } else {
-            setCssPercentageWidth(element, daysInRange, width, position);
+            if (isAlwaysCalculatePixelWidths()) {
+                element.getStyle().setWidth(position * dayWidthPx, Unit.PX);
+            } else {
+                setCssPercentageWidth(element, daysInRange, dayWidthPercentage,
+                        position);
+            }
         }
     }
 
-    private void setWidth(double pxValue, double pctValue, String pct,
-            Element element) {
+    private void setWidth(double minPxValue, double pctValue, double pxValue,
+            String pct, Element element) {
         if (isTimelineOverflowingHorizontally()) {
-            element.getStyle().setWidth(pxValue, Unit.PX);
+            element.getStyle().setWidth(minPxValue, Unit.PX);
         } else {
-            setCssPercentageWidth(element, pctValue, pct);
+            if (isAlwaysCalculatePixelWidths()) {
+                element.getStyle().setWidth(pxValue, Unit.PX);
+            } else {
+                setCssPercentageWidth(element, pctValue, pct);
+            }
         }
-    }
-
-    private void setWidth(double pctValue, String pct, Element element) {
-        setCssPercentageWidth(element, pctValue, pct);
     }
 
     private void ieFix(int index, int lastIndex, Element element) {

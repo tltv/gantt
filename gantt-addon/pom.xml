@@ -5,8 +5,8 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-addon</artifactId>
 	<packaging>jar</packaging>
-	<version>0.0.1</version>
-	<name>Gantt Add-on</name>
+	<version>0.0.2</version>
+	<name>Gantt</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
