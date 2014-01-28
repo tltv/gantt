@@ -62,7 +62,8 @@
 	float: left;
 	overflow: hidden;
 	height: 15px;
-	display: -ms-inline-flexbox; /* works with ie10+ */
+	display: -ms-inline-flexbox; /* works with ie10 */
+	-ms-flex-pack: justify;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;

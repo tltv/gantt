@@ -4,6 +4,8 @@ Gantt is an UI component add-on for Vaadin 7.
 
 You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
 
+Download latest release jar from http://vaadin.com/directory#addon/gantt
+
 List of features that are supported:
 * Server side API allows to modify timeline options and step options like start/end date, caption, color and adding/removing steps
 * adjustable timeline range
