@@ -215,6 +215,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         @Override
         public void onMouseMove(MouseMoveEvent event) {
             GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
+            event.preventDefault();
         }
     };
 
@@ -230,6 +231,7 @@ public class GanttWidget extends Widget implements HasEnabled {
             }
             pendingPointerDownEvent = event.getNativeEvent();
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
+            event.preventDefault();
         }
     };
 
@@ -241,6 +243,7 @@ public class GanttWidget extends Widget implements HasEnabled {
             pointerTouchStartedTimer.cancel();
             pendingPointerDownEvent = null;
             GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
+            event.preventDefault();
         }
     };
 
@@ -268,9 +271,9 @@ public class GanttWidget extends Widget implements HasEnabled {
         @Override
         public void onTouchStart(TouchStartEvent event) {
             if (event.getTargetTouches().length() == 1) {
-                event.preventDefault();
                 GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
             }
+            event.preventDefault();
         }
     };
 
@@ -279,6 +282,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         @Override
         public void onTouchEnd(TouchEndEvent event) {
             GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
+            event.preventDefault();
         }
     };
 
@@ -289,6 +293,7 @@ public class GanttWidget extends Widget implements HasEnabled {
             if (event.getChangedTouches().length() == 1) {
                 GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
             }
+            event.preventDefault();
         }
     };
 
