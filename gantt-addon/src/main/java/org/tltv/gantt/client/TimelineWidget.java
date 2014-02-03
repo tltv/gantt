@@ -198,11 +198,7 @@ public class TimelineWidget extends Widget {
             getElement().appendChild(entry.getValue());
         }
         if (isAlwaysCalculatePixelWidths()) {
-            yearSpacerBlock = DivElement.as(DOM.createDiv());
-            yearSpacerBlock.setClassName(STYLE_ROW + " " + STYLE_YEAR);
-            yearSpacerBlock.addClassName(STYLE_SPACER);
-            yearSpacerBlock.setInnerText(" ");
-            yearSpacerBlock.getStyle().setDisplay(Display.NONE);
+            yearSpacerBlock = createSpacerBlock(STYLE_YEAR);
             getElement().appendChild(yearSpacerBlock);
         }
 
@@ -210,11 +206,7 @@ public class TimelineWidget extends Widget {
             getElement().appendChild(entry.getValue());
         }
         if (isAlwaysCalculatePixelWidths()) {
-            monthSpacerBlock = DivElement.as(DOM.createDiv());
-            monthSpacerBlock.setClassName(STYLE_ROW + " " + STYLE_MONTH);
-            monthSpacerBlock.addClassName(STYLE_SPACER);
-            monthSpacerBlock.setInnerText(" ");
-            monthSpacerBlock.getStyle().setDisplay(Display.NONE);
+            monthSpacerBlock = createSpacerBlock(STYLE_MONTH);
             getElement().appendChild(monthSpacerBlock);
         }
         getElement().appendChild(resolutionDiv);
@@ -362,9 +354,7 @@ public class TimelineWidget extends Widget {
             return;
         }
 
-        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
-            resSpacerDiv.removeFromParent();
-        }
+        removeResolutionSpacerBlock();
 
         int resolutionBlockCount = resolutionDiv.getChildCount();
         setMinWidth(daysInRange * minDayResolutionWidth);
@@ -393,81 +383,17 @@ public class TimelineWidget extends Widget {
             pct = createCalcCssValue(daysInRange, DAYS_IN_WEEK);
         }
 
-        boolean firstWeekIsShort = resolution == Resolution.Week
-                && firstWeekDayCount > 0 && firstWeekDayCount < DAYS_IN_WEEK;
-        boolean lastWeekIsShort = resolution == Resolution.Week
-                && lastWeekDayCount > 0 && lastWeekDayCount < DAYS_IN_WEEK;
-
         // update resolution block widths
-        int lastIndex = resolutionBlockCount - 1;
-        int i;
-        for (i = 0; i < resolutionBlockCount; i++) {
-            Element resBlock = Element.as(resolutionDiv.getChild(i));
-
-            // first and last week blocks may be thinner than other
-            // resolution blocks.
-            if (firstWeekIsShort && i == 0) {
-                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
-                        firstWeekDayCount);
-            } else if (lastWeekIsShort && i == lastIndex) {
-                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
-                        lastWeekDayCount);
-            } else {
-                setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
-                        resBlockWidthPx, pct, resBlock);
-            }
-
-            ieFix(i, lastIndex, resBlock);
-        }
-
+        updateResolutionBlockWidths(resolutionBlockCount, dayWidthPercentage,
+                dayWidthPx, resBlockMinWidthPx, resBlockWidthPx,
+                resBlockWidthPercentage, pct);
         // update year block widths
-        i = 0;
-        lastIndex = years.size() - 1;
-        for (Entry<String, Element> entry : years.entrySet()) {
-            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
-                    entry.getValue(), yearLength.get(entry.getKey()));
-
-            ieFix(i, lastIndex, entry.getValue());
-            i++;
-        }
-
+        updateBlockWidths(dayWidthPercentage, dayWidthPx, years, yearLength);
         // update month block widths
-        i = 0;
-        lastIndex = months.size() - 1;
-        for (Entry<String, Element> entry : months.entrySet()) {
-            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
-                    entry.getValue(), monthLength.get(entry.getKey()));
-
-            ieFix(i, lastIndex, entry.getValue());
-            i++;
-        }
+        updateBlockWidths(dayWidthPercentage, dayWidthPx, months, monthLength);
 
         if (isAlwaysCalculatePixelWidths()) {
-            double spaceLeft = resolutionDiv.getClientWidth()
-                    - (daysInRange * dayWidthPx);
-            if (spaceLeft > 0) {
-                if (yearSpacerBlock != null) {
-                    yearSpacerBlock.getStyle().clearDisplay();
-                    yearSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
-                }
-                if (monthSpacerBlock != null) {
-                    monthSpacerBlock.getStyle().clearDisplay();
-                    monthSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
-                }
-
-                resSpacerDiv = createResolutionBLock();
-                resSpacerDiv.addClassName(STYLE_SPACER);
-                resSpacerDiv.getStyle().setWidth(spaceLeft, Unit.PX);
-                resSpacerDiv.setInnerText(" ");
-                resolutionDiv.appendChild(resSpacerDiv);
-            } else {
-                if (yearSpacerBlock != null) {
-                    yearSpacerBlock.getStyle().setDisplay(Display.NONE);
-                }
-                if (monthSpacerBlock != null) {
-                    monthSpacerBlock.getStyle().setDisplay(Display.NONE);
-                }
-            }
+            updateSpacerBlocks(dayWidthPx);
         }
 
         GWT.log(getClass().getSimpleName() + " widths are updated.");
@@ -527,6 +453,96 @@ public class TimelineWidget extends Widget {
             width = width - resSpacerDiv.getClientWidth();
         }
         return width;
+    }
+
+    private DivElement createSpacerBlock(String className) {
+        DivElement block = DivElement.as(DOM.createDiv());
+        block.setClassName(STYLE_ROW + " " + STYLE_YEAR);
+        block.addClassName(STYLE_SPACER);
+        block.setInnerText(" ");
+        block.getStyle().setDisplay(Display.NONE);
+        return block;
+    }
+
+    private void updateSpacerBlocks(double dayWidthPx) {
+        double spaceLeft = resolutionDiv.getClientWidth()
+                - (daysInRange * dayWidthPx);
+        if (spaceLeft > 0) {
+            if (yearSpacerBlock != null) {
+                yearSpacerBlock.getStyle().clearDisplay();
+                yearSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
+            }
+            if (monthSpacerBlock != null) {
+                monthSpacerBlock.getStyle().clearDisplay();
+                monthSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
+            }
+
+            resSpacerDiv = createResolutionBLock();
+            resSpacerDiv.addClassName(STYLE_SPACER);
+            resSpacerDiv.getStyle().setWidth(spaceLeft, Unit.PX);
+            resSpacerDiv.setInnerText(" ");
+            resolutionDiv.appendChild(resSpacerDiv);
+        } else {
+            if (yearSpacerBlock != null) {
+                yearSpacerBlock.getStyle().setDisplay(Display.NONE);
+            }
+            if (monthSpacerBlock != null) {
+                monthSpacerBlock.getStyle().setDisplay(Display.NONE);
+            }
+        }
+    }
+
+    private void updateBlockWidths(double dayWidthPercentage,
+            double dayWidthPx, Map<String, Element> elements,
+            Map<String, Integer> slots) {
+        int lastIndex;
+        int i = 0;
+        lastIndex = elements.size() - 1;
+        for (Entry<String, Element> entry : elements.entrySet()) {
+            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
+                    entry.getValue(), slots.get(entry.getKey()));
+
+            ieFix(i, lastIndex, entry.getValue());
+            i++;
+        }
+    }
+
+    private void updateResolutionBlockWidths(int resolutionBlockCount,
+            double dayWidthPercentage, double dayWidthPx,
+            double resBlockMinWidthPx, double resBlockWidthPx,
+            double resBlockWidthPercentage, String pct) {
+
+        boolean firstWeekIsShort = resolution == Resolution.Week
+                && firstWeekDayCount > 0 && firstWeekDayCount < DAYS_IN_WEEK;
+        boolean lastWeekIsShort = resolution == Resolution.Week
+                && lastWeekDayCount > 0 && lastWeekDayCount < DAYS_IN_WEEK;
+
+        int lastIndex = resolutionBlockCount - 1;
+        int i;
+        for (i = 0; i < resolutionBlockCount; i++) {
+            Element resBlock = Element.as(resolutionDiv.getChild(i));
+
+            // first and last week blocks may be thinner than other
+            // resolution blocks.
+            if (firstWeekIsShort && i == 0) {
+                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
+                        firstWeekDayCount);
+            } else if (lastWeekIsShort && i == lastIndex) {
+                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
+                        lastWeekDayCount);
+            } else {
+                setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
+                        resBlockWidthPx, pct, resBlock);
+            }
+
+            ieFix(i, lastIndex, resBlock);
+        }
+    }
+
+    private void removeResolutionSpacerBlock() {
+        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
+            resSpacerDiv.removeFromParent();
+        }
     }
 
     private void prepareTimelineForDayResolution(long startDate, long endDate) {
@@ -642,7 +658,7 @@ public class TimelineWidget extends Widget {
             // IEs up to 11 don't support more than two-decimal precision.
             // That's why we use calc(100% / x) or calc(123.12345%) css value to
             // workaround this limitation.
-            // TODO IE8 doesn't support calc() at all.
+            // IE8 doesn't support calc() at all.
             if (!ie8) {
                 if (multiplier != null) {
                     double percents = 100.0 / resolutionBlockCount
