@@ -67,6 +67,8 @@ public class DemoUI extends UI {
 
     private Gantt gantt;
 
+    private NativeSelect localeSelect;
+
     private ClickListener createStepClickListener = new ClickListener() {
 
         @Override
@@ -259,15 +261,24 @@ public class DemoUI extends UI {
         reso.setImmediate(true);
         reso.addValueChangeListener(resolutionValueChangeListener);
 
-        NativeSelect localeSelect = new NativeSelect("Locale");
+        localeSelect = new NativeSelect("Locale") {
+            @Override
+            public void attach() {
+                super.attach();
+
+                if (getValue() == null) {
+                    // use default locale
+                    setValue(gantt.getLocale());
+                    addValueChangeListener(localeValueChangeListener);
+                }
+            }
+        };
         localeSelect.setNullSelectionAllowed(false);
         for (Locale l : Locale.getAvailableLocales()) {
             localeSelect.addItem(l);
             localeSelect.setItemCaption(l, l.getDisplayName(getLocale()));
         }
-        localeSelect.setValue(gantt.getLocale());
         localeSelect.setImmediate(true);
-        localeSelect.addValueChangeListener(localeValueChangeListener);
 
         String[] zones = new String[] { "GMT-0", "GMT-1", "GMT-2", "GMT-3",
                 "GMT-4", "GMT-5", "GMT-6", "GMT-7", "GMT-8", "GMT-9", "GMT-10",
@@ -375,4 +386,5 @@ public class DemoUI extends UI {
 
         getUI().addWindow(win);
     }
+
 }

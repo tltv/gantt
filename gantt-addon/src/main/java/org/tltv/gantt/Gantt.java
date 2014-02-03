@@ -78,14 +78,13 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
 
     public Gantt() {
         registerRpc(rpc);
-
-        updateLocale();
     }
 
     @Override
     public void attach() {
         super.attach();
 
+        // update component state's locale.
         updateLocale();
     }
 
@@ -316,7 +315,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     private void updateLocale() {
-        getState().locale = getLocale().toString();
+        Locale locale = getLocale();
+        getState().locale = locale.toString();
         calendar = null;
     }
 
