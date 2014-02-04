@@ -27,6 +27,7 @@ import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Cursor;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
@@ -114,6 +115,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     private static final String STYLE_MOVING = "moving";
     private static final String STYLE_RESIZING = "resizing";
     private static final String STYLE_INVALID = "invalid";
+    private static final String STYLE_MOVE_ELEMENT = "mv-el";
 
     private boolean enabled = true;
     private boolean touchSupported = false;
@@ -153,6 +155,9 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
     protected Element targetBarElement;
+
+    // additional element that appears when moving or resizing
+    protected DivElement moveElement = DivElement.as(DOM.createDiv());
 
     // click is actually detected by 'mouseup'/'mousedown' events, not with
     // 'onclick'. click event is not used. disallowClickTimer helps to detect
@@ -230,6 +235,9 @@ public class GanttWidget extends Widget implements HasEnabled {
                 return; // multi-touch not supported
             }
             pendingPointerDownEvent = event.getNativeEvent();
+            capturePoint = new Point(
+                    getTouchOrMouseClientX(event.getNativeEvent()),
+                    getTouchOrMouseClientY(event.getNativeEvent()));
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
             event.preventDefault();
         }
@@ -251,7 +259,18 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onPointerMove(MsPointerMoveEvent event) {
-            GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
+            if (capturePoint == null) {
+                return;
+            }
+            movePoint = new Point(
+                    getTouchOrMouseClientX(event.getNativeEvent()),
+                    getTouchOrMouseClientY(event.getNativeEvent()));
+
+            // do nothing, if touch position has not changed
+            if (!(capturePoint.getX() == movePoint.getX() && capturePoint
+                    .getY() == movePoint.getY())) {
+                GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
+            }
         }
     };
 
@@ -309,6 +328,10 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         setElement(DivElement.as(DOM.createDiv()));
         setStyleName(STYLE_GANTT);
+
+        moveElement.setClassName(STYLE_MOVE_ELEMENT);
+        // not visible by default
+        moveElement.getStyle().setDisplay(Display.NONE);
 
         timeline = GWT.create(TimelineWidget.class);
 
@@ -767,7 +790,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
             if (isEnabled()) {
-                getRpc().stepClicked(getChildIndex(content, bar));
+                getRpc().stepClicked(getStepIndex(content, bar));
             }
 
         } else {
@@ -797,6 +820,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     protected void stopDrag(NativeEvent event) {
+        hideMoveElement();
+
         targetBarElement = null;
         capturePoint = null;
         resizing = false;
@@ -837,25 +862,40 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         if (resizing) {
             resizingInProgress = deltax != 0.0;
-            addResizingStyles(bar);
             if (resizingFromLeft) {
                 updateBarResizingLeft(bar, deltax);
             } else {
                 updateBarResizingRight(bar, deltax);
             }
+            addResizingStyles(bar);
             bar.getStyle().clearBackgroundColor();
         } else if (isMovableSteps()) {
             moveInProgress = deltax != 0.0;
-            addMovingStyles(bar);
             updateBarMovingPosition(bar, deltax);
+            addMovingStyles(bar);
             bar.getStyle().clearBackgroundColor();
         }
 
         event.stopPropagation();
     }
 
+    private void updateMoveElementFor(Element target) {
+        if (target == null) {
+            moveElement.getStyle().setDisplay(Display.NONE);
+        }
+        moveElement.getStyle().clearDisplay();
+
+        moveElement.getStyle().setProperty("left", target.getStyle().getLeft());
+        moveElement.getStyle().setProperty("width",
+                target.getStyle().getWidth());
+    }
+
+    private void hideMoveElement() {
+        moveElement.getStyle().setDisplay(Display.NONE);
+    }
+
     private void internalMoveOrResizeCompleted(Element bar, boolean move) {
-        int barIndex = getChildIndex(content, bar);
+        int barIndex = getStepIndex(content, bar);
 
         double left = parseSize(bar.getStyle().getLeft(), "px");
         long startDate = timeline.getDateForLeftPosition(left);
@@ -907,6 +947,15 @@ public class GanttWidget extends Widget implements HasEnabled {
                 size.length() - suffix.length()));
     }
 
+    private int getStepIndex(Element parent, Element child) {
+        // return child index minus additional elements in the content
+        return getChildIndex(parent, child) - getAdditonalContentElementCount();
+    }
+
+    private int getAdditonalContentElementCount() {
+        return 1;
+    }
+
     private int getChildIndex(Element parent, Element child) {
         return DOM
                 .getChildIndex(
@@ -937,6 +986,7 @@ public class GanttWidget extends Widget implements HasEnabled {
 
     private void addResizingStyles(Element bar) {
         bar.addClassName(STYLE_RESIZING);
+        updateMoveElementFor(bar);
     }
 
     private void removeResizingStyles(Element bar) {
@@ -956,6 +1006,7 @@ public class GanttWidget extends Widget implements HasEnabled {
             return;
         }
         bar.addClassName(STYLE_MOVING);
+        updateMoveElementFor(bar);
     }
 
     private void removeMovingStyles(Element bar) {
@@ -992,6 +1043,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         while (content.hasChildNodes()) {
             content.getLastChild().removeFromParent();
         }
+        content.appendChild(moveElement);
     }
 
     private void disableClickOnNextMouseUp() {

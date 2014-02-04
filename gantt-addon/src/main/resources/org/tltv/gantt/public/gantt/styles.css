@@ -120,15 +120,28 @@
 .gantt .bar.moving {
 	background: orange;
 	cursor: move;
-	z-index: 2;
+	z-index: 3;
 }
 
 .gantt .bar.resizing {
 	background: orange;
 	cursor: e-resize;
-	z-index: 2;
+	z-index: 3;
 }
 
 .gantt .bar.invalid {
 	visibility: hidden;
+}
+
+.gantt .mv-el {
+	position: absolute;
+	top: 0;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	height: 100%;
+	z-index: 2;
+	background: transparent;
+	border-left: 1px dashed #ddd;
+	border-right: 1px dashed #ddd;
 }
