@@ -80,6 +80,8 @@ public class TimelineWidget extends Widget {
     private boolean ie, ie8, ie9;
 
     private LocaleDataProvider localeDataProvider;
+    private DateTimeFormat yearFormat;
+    private DateTimeFormat monthFormat;
 
     private boolean even;
     private String locale;
@@ -96,6 +98,7 @@ public class TimelineWidget extends Widget {
     private int lastWeekDayCount;
     private boolean firstWeek;
     private boolean lastWeek;
+    private boolean timelineOverflowingHorizontally;
 
     private DivElement resolutionDiv;
     private DivElement resSpacerDiv;
@@ -163,9 +166,13 @@ public class TimelineWidget extends Widget {
                 localeDataProvider.getFirstDayOfWeek(), firstDayOfRange,
                 localeDataProvider.getLocale())) {
             clear();
+            GWT.log(getClass().getSimpleName() + " content cleared.");
         } else {
             return;
         }
+
+        GWT.log(getClass().getSimpleName() + " Updating content.");
+
         locale = localeDataProvider.getLocale();
         this.resolution = resolution;
         this.startDate = startDate;
@@ -177,6 +184,8 @@ public class TimelineWidget extends Widget {
         monthNames = localeDataProvider.getMonthNames();
         weekdayNames = localeDataProvider.getWeekdayNames();
         this.localeDataProvider = localeDataProvider;
+        yearFormat = DateTimeFormat.getFormat("yyyy");
+        monthFormat = DateTimeFormat.getFormat("M");
 
         resolutionDiv = DivElement.as(DOM.createDiv());
         resolutionDiv.setClassName(STYLE_ROW + " " + STYLE_RESOLUTION);
@@ -210,6 +219,8 @@ public class TimelineWidget extends Widget {
             getElement().appendChild(monthSpacerBlock);
         }
         getElement().appendChild(resolutionDiv);
+
+        GWT.log(getClass().getSimpleName() + " Constructed content.");
 
         updateWidths();
 
@@ -354,6 +365,9 @@ public class TimelineWidget extends Widget {
             return;
         }
 
+        GWT.log(getClass().getSimpleName() + " Started updating widths.");
+
+        updateTimelineOverflowingHorizontally();
         removeResolutionSpacerBlock();
 
         int resolutionBlockCount = resolutionDiv.getChildCount();
@@ -396,7 +410,7 @@ public class TimelineWidget extends Widget {
             updateSpacerBlocks(dayWidthPx);
         }
 
-        GWT.log(getClass().getSimpleName() + " widths are updated.");
+        GWT.log(getClass().getSimpleName() + " Widths are updated.");
     }
 
     /**
@@ -407,8 +421,20 @@ public class TimelineWidget extends Widget {
      *         {@link Element#getClientWidth()}).
      */
     public boolean isTimelineOverflowingHorizontally() {
-        return resolutionDiv.getClientWidth() > getElement().getParentElement()
-                .getClientWidth();
+        return timelineOverflowingHorizontally;
+    }
+
+    /**
+     * Updates horizontal overflow state and returns true if the timeline is
+     * overflowing the parent's width. This works only when this widget is
+     * attached to some parent.
+     * 
+     * @return True when timeline width is more than the parent's width (@see
+     *         {@link Element#getClientWidth()}).
+     */
+    public boolean checkTimelineOverflowingHorizontally() {
+        updateTimelineOverflowingHorizontally();
+        return isTimelineOverflowingHorizontally();
     }
 
     public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
@@ -453,6 +479,14 @@ public class TimelineWidget extends Widget {
             width = width - resSpacerDiv.getClientWidth();
         }
         return width;
+    }
+
+    /**
+     * Update horizontal overflow state.
+     */
+    private void updateTimelineOverflowingHorizontally() {
+        timelineOverflowingHorizontally = resolutionDiv.getClientWidth() > getElement()
+                .getParentElement().getClientWidth();
     }
 
     private DivElement createSpacerBlock(String className) {
@@ -519,8 +553,9 @@ public class TimelineWidget extends Widget {
 
         int lastIndex = resolutionBlockCount - 1;
         int i;
+        Element resBlock;
         for (i = 0; i < resolutionBlockCount; i++) {
-            Element resBlock = Element.as(resolutionDiv.getChild(i));
+            resBlock = Element.as(resolutionDiv.getChild(i));
 
             // first and last week blocks may be thinner than other
             // resolution blocks.
@@ -559,20 +594,22 @@ public class TimelineWidget extends Widget {
         int index = 0;
         Weekday weekday;
         boolean lastTimelineBlock = false;
+        Date date;
 
         while (pos <= endDate) {
             lastTimelineBlock = (pos + DAY_INTERVAL) > endDate;
             weekday = getWeekday(dayCounter);
-            addResolutionBlock(pos, index, weekday, isWeekEnd(dayCounter),
+            date = new Date(pos);
+
+            addResolutionBlock(date, index, weekday, isWeekEnd(dayCounter),
                     lastTimelineBlock);
 
-            currentYear = addYearBlock(currentYear, pos);
-            currentMonth = addMonthBlock(currentMonth, pos);
+            currentYear = addYearBlock(currentYear, date);
+            currentMonth = addMonthBlock(currentMonth, date);
 
             pos += DAY_INTERVAL;
             index++;
             dayCounter = Math.max((dayCounter + 1) % 8, 1);
-
         }
     }
 
@@ -590,8 +627,8 @@ public class TimelineWidget extends Widget {
         return dayCounter == 1 || dayCounter == 7;
     }
 
-    private int addMonthBlock(int currentMonth, long pos) {
-        int month = getMonth(pos);
+    private int addMonthBlock(int currentMonth, Date date) {
+        int month = getMonth(date);
         String key;
         if (month != currentMonth) {
             // month changed, add month block
@@ -606,8 +643,8 @@ public class TimelineWidget extends Widget {
         return currentMonth;
     }
 
-    private String addYearBlock(String currentYear, long pos) {
-        String year = getYear(pos);
+    private String addYearBlock(String currentYear, Date date) {
+        String year = getYear(date);
         if (!year.equals(currentYear)) {
             // year changed, add year block
             currentYear = year;
@@ -639,12 +676,12 @@ public class TimelineWidget extends Widget {
         years.put(year, yearBlock);
     }
 
-    private String getYear(long pos) {
-        return DateTimeFormat.getFormat("yyyy").format(new Date(pos));
+    private String getYear(Date date) {
+        return yearFormat.format(date);
     }
 
-    private int getMonth(long pos) {
-        String m = DateTimeFormat.getFormat("M").format(new Date(pos));
+    private int getMonth(Date date) {
+        String m = monthFormat.format(date);
         return Integer.parseInt(m) - 1;
     }
 
@@ -745,10 +782,9 @@ public class TimelineWidget extends Widget {
         }
     }
 
-    private void addResolutionBlock(long pos, int index, Weekday weekDay,
+    private void addResolutionBlock(Date date, int index, Weekday weekDay,
             boolean weekend, boolean lastBlock) {
         DivElement resBlock;
-        Date date = new Date(pos);
 
         if (resolution == Resolution.Week) {
             if (index == 0 || weekDay == Weekday.First) {

@@ -508,7 +508,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyWidthChanged(int width) {
         if (timeline != null) {
 
-            if (timeline.isAlwaysCalculatePixelWidths()
+            if (timeline.checkTimelineOverflowingHorizontally()
                     || wasTimelineOverflowingHorizontally != timeline
                             .isTimelineOverflowingHorizontally()) {
                 // scrollbar has just appeared/disappeared
