@@ -508,12 +508,11 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyWidthChanged(int width) {
         if (timeline != null) {
 
-            if (timeline.checkTimelineOverflowingHorizontally()
-                    || wasTimelineOverflowingHorizontally != timeline
-                            .isTimelineOverflowingHorizontally()) {
+            boolean overflow = timeline.checkTimelineOverflowingHorizontally();
+            if (timeline.isAlwaysCalculatePixelWidths()
+                    || wasTimelineOverflowingHorizontally != overflow) {
                 // scrollbar has just appeared/disappeared
-                wasTimelineOverflowingHorizontally = timeline
-                        .isTimelineOverflowingHorizontally();
+                wasTimelineOverflowingHorizontally = overflow;
                 if (!wasTimelineOverflowingHorizontally) {
                     timeline.setScrollLeft(0);
                 }

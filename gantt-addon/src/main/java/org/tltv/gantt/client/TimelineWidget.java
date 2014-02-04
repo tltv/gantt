@@ -179,7 +179,8 @@ public class TimelineWidget extends Widget {
         this.endDate = endDate;
         // Required with Resolution.Week.
         firstDayOfWeek = localeDataProvider.getFirstDayOfWeek();
-        lastDayOfWeek = Math.max((firstDayOfWeek - 1) % 8, 1);
+        lastDayOfWeek = (firstDayOfWeek == 1) ? 7 : Math.max(
+                (firstDayOfWeek - 1) % 8, 1);
         this.firstDayOfRange = firstDayOfRange;
         monthNames = localeDataProvider.getMonthNames();
         weekdayNames = localeDataProvider.getWeekdayNames();
@@ -367,11 +368,15 @@ public class TimelineWidget extends Widget {
 
         GWT.log(getClass().getSimpleName() + " Started updating widths.");
 
-        updateTimelineOverflowingHorizontally();
-        removeResolutionSpacerBlock();
-
-        int resolutionBlockCount = resolutionDiv.getChildCount();
         setMinWidth(daysInRange * minDayResolutionWidth);
+
+        // update horizontal overflow state here, after min-width is updated.
+        updateTimelineOverflowingHorizontally();
+
+        // remove spacer block if it exist
+        removeResolutionSpacerBlock();
+        // now when the spacer block is removed, count resolution block elements
+        int resolutionBlockCount = resolutionDiv.getChildCount();
 
         // calculate new block width for day-resolution.
         // Year and month blocks are vertically in-line with days.
