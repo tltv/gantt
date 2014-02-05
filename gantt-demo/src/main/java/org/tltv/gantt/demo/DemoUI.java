@@ -76,7 +76,7 @@ public class DemoUI extends UI {
             Step newStep = new Step();
             Date now = new Date();
             newStep.setStartDate(now.getTime());
-            newStep.setEndDate(now.getTime());
+            newStep.setEndDate(now.getTime() + (7 * 24 * 3600000));
             openStepEditor(newStep);
         }
 
