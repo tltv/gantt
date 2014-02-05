@@ -30,6 +30,7 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.ui.AbstractNativeScrollbar;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -99,6 +100,7 @@ public class TimelineWidget extends Widget {
     private boolean firstWeek;
     private boolean lastWeek;
     private boolean timelineOverflowingHorizontally;
+    private boolean noticeVerticalScrollbarWidth;
 
     private DivElement resolutionDiv;
     private DivElement resSpacerDiv;
@@ -442,6 +444,27 @@ public class TimelineWidget extends Widget {
         return isTimelineOverflowingHorizontally();
     }
 
+    /**
+     * Return true if timeline should notice vertical scrollbar width in it's
+     * calculations.
+     * 
+     * @return
+     */
+    public boolean isNoticeVerticalScrollbarWidth() {
+        return noticeVerticalScrollbarWidth;
+    }
+
+    public void setNoticeVerticalScrollbarWidth(
+            boolean noticeVerticalScrollbarWidth) {
+        this.noticeVerticalScrollbarWidth = noticeVerticalScrollbarWidth;
+        if (noticeVerticalScrollbarWidth) {
+            getElement().getStyle().setMarginRight(
+                    AbstractNativeScrollbar.getNativeScrollbarWidth(), Unit.PX);
+        } else {
+            getElement().getStyle().clearMarginRight();
+        }
+    }
+
     public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
         this.ie = ie;
         this.ie8 = ie8;
@@ -499,7 +522,7 @@ public class TimelineWidget extends Widget {
         block.setClassName(STYLE_ROW + " " + STYLE_YEAR);
         block.addClassName(STYLE_SPACER);
         block.setInnerText(" ");
-        block.getStyle().setDisplay(Display.NONE);
+        block.getStyle().setDisplay(Display.NONE); // not visible by default
         return block;
     }
 
@@ -522,12 +545,16 @@ public class TimelineWidget extends Widget {
             resSpacerDiv.setInnerText(" ");
             resolutionDiv.appendChild(resSpacerDiv);
         } else {
-            if (yearSpacerBlock != null) {
-                yearSpacerBlock.getStyle().setDisplay(Display.NONE);
-            }
-            if (monthSpacerBlock != null) {
-                monthSpacerBlock.getStyle().setDisplay(Display.NONE);
-            }
+            hideSpacerBlocks();
+        }
+    }
+
+    private void hideSpacerBlocks() {
+        if (yearSpacerBlock != null) {
+            yearSpacerBlock.getStyle().setDisplay(Display.NONE);
+        }
+        if (monthSpacerBlock != null) {
+            monthSpacerBlock.getStyle().setDisplay(Display.NONE);
         }
     }
 

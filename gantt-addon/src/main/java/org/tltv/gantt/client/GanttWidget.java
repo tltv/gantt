@@ -133,6 +133,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     private int minWidth;
     protected double contentHeight;
     protected boolean wasTimelineOverflowingHorizontally = false;
+    protected boolean wasContentOverflowingVertically = false;
 
     protected TimelineWidget timeline;
     protected DivElement container;
@@ -366,21 +367,20 @@ public class GanttWidget extends Widget implements HasEnabled {
                     + startDate + ", End: " + endDate);
             return;
         }
+        contentHeight = 0; // reset content height
+        for (Step step : steps) {
+            contentHeight = addStep(contentHeight, step);
+        }
+        content.getStyle().setHeight(contentHeight, Unit.PX);
 
+        // tell timeline to notice vertical scrollbar before updating it
+        timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
         timeline.update(resolution, startDate, endDate, firstDayOfRange,
                 localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
         updateContentWidth();
 
-        contentHeight = 0; // reset content height
-
-        int index = 0;
-        for (Step step : steps) {
-            addStep(index, step);
-            index++;
-        }
-
-        content.getStyle().setHeight(contentHeight, Unit.PX);
+        updateStepWidths(steps);
 
         wasTimelineOverflowingHorizontally = timeline
                 .isTimelineOverflowingHorizontally();
@@ -495,6 +495,15 @@ public class GanttWidget extends Widget implements HasEnabled {
         if (container != null && timeline != null) {
             container.getStyle().setHeight(
                     height - timeline.getElement().getClientHeight(), Unit.PX);
+
+            boolean overflow = isContentOverflowingVertically();
+            if (wasContentOverflowingVertically != overflow) {
+                wasContentOverflowingVertically = overflow;
+                timeline.setNoticeVerticalScrollbarWidth(overflow);
+                // width has changed due to vertical scrollbar
+                // appearing/disappearing
+                internalHandleWidthChange();
+            }
         }
     }
 
@@ -516,10 +525,14 @@ public class GanttWidget extends Widget implements HasEnabled {
                 if (!wasTimelineOverflowingHorizontally) {
                     timeline.setScrollLeft(0);
                 }
-                timeline.updateWidths();
-                updateContentWidth();
+                internalHandleWidthChange();
             }
         }
+    }
+
+    protected void internalHandleWidthChange() {
+        timeline.updateWidths();
+        updateContentWidth();
     }
 
     /**
@@ -682,7 +695,14 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     }
 
-    protected void addStep(int index, Step step) {
+    /**
+     * Add new Step. Returns new height of the content.
+     * 
+     * @param currentHeight
+     * @param step
+     * @return New height of the content.
+     */
+    protected double addStep(double currentHeight, Step step) {
         DivElement bar = DivElement.as(DOM.createDiv());
         bar.setClassName(STYLE_BAR);
         bar.getStyle().setBackgroundColor(step.getBackgroundColor());
@@ -692,23 +712,39 @@ public class GanttWidget extends Widget implements HasEnabled {
         caption.setInnerText(step.getCaption());
         bar.appendChild(caption);
 
-        // sanity check
-        if (step.getStartDate() < 0 || step.getEndDate() < 0
-                || step.getEndDate() <= step.getStartDate()) {
-            bar.addClassName(STYLE_INVALID);
-        } else {
-            updateBarPercentagePosition(step.getStartDate(), step.getEndDate(),
-                    bar);
-        }
-
         content.appendChild(bar);
 
         // bar height should be defined in css
         int height = bar.getClientHeight();
-        contentHeight += height;
-        bar.getStyle().setTop(index * height, Unit.PX);
+        bar.getStyle().setTop(currentHeight, Unit.PX);
+        currentHeight += height;
 
         registerBarEventListener(bar);
+        return currentHeight;
+    }
+
+    /**
+     * Update step widths based on the timeline. Timeline's width have to be
+     * final at this point.
+     * 
+     * @param steps
+     */
+    protected void updateStepWidths(Collection<Step> steps) {
+        int index = getAdditonalContentElementCount();
+        Element bar;
+        for (Step step : steps) {
+            bar = Element.as(content.getChild(index));
+
+            // sanity check
+            if (step.getStartDate() < 0 || step.getEndDate() < 0
+                    || step.getEndDate() <= step.getStartDate()) {
+                bar.addClassName(STYLE_INVALID);
+            } else {
+                updateBarPercentagePosition(step.getStartDate(),
+                        step.getEndDate(), bar);
+            }
+            index++;
+        }
     }
 
     protected Element getBar(NativeEvent event) {
@@ -1055,5 +1091,12 @@ public class GanttWidget extends Widget implements HasEnabled {
 
     private boolean isResizingInProgress() {
         return resizingInProgress;
+    }
+
+    private boolean isContentOverflowingVertically() {
+        if (content == null || container == null) {
+            return false;
+        }
+        return content.getClientHeight() > container.getClientHeight();
     }
 }
