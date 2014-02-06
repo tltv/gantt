@@ -206,7 +206,7 @@ public class DemoUI extends UI {
                 Notification.show("Moved " + event.getStep().getCaption()
                         + " to  Start Date: "
                         + new Date(event.getStartDate()).toString()
-                        + "End Date: "
+                        + " End Date: "
                         + new Date(event.getEndDate()).toString());
             }
         });
@@ -218,7 +218,7 @@ public class DemoUI extends UI {
                 Notification.show("Resized " + event.getStep().getCaption()
                         + " to  Start Date: "
                         + new Date(event.getStartDate()).toString()
-                        + "End Date: "
+                        + " End Date: "
                         + new Date(event.getEndDate()).toString());
             }
         });
