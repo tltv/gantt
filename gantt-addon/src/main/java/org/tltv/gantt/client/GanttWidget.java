@@ -631,6 +631,38 @@ public class GanttWidget extends Widget implements HasEnabled {
         return isEnabled() && movableSteps;
     }
 
+    public boolean isMonthRowVisible() {
+        return timeline.isMonthRowVisible();
+    }
+
+    public void setMonthRowVisible(boolean monthRowVisible) {
+        timeline.setMonthRowVisible(monthRowVisible);
+    }
+
+    public boolean isYearRowVisible() {
+        return timeline.isYearRowVisible();
+    }
+
+    public void setYearRowVisible(boolean yearRowVisible) {
+        timeline.setYearRowVisible(yearRowVisible);
+    }
+
+    public String getMonthFormat() {
+        return timeline.getMonthFormat();
+    }
+
+    public void setMonthFormat(String monthFormat) {
+        timeline.setMonthFormat(monthFormat);
+    }
+
+    public void setYearFormat(String yearFormat) {
+        timeline.setYearFormat(yearFormat);
+    }
+
+    public String getYearFormat() {
+        return timeline.getYearFormat();
+    }
+
     /**
      * Set LocaleDataProvider that is used to provide translations of months and
      * weekdays.

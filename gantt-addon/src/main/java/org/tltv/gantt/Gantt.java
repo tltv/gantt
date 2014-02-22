@@ -197,6 +197,15 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
+     * Returns true if user can resize the step length. Default is true.
+     * 
+     * @return true if rezisable
+     */
+    public boolean isResizableSteps() {
+        return getState().resizableSteps;
+    }
+
+    /**
      * Enable or disable step resizing -feature. Enabled by default.
      * 
      * @param resizable
@@ -207,6 +216,16 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
+     * Return true if user can move the step position in the time line. Default
+     * is true.
+     * 
+     * @return true if movable
+     */
+    public boolean isMovable() {
+        return getState().movableSteps;
+    }
+
+    /**
      * Enable or disable step moving -feature. Enabled by default.
      * 
      * @param movable
@@ -214,6 +233,60 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      */
     public void setMovableSteps(boolean movable) {
         getState().movableSteps = movable;
+    }
+
+    /**
+     * Return true if years should be shown in a row in the time line. Default
+     * is true.
+     * 
+     * @return
+     */
+    public boolean isYearsVisible() {
+        return getState().yearRowVisible;
+    }
+
+    /**
+     * Set time line's year row visible or hidden.
+     * 
+     * @param visible
+     */
+    public void setYearsVisible(boolean visible) {
+        getState().yearRowVisible = visible;
+    }
+
+    /**
+     * Return true if months should be shown in a row in the time line. Default
+     * is true.
+     * 
+     * @return
+     */
+    public boolean isMonthsVisible() {
+        return getState().monthRowVisible;
+    }
+
+    /**
+     * Set time line's month row visible or hidden.
+     * 
+     * @param visible
+     */
+    public void setMonthsVisible(boolean visible) {
+        getState().monthRowVisible = visible;
+    }
+
+    public void setTimelineYearFormat(String format) {
+        getState().yearFormat = trimFormat(format);
+    }
+
+    public void setTimelineMonthFormat(String format) {
+        getState().monthFormat = trimFormat(format);
+    }
+
+    public String getTimelineYearFormat() {
+        return getState().yearFormat;
+    }
+
+    public String getTimelineMonthFormat() {
+        return getState().monthFormat;
     }
 
     /*
@@ -318,6 +391,16 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         Locale locale = getLocale();
         getState().locale = locale.toString();
         calendar = null;
+    }
+
+    private String trimFormat(String format) {
+        if (format != null) {
+            format = format.trim();
+            if (format.isEmpty()) {
+                format = null;
+            }
+        }
+        return format;
     }
 
     /**

@@ -81,8 +81,8 @@ public class TimelineWidget extends Widget {
     private boolean ie, ie8, ie9;
 
     private LocaleDataProvider localeDataProvider;
-    private DateTimeFormat yearFormat;
-    private DateTimeFormat monthFormat;
+    private DateTimeFormat yearDateTimeFormat;
+    private DateTimeFormat monthDateTimeFormat;
 
     private boolean even;
     private String locale;
@@ -101,6 +101,10 @@ public class TimelineWidget extends Widget {
     private boolean lastWeek;
     private boolean timelineOverflowingHorizontally;
     private boolean noticeVerticalScrollbarWidth;
+    private boolean monthRowVisible;
+    private boolean yearRowVisible;
+    private String monthFormat;
+    private String yearFormat;
 
     private DivElement resolutionDiv;
     private DivElement resSpacerDiv;
@@ -187,8 +191,8 @@ public class TimelineWidget extends Widget {
         monthNames = localeDataProvider.getMonthNames();
         weekdayNames = localeDataProvider.getWeekdayNames();
         this.localeDataProvider = localeDataProvider;
-        yearFormat = DateTimeFormat.getFormat("yyyy");
-        monthFormat = DateTimeFormat.getFormat("M");
+        yearDateTimeFormat = DateTimeFormat.getFormat("yyyy");
+        monthDateTimeFormat = DateTimeFormat.getFormat("M");
 
         resolutionDiv = DivElement.as(DOM.createDiv());
         resolutionDiv.setClassName(STYLE_ROW + " " + STYLE_RESOLUTION);
@@ -206,20 +210,24 @@ public class TimelineWidget extends Widget {
             return;
         }
 
-        for (Entry<String, Element> entry : years.entrySet()) {
-            getElement().appendChild(entry.getValue());
-        }
-        if (isAlwaysCalculatePixelWidths()) {
-            yearSpacerBlock = createSpacerBlock(STYLE_YEAR);
-            getElement().appendChild(yearSpacerBlock);
+        if (isYearRowVisible()) {
+            for (Entry<String, Element> entry : years.entrySet()) {
+                getElement().appendChild(entry.getValue());
+            }
+            if (isAlwaysCalculatePixelWidths()) {
+                yearSpacerBlock = createSpacerBlock(STYLE_YEAR);
+                getElement().appendChild(yearSpacerBlock);
+            }
         }
 
-        for (Entry<String, Element> entry : months.entrySet()) {
-            getElement().appendChild(entry.getValue());
-        }
-        if (isAlwaysCalculatePixelWidths()) {
-            monthSpacerBlock = createSpacerBlock(STYLE_MONTH);
-            getElement().appendChild(monthSpacerBlock);
+        if (isMonthRowVisible()) {
+            for (Entry<String, Element> entry : months.entrySet()) {
+                getElement().appendChild(entry.getValue());
+            }
+            if (isAlwaysCalculatePixelWidths()) {
+                monthSpacerBlock = createSpacerBlock(STYLE_MONTH);
+                getElement().appendChild(monthSpacerBlock);
+            }
         }
         getElement().appendChild(resolutionDiv);
 
@@ -408,10 +416,17 @@ public class TimelineWidget extends Widget {
         updateResolutionBlockWidths(resolutionBlockCount, dayWidthPercentage,
                 dayWidthPx, resBlockMinWidthPx, resBlockWidthPx,
                 resBlockWidthPercentage, pct);
-        // update year block widths
-        updateBlockWidths(dayWidthPercentage, dayWidthPx, years, yearLength);
-        // update month block widths
-        updateBlockWidths(dayWidthPercentage, dayWidthPx, months, monthLength);
+
+        if (isYearRowVisible()) {
+            // update year block widths
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, years, yearLength);
+        }
+
+        if (isMonthRowVisible()) {
+            // update month block widths
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, months,
+                    monthLength);
+        }
 
         if (isAlwaysCalculatePixelWidths()) {
             updateSpacerBlocks(dayWidthPx);
@@ -507,6 +522,38 @@ public class TimelineWidget extends Widget {
             width = width - resSpacerDiv.getClientWidth();
         }
         return width;
+    }
+
+    public boolean isMonthRowVisible() {
+        return monthRowVisible;
+    }
+
+    public boolean isYearRowVisible() {
+        return yearRowVisible;
+    }
+
+    public void setMonthRowVisible(boolean monthRowVisible) {
+        this.monthRowVisible = monthRowVisible;
+    }
+
+    public void setYearRowVisible(boolean yearRowVisible) {
+        this.yearRowVisible = yearRowVisible;
+    }
+
+    public String getMonthFormat() {
+        return monthFormat;
+    }
+
+    public void setMonthFormat(String monthFormat) {
+        this.monthFormat = monthFormat;
+    }
+
+    public String getYearFormat() {
+        return yearFormat;
+    }
+
+    public void setYearFormat(String yearFormat) {
+        this.yearFormat = yearFormat;
     }
 
     /**
@@ -636,13 +683,21 @@ public class TimelineWidget extends Widget {
             addResolutionBlock(date, index, weekday, isWeekEnd(dayCounter),
                     lastTimelineBlock);
 
-            currentYear = addYearBlock(currentYear, date);
-            currentMonth = addMonthBlock(currentMonth, date);
+            if (isYearRowVisible()) {
+                currentYear = addYearBlock(currentYear, date);
+            }
+            if (isMonthRowVisible()) {
+                currentMonth = addMonthBlock(currentMonth, date);
+            }
 
             pos += DAY_INTERVAL;
             index++;
             dayCounter = Math.max((dayCounter + 1) % 8, 1);
         }
+    }
+
+    public LocaleDataProvider getLocaleDataProvider() {
+        return localeDataProvider;
     }
 
     private Weekday getWeekday(int dayCounter) {
@@ -666,7 +721,7 @@ public class TimelineWidget extends Widget {
             // month changed, add month block
             currentMonth = month;
             key = currentMonth + "_" + (monthLength.size() + 1);
-            addMonthBlock(month, key);
+            addMonthBlock(month, key, formatMonthCaption(month, date));
         } else {
             key = currentMonth + "_" + monthLength.size();
             // increase month block length by one resolution block
@@ -680,7 +735,7 @@ public class TimelineWidget extends Widget {
         if (!year.equals(currentYear)) {
             // year changed, add year block
             currentYear = year;
-            addYearBlock(year);
+            addYearBlock(year, formatYearCaption(year, date));
         } else {
             // increase year block length by one resolution block
             yearLength.put(currentYear, yearLength.get(currentYear) + 1);
@@ -688,10 +743,10 @@ public class TimelineWidget extends Widget {
         return currentYear;
     }
 
-    private void addMonthBlock(int month, String key) {
+    private void addMonthBlock(int month, String key, String caption) {
         DivElement monthBlock = DivElement.as(DOM.createDiv());
         monthBlock.setClassName(STYLE_ROW + " " + STYLE_MONTH);
-        monthBlock.setInnerText(monthNames[month]);
+        monthBlock.setInnerText(caption);
         monthLength.put(key, 1);
         months.put(key, monthBlock);
 
@@ -700,20 +755,34 @@ public class TimelineWidget extends Widget {
         }
     }
 
-    private void addYearBlock(String year) {
+    private void addYearBlock(String year, String text) {
         DivElement yearBlock = DivElement.as(DOM.createDiv());
         yearBlock.setClassName(STYLE_ROW + " " + STYLE_YEAR);
-        yearBlock.setInnerText(year);
+        yearBlock.setInnerText(text);
         yearLength.put(year, 1);
         years.put(year, yearBlock);
     }
 
+    private String formatYearCaption(String year, Date date) {
+        if (yearFormat == null || yearFormat.isEmpty()) {
+            return year;
+        }
+        return getLocaleDataProvider().formatDate(date, yearFormat);
+    }
+
+    private String formatMonthCaption(int month, Date date) {
+        if (monthFormat == null || monthFormat.isEmpty()) {
+            return monthNames[month];
+        }
+        return getLocaleDataProvider().formatDate(date, monthFormat);
+    }
+
     private String getYear(Date date) {
-        return yearFormat.format(date);
+        return yearDateTimeFormat.format(date);
     }
 
     private int getMonth(Date date) {
-        String m = monthFormat.format(date);
+        String m = monthDateTimeFormat.format(date);
         return Integer.parseInt(m) - 1;
     }
 
@@ -902,7 +971,8 @@ public class TimelineWidget extends Widget {
         while (getElement().hasChildNodes()) {
             getElement().getLastChild().removeFromParent();
         }
-
+        yearSpacerBlock = null;
+        monthSpacerBlock = null;
         years.clear();
         yearLength.clear();
         months.clear();

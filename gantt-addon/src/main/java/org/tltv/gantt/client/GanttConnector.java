@@ -15,6 +15,8 @@
  */
 package org.tltv.gantt.client;
 
+import java.util.Date;
+
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
@@ -22,6 +24,7 @@ import org.tltv.gantt.client.shared.GanttState;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
+import com.vaadin.client.DateTimeService;
 import com.vaadin.client.LocaleNotLoadedException;
 import com.vaadin.client.LocaleService;
 import com.vaadin.client.communication.RpcProxy;
@@ -44,6 +47,7 @@ public class GanttConnector extends AbstractComponentConnector {
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
     String locale;
+    DateTimeService dateTimeService;
 
     LocaleDataProvider localeDataProvider = new LocaleDataProvider() {
 
@@ -86,9 +90,24 @@ public class GanttConnector extends AbstractComponentConnector {
         }
 
         @Override
+        public String formatDate(Date date, String formatStr) {
+            if (dateTimeService == null) {
+                try {
+                    dateTimeService = new DateTimeService(getLocale());
+                } catch (LocaleNotLoadedException e) {
+                    GWT.log("Could not create DateTimeService for the locale "
+                            + getLocale(), e);
+                    return "";
+                }
+            }
+            return dateTimeService.formatDate(date, formatStr);
+        }
+
+        @Override
         public String getLocale() {
             return locale;
         }
+
     };
 
     GanttRpc ganttRpc = new GanttRpc() {
@@ -172,6 +191,10 @@ public class GanttConnector extends AbstractComponentConnector {
         super.onStateChanged(stateChangeEvent);
 
         locale = getState().locale;
+        if (stateChangeEvent.hasPropertyChanged("locale")) {
+            dateTimeService = null;
+        }
+
         if (stateChangeEvent.hasPropertyChanged("readOnly")) {
             getWidget().setMovableSteps(
                     !getState().readOnly && getState().movableSteps);

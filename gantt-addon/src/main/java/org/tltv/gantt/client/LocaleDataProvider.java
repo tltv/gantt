@@ -15,6 +15,7 @@
  */
 package org.tltv.gantt.client;
 
+import java.util.Date;
 import java.util.Locale;
 
 public interface LocaleDataProvider {
@@ -39,6 +40,17 @@ public interface LocaleDataProvider {
      * @return Integer between 1-7.
      */
     int getFirstDayOfWeek();
+
+    /**
+     * Format date to String.
+     * 
+     * @param date
+     *            Date to format
+     * @param format
+     *            Pattern of the date format. Like MMM or MMMM.
+     * @return Formatted date
+     */
+    String formatDate(Date date, String format);
 
     /**
      * Get currently active locale id. See {@link Locale#toString()}.
