@@ -692,6 +692,19 @@ public class GanttWidget extends Widget implements HasEnabled {
         timeline.setAlwaysCalculatePixelWidths(calcPx);
     }
 
+    /**
+     * Sets timeline's force update flag up. Next
+     * {@link TimelineWidget#update(Resolution, long, long, int, LocaleDataProvider)}
+     * call knows then to update everything.
+     */
+    public void setForceUpdateTimeline() {
+        if (timeline == null) {
+            return;
+        }
+
+        timeline.setForceUpdate();
+    }
+
     @Override
     public boolean isEnabled() {
         return enabled;

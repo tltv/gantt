@@ -195,6 +195,13 @@ public class GanttConnector extends AbstractComponentConnector {
             dateTimeService = null;
         }
 
+        if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
+                || stateChangeEvent.hasPropertyChanged("yearRowVisible")
+                || stateChangeEvent.hasPropertyChanged("monthFormat")
+                || stateChangeEvent.hasPropertyChanged("yearFormat")) {
+            getWidget().setForceUpdateTimeline();
+        }
+
         if (stateChangeEvent.hasPropertyChanged("readOnly")) {
             getWidget().setMovableSteps(
                     !getState().readOnly && getState().movableSteps);

@@ -80,6 +80,8 @@ public class TimelineWidget extends Widget {
 
     private boolean ie, ie8, ie9;
 
+    private boolean forceUpdateFlag;
+
     private LocaleDataProvider localeDataProvider;
     private DateTimeFormat yearDateTimeFormat;
     private DateTimeFormat monthDateTimeFormat;
@@ -557,6 +559,15 @@ public class TimelineWidget extends Widget {
     }
 
     /**
+     * Sets force update flag up. Next
+     * {@link #update(Resolution, long, long, int, LocaleDataProvider)} call
+     * knows then to update everything.
+     */
+    public void setForceUpdate() {
+        forceUpdateFlag = true;
+    }
+
+    /**
      * Update horizontal overflow state.
      */
     private void updateTimelineOverflowingHorizontally() {
@@ -934,6 +945,11 @@ public class TimelineWidget extends Widget {
         boolean resolutionChanged = this.resolution != resolution;
         if (resolutionChanged) {
             minDayResolutionWidth = -1;
+        }
+
+        if (forceUpdateFlag) {
+            forceUpdateFlag = false;
+            return true;
         }
         return resolutionChanged
                 || this.startDate != startDate
