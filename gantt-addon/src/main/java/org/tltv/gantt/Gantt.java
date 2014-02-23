@@ -273,18 +273,40 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         getState().monthRowVisible = visible;
     }
 
+    /**
+     * Set timeline's year row's year format.
+     * 
+     * @param format
+     *            Format string like 'dd yyyy MMM' or 'MMMM'
+     */
     public void setTimelineYearFormat(String format) {
         getState().yearFormat = trimFormat(format);
     }
 
+    /**
+     * Set timeline's month row's year format.
+     * 
+     * @param format
+     *            Format string like 'dd yyyy MMM' or 'MMMM'
+     */
     public void setTimelineMonthFormat(String format) {
         getState().monthFormat = trimFormat(format);
     }
 
+    /**
+     * Timeline's year row's year format.
+     * 
+     * @return
+     */
     public String getTimelineYearFormat() {
         return getState().yearFormat;
     }
 
+    /**
+     * Timeline's month row's month format.
+     * 
+     * @return
+     */
     public String getTimelineMonthFormat() {
         return getState().monthFormat;
     }
