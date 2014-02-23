@@ -46,6 +46,9 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.MenuBar;
+import com.vaadin.ui.MenuBar.Command;
+import com.vaadin.ui.MenuBar.MenuItem;
 import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
@@ -132,11 +135,13 @@ public class DemoUI extends UI {
     protected void init(VaadinRequest request) {
         createGantt();
 
+        MenuBar menu = controlsMenuBar();
         Panel controls = createControls();
 
         final VerticalLayout layout = new VerticalLayout();
         layout.setStyleName("demoContentLayout");
         layout.setSizeFull();
+        layout.addComponent(menu);
         layout.addComponent(controls);
         layout.addComponent(gantt);
         layout.setExpandRatio(gantt, 1);
@@ -311,6 +316,79 @@ public class DemoUI extends UI {
         controls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
 
         return panel;
+    }
+
+    private MenuBar controlsMenuBar() {
+        MenuBar menu = new MenuBar();
+        MenuItem editItem = menu.addItem("Edit", null);
+        MenuItem formatItem = menu.addItem("Format", null);
+
+        MenuItem item = editItem.addItem("Enabled", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setEnabled(!gantt.isEnabled());
+                selectedItem.setChecked(gantt.isEnabled());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isEnabled());
+
+        item = editItem.addItem("Read-only", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setReadOnly(!gantt.isReadOnly());
+                selectedItem.setChecked(gantt.isReadOnly());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isReadOnly());
+
+        item = editItem.addItem("Show years", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setYearsVisible(!gantt.isYearsVisible());
+                selectedItem.setChecked(gantt.isYearsVisible());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isYearsVisible());
+
+        item = editItem.addItem("Show months", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setMonthsVisible(!gantt.isMonthsVisible());
+                selectedItem.setChecked(gantt.isMonthsVisible());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isMonthsVisible());
+
+        item = formatItem.addItem("Set short month format", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineMonthFormat("MMM");
+            }
+        });
+        item = formatItem.addItem("Set long month format", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineMonthFormat("MMMM");
+            }
+        });
+        item = formatItem.addItem("Set year+month month format", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineMonthFormat("yyyy MMMM");
+            }
+        });
+        return menu;
     }
 
     private void openStepEditor(Step step) {
