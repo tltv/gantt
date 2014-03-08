@@ -22,6 +22,8 @@ import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.DateTimeService;
@@ -135,15 +137,28 @@ public class GanttConnector extends AbstractComponentConnector {
 
         @Override
         public void onElementResize(ElementResizeEvent e) {
-            int height = e.getElement().getClientHeight();
-            int width = e.getElement().getClientWidth();
+            final int height = e.getElement().getClientHeight();
+            final int width = e.getElement().getClientWidth();
             if (previousHeight != height) {
                 previousHeight = height;
-                getWidget().notifyHeightChanged(height);
+
+                Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+                    @Override
+                    public void execute() {
+                        getWidget().notifyHeightChanged(height);
+                    }
+                });
             }
             if (previousWidth != width) {
                 previousWidth = width;
-                getWidget().notifyWidthChanged(width);
+                Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+                    @Override
+                    public void execute() {
+                        getWidget().notifyWidthChanged(width);
+                    }
+                });
             }
         }
     };
@@ -208,7 +223,14 @@ public class GanttConnector extends AbstractComponentConnector {
             getWidget().setResizableSteps(
                     !getState().readOnly && getState().resizableSteps);
         }
-        getWidget().update(getState().steps);
+
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+            @Override
+            public void execute() {
+                getWidget().update(getState().steps);
+            }
+        });
     }
 
 }
