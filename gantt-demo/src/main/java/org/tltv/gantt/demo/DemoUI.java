@@ -26,6 +26,7 @@ import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
 import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.demo.util.UriFragmentWrapperFactory;
 import org.tltv.gantt.demo.util.Util;
 
 import com.vaadin.annotations.Theme;
@@ -44,6 +45,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.MenuBar;
@@ -53,6 +55,7 @@ import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -138,13 +141,20 @@ public class DemoUI extends UI {
         MenuBar menu = controlsMenuBar();
         Panel controls = createControls();
 
+        TabSheet tabsheet = new TabSheet();
+        tabsheet.setSizeFull();
+
+        Component wrapper = UriFragmentWrapperFactory.wrapByUriFragment(UI
+                .getCurrent().getPage().getUriFragment(), gantt);
+
         final VerticalLayout layout = new VerticalLayout();
         layout.setStyleName("demoContentLayout");
         layout.setSizeFull();
         layout.addComponent(menu);
         layout.addComponent(controls);
-        layout.addComponent(gantt);
-        layout.setExpandRatio(gantt, 1);
+        layout.addComponent(wrapper);
+        layout.setExpandRatio(wrapper, 1);
+
         setContent(layout);
     }
 
