@@ -270,6 +270,7 @@ public class DemoUI extends UI {
 
         NativeSelect reso = new NativeSelect("Resolution");
         reso.setNullSelectionAllowed(false);
+        reso.addItem(org.tltv.gantt.client.shared.Resolution.Hour);
         reso.addItem(org.tltv.gantt.client.shared.Resolution.Day);
         reso.addItem(org.tltv.gantt.client.shared.Resolution.Week);
         reso.setValue(gantt.getResolution());
@@ -377,27 +378,50 @@ public class DemoUI extends UI {
         item.setCheckable(true);
         item.setChecked(gantt.isMonthsVisible());
 
-        item = formatItem.addItem("Set short month format", new Command() {
+        item = formatItem.addItem("Set 'MMM' month format", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 gantt.setTimelineMonthFormat("MMM");
             }
         });
-        item = formatItem.addItem("Set long month format", new Command() {
+        item = formatItem.addItem("Set 'MMMM' month format", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
                 gantt.setTimelineMonthFormat("MMMM");
             }
         });
-        item = formatItem.addItem("Set year+month month format", new Command() {
+        item = formatItem.addItem("Set 'yyyy MMMM' month format",
+                new Command() {
+
+                    @Override
+                    public void menuSelected(MenuItem selectedItem) {
+                        gantt.setTimelineMonthFormat("yyyy MMMM");
+                    }
+                });
+        item = formatItem.addItem("Set 'dd.' week format", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                gantt.setTimelineMonthFormat("yyyy MMMM");
+                gantt.setTimelineWeekFormat("dd.");
             }
         });
+        item = formatItem.addItem("Set week number week format", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineWeekFormat(null);
+            }
+        });
+        item = formatItem.addItem(
+                "Set 'dd. EEEE' day format for Hour resolution", new Command() {
+
+                    @Override
+                    public void menuSelected(MenuItem selectedItem) {
+                        gantt.setTimelineDayFormat("dd. EEEE");
+                    }
+                });
         return menu;
     }
 
