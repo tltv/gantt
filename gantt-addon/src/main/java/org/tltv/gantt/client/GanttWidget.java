@@ -128,6 +128,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     private String locale;
     private Resolution resolution;
     private int firstDayOfRange;
+    private int firstHourOfRange;
     private long startDate;
     private long endDate;
     private int minWidth;
@@ -484,6 +485,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         this.firstDayOfRange = firstDayOfRange;
     }
 
+    public void setFirstHourOfRange(int firstHourOfRange) {
+        this.firstHourOfRange = firstHourOfRange;
+    }
+
     /**
      * Notify Gantt widget that height has changed. Delegates necessary changes
      * to child elements.
@@ -661,6 +666,14 @@ public class GanttWidget extends Widget implements HasEnabled {
 
     public String getYearFormat() {
         return timeline.getYearFormat();
+    }
+
+    public void setWeekFormat(String weekFormat) {
+        timeline.setWeekFormat(weekFormat);
+    }
+
+    public void setDayFormat(String dayFormat) {
+        timeline.setDayFormat(dayFormat);
     }
 
     /**

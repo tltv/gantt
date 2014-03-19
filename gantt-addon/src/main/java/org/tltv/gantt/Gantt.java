@@ -274,7 +274,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
-     * Set timeline's year row's year format.
+     * Set timeline's year row's year format. Default is just year number.
      * 
      * @param format
      *            Format string like 'dd yyyy MMM' or 'MMMM'
@@ -284,7 +284,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
-     * Set timeline's month row's year format.
+     * Set timeline's month row's year format. Default is full month name.
      * 
      * @param format
      *            Format string like 'dd yyyy MMM' or 'MMMM'
@@ -309,6 +309,46 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      */
     public String getTimelineMonthFormat() {
         return getState().monthFormat;
+    }
+
+    /**
+     * Set timeline's week row's week format for {@link Resolution#Week}
+     * resolution. Default is week number.
+     * 
+     * @param format
+     *            Format string like 'dd'
+     */
+    public void setTimelineWeekFormat(String weekFormat) {
+        getState().weekFormat = weekFormat;
+    }
+
+    /**
+     * Timeline's week row's week format for {@link Resolution#Week} resolution.
+     * 
+     * @return
+     */
+    public String getTimelineWeekFormat() {
+        return getState().weekFormat;
+    }
+
+    /**
+     * Set timeline's day row's format for {@link Resolution#Hour} resolution.
+     * Default is number of day in month.
+     * 
+     * @param format
+     *            Format string like 'dd'
+     */
+    public void setTimelineDayFormat(String dayFormat) {
+        getState().dayFormat = dayFormat;
+    }
+
+    /**
+     * Timeline's day row's day format for {@link Resolution#Hour} resolution.
+     * 
+     * @return
+     */
+    public String getTimelineDayFormat() {
+        return getState().dayFormat;
     }
 
     /*

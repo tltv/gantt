@@ -53,6 +53,13 @@ public interface LocaleDataProvider {
     String formatDate(Date date, String format);
 
     /**
+     * Returns true, if active locale uses twelve hour clock.
+     * 
+     * @return true if 12h clock. False if 24h clock.
+     */
+    boolean isTwelveHourClock();
+
+    /**
      * Get currently active locale id. See {@link Locale#toString()}.
      * 
      * @return Locale

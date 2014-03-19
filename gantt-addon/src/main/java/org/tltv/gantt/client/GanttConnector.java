@@ -50,6 +50,7 @@ public class GanttConnector extends AbstractComponentConnector {
 
     String locale;
     DateTimeService dateTimeService;
+    boolean notifyHeight = false;
 
     LocaleDataProvider localeDataProvider = new LocaleDataProvider() {
 
@@ -103,6 +104,16 @@ public class GanttConnector extends AbstractComponentConnector {
                 }
             }
             return dateTimeService.formatDate(date, formatStr);
+        }
+
+        @Override
+        public boolean isTwelveHourClock() {
+            try {
+                return LocaleService.isTwelveHourClock(locale);
+            } catch (LocaleNotLoadedException e) {
+                GWT.log(e.getMessage(), e);
+            }
+            return false;
         }
 
         @Override
@@ -210,11 +221,19 @@ public class GanttConnector extends AbstractComponentConnector {
             dateTimeService = null;
         }
 
+        notifyHeight = false;
+
         if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
                 || stateChangeEvent.hasPropertyChanged("yearRowVisible")
                 || stateChangeEvent.hasPropertyChanged("monthFormat")
-                || stateChangeEvent.hasPropertyChanged("yearFormat")) {
+                || stateChangeEvent.hasPropertyChanged("yearFormat")
+                || stateChangeEvent.hasPropertyChanged("weekFormat")
+                || stateChangeEvent.hasPropertyChanged("dayFormat")) {
+            notifyHeight = !stateChangeEvent.isInitialStateChange();
             getWidget().setForceUpdateTimeline();
+        }
+        if (!notifyHeight && stateChangeEvent.hasPropertyChanged("resolution")) {
+            notifyHeight = !stateChangeEvent.isInitialStateChange();
         }
 
         if (stateChangeEvent.hasPropertyChanged("readOnly")) {
@@ -229,6 +248,9 @@ public class GanttConnector extends AbstractComponentConnector {
             @Override
             public void execute() {
                 getWidget().update(getState().steps);
+                if (notifyHeight) {
+                    getWidget().notifyHeightChanged(previousHeight);
+                }
             }
         });
     }

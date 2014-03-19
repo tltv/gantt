@@ -33,5 +33,7 @@ public enum Resolution {
      * Week resolution divides the timeline in week blocks making it clearer to
      * represent several months long steps.
      */
-    Week
+    Week,
+
+    Hour
 }

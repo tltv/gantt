@@ -17,9 +17,11 @@
 package org.tltv.gantt.client;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.tltv.gantt.client.shared.Resolution;
 
@@ -66,6 +68,7 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_COL = "col";
     public static final String STYLE_MONTH = "month";
     public static final String STYLE_YEAR = "year";
+    public static final String STYLE_DAY = "day";
     public static final String STYLE_RESOLUTION = "resolution";
     public static final String STYLE_WEEK_FIRST = "week-f";
     public static final String STYLE_WEEK_LAST = "week-l";
@@ -74,9 +77,12 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_WEEKEND = "weekend";
     public static final String STYLE_SPACER = "spacer";
 
-    public static final long DAY_INTERVAL = 24 * 60 * 60 * 1000;
-    public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
     public static final int DAYS_IN_WEEK = 7;
+    public static final int HOURS_IN_DAY = 24;
+    public static final long DAY_INTERVAL = 24 * 60 * 60 * 1000;
+    public static final long HOUR_INTERVAL = 60 * 60 * 1000;
+    public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
+    public static final int RESOLUTION_HOUR_DAYBLOCK_WIDTH = 4;
 
     private boolean ie, ie8, ie9;
 
@@ -85,6 +91,10 @@ public class TimelineWidget extends Widget {
     private LocaleDataProvider localeDataProvider;
     private DateTimeFormat yearDateTimeFormat;
     private DateTimeFormat monthDateTimeFormat;
+    private DateTimeFormat weekDateTimeFormat;
+    private DateTimeFormat dayDateTimeFormat;
+    private DateTimeFormat hour12DateTimeFormat;
+    private DateTimeFormat hour24DateTimeFormat;
 
     private boolean even;
     private String locale;
@@ -94,24 +104,33 @@ public class TimelineWidget extends Widget {
     private int firstDayOfWeek;
     private int lastDayOfWeek;
     private int firstDayOfRange;
+    private int firstHourOfRange;
     private String[] monthNames;
     private String[] weekdayNames;
-    private int daysInRange = 0;
-    private int firstWeekDayCount;
-    private int lastWeekDayCount;
+    /* single resolution block interval in milliseconds */
+    private long interval;
+
+    /*
+     * number of blocks in resolution range. Days for Day/Week resolution, Hours
+     * for hour resolution..
+     */
+    private int blocksInRange = 0;
+    private int firstResBlockCount;
+    private int lastResBlockCount;
     private boolean firstWeek;
-    private boolean lastWeek;
+    private boolean firstDay;
     private boolean timelineOverflowingHorizontally;
     private boolean noticeVerticalScrollbarWidth;
     private boolean monthRowVisible;
     private boolean yearRowVisible;
     private String monthFormat;
     private String yearFormat;
+    private String weekFormat;
+    private String dayFormat;
 
     private DivElement resolutionDiv;
     private DivElement resSpacerDiv;
-    private DivElement yearSpacerBlock;
-    private DivElement monthSpacerBlock;
+    private Set<DivElement> spacerBlocks = new HashSet<DivElement>();
 
     private final Map<String, Element> years = new LinkedHashMap<String, Element>();
     private final Map<String, Integer> yearLength = new LinkedHashMap<String, Integer>();
@@ -119,7 +138,11 @@ public class TimelineWidget extends Widget {
     private final Map<String, Element> months = new LinkedHashMap<String, Element>();
     private final Map<String, Integer> monthLength = new LinkedHashMap<String, Integer>();
 
-    private int minDayResolutionWidth = -1;
+    // days/daysLength are needed only with resolutions smaller than Day.
+    private final Map<String, Element> days = new LinkedHashMap<String, Element>();
+    private final Map<String, Integer> dayLength = new LinkedHashMap<String, Integer>();
+
+    private int minResolutionWidth = -1;
     private int minWidth = -1;
     private boolean calcPixels = false;
 
@@ -193,18 +216,17 @@ public class TimelineWidget extends Widget {
         monthNames = localeDataProvider.getMonthNames();
         weekdayNames = localeDataProvider.getWeekdayNames();
         this.localeDataProvider = localeDataProvider;
-        yearDateTimeFormat = DateTimeFormat.getFormat("yyyy");
-        monthDateTimeFormat = DateTimeFormat.getFormat("M");
-
         resolutionDiv = DivElement.as(DOM.createDiv());
         resolutionDiv.setClassName(STYLE_ROW + " " + STYLE_RESOLUTION);
 
-        if (minDayResolutionWidth < 0) {
-            minDayResolutionWidth = calculateMinDayResolutionWidth();
+        if (minResolutionWidth < 0) {
+            minResolutionWidth = calculateResolutionMinWidth();
         }
 
         if (resolution == Resolution.Day || resolution == Resolution.Week) {
             prepareTimelineForDayResolution(startDate, endDate);
+        } else if (resolution == Resolution.Hour) {
+            prepareTimelineForHourResolution(startDate, endDate);
         } else {
             GWT.log(getClass().getSimpleName() + " resolution "
                     + (resolution != null ? resolution.name() : "null")
@@ -213,23 +235,13 @@ public class TimelineWidget extends Widget {
         }
 
         if (isYearRowVisible()) {
-            for (Entry<String, Element> entry : years.entrySet()) {
-                getElement().appendChild(entry.getValue());
-            }
-            if (isAlwaysCalculatePixelWidths()) {
-                yearSpacerBlock = createSpacerBlock(STYLE_YEAR);
-                getElement().appendChild(yearSpacerBlock);
-            }
+            appendTimelineBlocks(years, STYLE_YEAR);
         }
-
         if (isMonthRowVisible()) {
-            for (Entry<String, Element> entry : months.entrySet()) {
-                getElement().appendChild(entry.getValue());
-            }
-            if (isAlwaysCalculatePixelWidths()) {
-                monthSpacerBlock = createSpacerBlock(STYLE_MONTH);
-                getElement().appendChild(monthSpacerBlock);
-            }
+            appendTimelineBlocks(months, STYLE_MONTH);
+        }
+        if (isDayRowVisible()) {
+            appendTimelineBlocks(days, STYLE_DAY);
         }
         getElement().appendChild(resolutionDiv);
 
@@ -380,7 +392,7 @@ public class TimelineWidget extends Widget {
 
         GWT.log(getClass().getSimpleName() + " Started updating widths.");
 
-        setMinWidth(daysInRange * minDayResolutionWidth);
+        setMinWidth(blocksInRange * minResolutionWidth);
 
         // update horizontal overflow state here, after min-width is updated.
         updateTimelineOverflowingHorizontally();
@@ -392,10 +404,10 @@ public class TimelineWidget extends Widget {
 
         // calculate new block width for day-resolution.
         // Year and month blocks are vertically in-line with days.
-        double dayWidthPercentage = 100.0 / daysInRange;
+        double dayWidthPercentage = 100.0 / blocksInRange;
         double dayWidthPx = Math.round(resolutionDiv.getClientWidth()
-                / daysInRange);
-        while ((resolutionDiv.getClientWidth() % (daysInRange * dayWidthPx)) >= daysInRange) {
+                / blocksInRange);
+        while ((resolutionDiv.getClientWidth() % (blocksInRange * dayWidthPx)) >= blocksInRange) {
             dayWidthPx++;
         }
 
@@ -403,15 +415,16 @@ public class TimelineWidget extends Widget {
         // (day,week,...)
         // resolution div's content may not be vertically in-line with
         // year/month blocks. This is the case for example with Week resolution.
-        double resBlockMinWidthPx = minDayResolutionWidth;
+        double resBlockMinWidthPx = minResolutionWidth;
         double resBlockWidthPx = dayWidthPx;
         double resBlockWidthPercentage = 100.0 / resolutionBlockCount;
         String pct = createCalcCssValue(resolutionBlockCount);
         if (resolution == Resolution.Week) {
-            resBlockMinWidthPx = DAYS_IN_WEEK * minDayResolutionWidth;
+            resBlockMinWidthPx = DAYS_IN_WEEK * minResolutionWidth;
             resBlockWidthPx = DAYS_IN_WEEK * dayWidthPx;
             resBlockWidthPercentage = dayWidthPercentage * DAYS_IN_WEEK;
-            pct = createCalcCssValue(daysInRange, DAYS_IN_WEEK);
+            pct = createCalcCssValue(blocksInRange, DAYS_IN_WEEK);
+
         }
 
         // update resolution block widths
@@ -428,6 +441,10 @@ public class TimelineWidget extends Widget {
             // update month block widths
             updateBlockWidths(dayWidthPercentage, dayWidthPx, months,
                     monthLength);
+        }
+
+        if (isDayRowVisible()) {
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, days, dayLength);
         }
 
         if (isAlwaysCalculatePixelWidths()) {
@@ -526,6 +543,10 @@ public class TimelineWidget extends Widget {
         return width;
     }
 
+    public boolean isDayRowVisible() {
+        return resolution == Resolution.Hour;
+    }
+
     public boolean isMonthRowVisible() {
         return monthRowVisible;
     }
@@ -558,6 +579,14 @@ public class TimelineWidget extends Widget {
         this.yearFormat = yearFormat;
     }
 
+    public void setWeekFormat(String weekFormat) {
+        this.weekFormat = weekFormat;
+    }
+
+    public void setDayFormat(String dayFormat) {
+        this.dayFormat = dayFormat;
+    }
+
     /**
      * Sets force update flag up. Next
      * {@link #update(Resolution, long, long, int, LocaleDataProvider)} call
@@ -565,6 +594,57 @@ public class TimelineWidget extends Widget {
      */
     public void setForceUpdate() {
         forceUpdateFlag = true;
+    }
+
+    public DateTimeFormat getYearDateTimeFormat() {
+        if (yearDateTimeFormat == null) {
+            yearDateTimeFormat = DateTimeFormat.getFormat("yyyy");
+        }
+        return yearDateTimeFormat;
+    }
+
+    public DateTimeFormat getMonthDateTimeFormat() {
+        if (monthDateTimeFormat == null) {
+            monthDateTimeFormat = DateTimeFormat.getFormat("M");
+        }
+        return monthDateTimeFormat;
+    }
+
+    public DateTimeFormat getWeekDateTimeFormat() {
+        if (weekDateTimeFormat == null) {
+            weekDateTimeFormat = DateTimeFormat.getFormat("d");
+        }
+        return weekDateTimeFormat;
+    }
+
+    public DateTimeFormat getDayDateTimeFormat() {
+        if (dayDateTimeFormat == null) {
+            dayDateTimeFormat = DateTimeFormat.getFormat("d");
+        }
+        return dayDateTimeFormat;
+    }
+
+    public DateTimeFormat getHour12DateTimeFormat() {
+        if (hour12DateTimeFormat == null) {
+            hour12DateTimeFormat = DateTimeFormat.getFormat("h");
+        }
+        return hour12DateTimeFormat;
+    }
+
+    public DateTimeFormat getHour24DateTimeFormat() {
+        if (hour24DateTimeFormat == null) {
+            hour24DateTimeFormat = DateTimeFormat.getFormat("HH");
+        }
+        return hour24DateTimeFormat;
+    }
+
+    private void appendTimelineBlocks(Map<String, Element> map, String style) {
+        for (Entry<String, Element> entry : map.entrySet()) {
+            getElement().appendChild(entry.getValue());
+        }
+        if (isAlwaysCalculatePixelWidths()) {
+            getElement().appendChild(createSpacerBlock(style));
+        }
     }
 
     /**
@@ -581,20 +661,17 @@ public class TimelineWidget extends Widget {
         block.addClassName(STYLE_SPACER);
         block.setInnerText(" ");
         block.getStyle().setDisplay(Display.NONE); // not visible by default
+        spacerBlocks.add(block);
         return block;
     }
 
     private void updateSpacerBlocks(double dayWidthPx) {
         double spaceLeft = resolutionDiv.getClientWidth()
-                - (daysInRange * dayWidthPx);
+                - (blocksInRange * dayWidthPx);
         if (spaceLeft > 0) {
-            if (yearSpacerBlock != null) {
-                yearSpacerBlock.getStyle().clearDisplay();
-                yearSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
-            }
-            if (monthSpacerBlock != null) {
-                monthSpacerBlock.getStyle().clearDisplay();
-                monthSpacerBlock.getStyle().setWidth(spaceLeft, Unit.PX);
+            for (DivElement e : spacerBlocks) {
+                e.getStyle().clearDisplay();
+                e.getStyle().setWidth(spaceLeft, Unit.PX);
             }
 
             resSpacerDiv = createResolutionBLock();
@@ -608,11 +685,8 @@ public class TimelineWidget extends Widget {
     }
 
     private void hideSpacerBlocks() {
-        if (yearSpacerBlock != null) {
-            yearSpacerBlock.getStyle().setDisplay(Display.NONE);
-        }
-        if (monthSpacerBlock != null) {
-            monthSpacerBlock.getStyle().setDisplay(Display.NONE);
+        for (DivElement e : spacerBlocks) {
+            e.getStyle().setDisplay(Display.NONE);
         }
     }
 
@@ -623,7 +697,7 @@ public class TimelineWidget extends Widget {
         int i = 0;
         lastIndex = elements.size() - 1;
         for (Entry<String, Element> entry : elements.entrySet()) {
-            setWidth(daysInRange, dayWidthPercentage, dayWidthPx,
+            setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
                     entry.getValue(), slots.get(entry.getKey()));
 
             ieFix(i, lastIndex, entry.getValue());
@@ -636,10 +710,10 @@ public class TimelineWidget extends Widget {
             double resBlockMinWidthPx, double resBlockWidthPx,
             double resBlockWidthPercentage, String pct) {
 
-        boolean firstWeekIsShort = resolution == Resolution.Week
-                && firstWeekDayCount > 0 && firstWeekDayCount < DAYS_IN_WEEK;
-        boolean lastWeekIsShort = resolution == Resolution.Week
-                && lastWeekDayCount > 0 && lastWeekDayCount < DAYS_IN_WEEK;
+        boolean firstResBlockIsShort = firstResBlockCount > 0
+                && ((resolution == Resolution.Week && firstResBlockCount < DAYS_IN_WEEK));
+        boolean lastResBlockIsShort = lastResBlockCount > 0
+                && ((resolution == Resolution.Week && lastResBlockCount < DAYS_IN_WEEK));
 
         int lastIndex = resolutionBlockCount - 1;
         int i;
@@ -649,12 +723,12 @@ public class TimelineWidget extends Widget {
 
             // first and last week blocks may be thinner than other
             // resolution blocks.
-            if (firstWeekIsShort && i == 0) {
-                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
-                        firstWeekDayCount);
-            } else if (lastWeekIsShort && i == lastIndex) {
-                setWidth(daysInRange, dayWidthPercentage, dayWidthPx, resBlock,
-                        lastWeekDayCount);
+            if (firstResBlockIsShort && i == 0) {
+                setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                        resBlock, firstResBlockCount);
+            } else if (lastResBlockIsShort && i == lastIndex) {
+                setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                        resBlock, lastResBlockCount);
             } else {
                 setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
                         resBlockWidthPx, pct, resBlock);
@@ -670,28 +744,76 @@ public class TimelineWidget extends Widget {
         }
     }
 
+    private void prepareTimelineForHourResolution(long startDate, long endDate) {
+        firstDay = true;
+        prepareTimelineForResolution(HOUR_INTERVAL, startDate, endDate,
+                new ResolutionBlockAdder() {
+
+                    /*
+                     * TODO set firstHourOfRange. Timeline range time is
+                     * currently reseted to min/max.
+                     */
+                    int hourCounter = firstHourOfRange;
+
+                    @Override
+                    public void addResolutionBLock(int index, Date date,
+                            String currentYear, boolean lastTimelineBlock) {
+
+                        addHourResolutionBlock(date, index, hourCounter,
+                                lastTimelineBlock);
+
+                        hourCounter = Math.max((hourCounter + 1) % 25, 1);
+                    }
+                });
+    }
+
     private void prepareTimelineForDayResolution(long startDate, long endDate) {
-        daysInRange = 0;
-        even = false;
         firstWeek = true;
-        lastWeek = false;
-        firstWeekDayCount = 0;
-        lastWeekDayCount = 0;
+        prepareTimelineForResolution(DAY_INTERVAL, startDate, endDate,
+                new ResolutionBlockAdder() {
+
+                    int dayCounter = firstDayOfRange;
+                    Weekday weekday;
+
+                    @Override
+                    public void addResolutionBLock(int index, Date date,
+                            String currentYear, boolean lastTimelineBlock) {
+
+                        weekday = getWeekday(dayCounter);
+
+                        if (resolution == Resolution.Week) {
+                            addWeekResolutionBlock(date, index, weekday,
+                                    isWeekEnd(dayCounter), lastTimelineBlock);
+                        } else {
+                            addDayResolutionBlock(date, index,
+                                    isWeekEnd(dayCounter));
+                        }
+
+                        dayCounter = Math.max((dayCounter + 1) % 8, 1);
+                    }
+                });
+    }
+
+    private void prepareTimelineForResolution(long interval, long startDate,
+            long endDate, ResolutionBlockAdder resBlockAdder) {
+        this.interval = interval;
+        blocksInRange = 0;
+        even = false;
+        firstResBlockCount = 0;
+        lastResBlockCount = 0;
         String currentYear = null;
-        int currentMonth = -1;
-        int dayCounter = firstDayOfRange;
+        String currentMonth = null;
+        String currentDay = null;
         long pos = startDate;
         int index = 0;
-        Weekday weekday;
         boolean lastTimelineBlock = false;
         Date date;
 
         while (pos <= endDate) {
-            lastTimelineBlock = (pos + DAY_INTERVAL) > endDate;
-            weekday = getWeekday(dayCounter);
+            lastTimelineBlock = (pos + interval) > endDate;
             date = new Date(pos);
 
-            addResolutionBlock(date, index, weekday, isWeekEnd(dayCounter),
+            resBlockAdder.addResolutionBLock(index, date, currentYear,
                     lastTimelineBlock);
 
             if (isYearRowVisible()) {
@@ -701,10 +823,17 @@ public class TimelineWidget extends Widget {
                 currentMonth = addMonthBlock(currentMonth, date);
             }
 
-            pos += DAY_INTERVAL;
+            if (isDayRowVisible()) {
+                currentDay = addDayBlock(currentDay, date);
+            }
+            pos += interval;
             index++;
-            dayCounter = Math.max((dayCounter + 1) % 8, 1);
         }
+    }
+
+    private interface ResolutionBlockAdder {
+        void addResolutionBLock(int index, Date date, String currentYear,
+                boolean lastTimelineBlock);
     }
 
     public LocaleDataProvider getLocaleDataProvider() {
@@ -725,53 +854,110 @@ public class TimelineWidget extends Widget {
         return dayCounter == 1 || dayCounter == 7;
     }
 
-    private int addMonthBlock(int currentMonth, Date date) {
-        int month = getMonth(date);
+    private String key(String prefix, Map<String, Integer> map) {
+        return prefix + "_" + (map.size());
+
+    }
+
+    private String newKey(String prefix, Map<String, Integer> map) {
+        return prefix + "_" + (map.size() + 1);
+    }
+
+    private String addBlock(String current, String target, Date date,
+            Map<String, Integer> lengths, Operation operation) {
         String key;
-        if (month != currentMonth) {
-            // month changed, add month block
-            currentMonth = month;
-            key = currentMonth + "_" + (monthLength.size() + 1);
-            addMonthBlock(month, key, formatMonthCaption(month, date));
+        if (!target.equals(current)) {
+            current = target;
+            key = newKey("" + current, lengths);
+            operation.run(target, key, date);
         } else {
-            key = currentMonth + "_" + monthLength.size();
-            // increase month block length by one resolution block
-            monthLength.put(key, monthLength.get(key) + 1);
+            key = key("" + current, lengths);
+            lengths.put(key, lengths.get(key) + 1);
         }
-        return currentMonth;
+        return current;
+    }
+
+    private interface Operation {
+        void run(String target, String value, Date date);
+    }
+
+    private String addDayBlock(String currentDay, Date date) {
+        String day = getDay(date);
+
+        return addBlock(currentDay, day, date, dayLength, new Operation() {
+
+            @Override
+            public void run(String day, String key, Date date) {
+                addDayBlock(key, formatDayCaption(day, date));
+            }
+        });
+    }
+
+    private String addMonthBlock(String currentMonth, Date date) {
+        final int month = getMonth(date);
+
+        return addBlock(currentMonth, String.valueOf(month), date, monthLength,
+                new Operation() {
+
+                    @Override
+                    public void run(String target, String key, Date date) {
+                        addMonthBlock(key, formatMonthCaption(month, date));
+                    }
+                });
     }
 
     private String addYearBlock(String currentYear, Date date) {
         String year = getYear(date);
-        if (!year.equals(currentYear)) {
-            // year changed, add year block
-            currentYear = year;
-            addYearBlock(year, formatYearCaption(year, date));
-        } else {
-            // increase year block length by one resolution block
-            yearLength.put(currentYear, yearLength.get(currentYear) + 1);
-        }
-        return currentYear;
+
+        return addBlock(currentYear, year, date, yearLength, new Operation() {
+
+            @Override
+            public void run(String year, String key, Date date) {
+                addYearBlock(key, formatYearCaption(year, date));
+            }
+        });
     }
 
-    private void addMonthBlock(int month, String key, String caption) {
-        DivElement monthBlock = DivElement.as(DOM.createDiv());
-        monthBlock.setClassName(STYLE_ROW + " " + STYLE_MONTH);
-        monthBlock.setInnerText(caption);
-        monthLength.put(key, 1);
-        months.put(key, monthBlock);
+    private void addMonthBlock(String key, String text) {
+        DivElement monthBlock = createTimelineBlock(key, text, STYLE_MONTH,
+                monthLength, months);
 
-        if (ie8 && months.size() % 2 == 0) {
-            monthBlock.addClassName(STYLE_EVEN);
+        addEvenStyleIfNeeded(months.size(), monthBlock);
+    }
+
+    private void addYearBlock(String key, String text) {
+        createTimelineBlock(key, text, STYLE_YEAR, yearLength, years);
+    }
+
+    private void addDayBlock(String key, String text) {
+        DivElement dayBlock = createTimelineBlock(key, text, STYLE_DAY,
+                dayLength, days);
+
+        addEvenStyleIfNeeded(days.size(), dayBlock);
+    }
+
+    private DivElement createTimelineBlock(String key, String text,
+            String styleSuffix, Map<String, Integer> lengths,
+            Map<String, Element> blocks) {
+        DivElement div = DivElement.as(DOM.createDiv());
+        div.setClassName(STYLE_ROW + " " + styleSuffix);
+        div.setInnerText(text);
+        lengths.put(key, 1);
+        blocks.put(key, div);
+        return div;
+    }
+
+    private void addEvenStyleIfNeeded(int number, Element element) {
+        if (ie8 && number % 2 == 0) {
+            element.addClassName(STYLE_EVEN);
         }
     }
 
-    private void addYearBlock(String year, String text) {
-        DivElement yearBlock = DivElement.as(DOM.createDiv());
-        yearBlock.setClassName(STYLE_ROW + " " + STYLE_YEAR);
-        yearBlock.setInnerText(text);
-        yearLength.put(year, 1);
-        years.put(year, yearBlock);
+    private String formatDayCaption(String day, Date date) {
+        if (dayFormat == null || dayFormat.isEmpty()) {
+            return day;
+        }
+        return getLocaleDataProvider().formatDate(date, dayFormat);
     }
 
     private String formatYearCaption(String year, Date date) {
@@ -781,6 +967,13 @@ public class TimelineWidget extends Widget {
         return getLocaleDataProvider().formatDate(date, yearFormat);
     }
 
+    private String formatWeekCaption(Date date) {
+        if (weekFormat == null || weekFormat.isEmpty()) {
+            return "" + getWeekNumber(date);
+        }
+        return getLocaleDataProvider().formatDate(date, weekFormat);
+    }
+
     private String formatMonthCaption(int month, Date date) {
         if (monthFormat == null || monthFormat.isEmpty()) {
             return monthNames[month];
@@ -788,12 +981,16 @@ public class TimelineWidget extends Widget {
         return getLocaleDataProvider().formatDate(date, monthFormat);
     }
 
+    private String getDay(Date date) {
+        return getDayDateTimeFormat().format(date);
+    }
+
     private String getYear(Date date) {
-        return yearDateTimeFormat.format(date);
+        return getYearDateTimeFormat().format(date);
     }
 
     private int getMonth(Date date) {
-        String m = monthDateTimeFormat.format(date);
+        String m = getMonthDateTimeFormat().format(date);
         return Integer.parseInt(m) - 1;
     }
 
@@ -834,8 +1031,7 @@ public class TimelineWidget extends Widget {
     private void setWidth(int daysInRange, double dayWidthPercentage,
             double dayWidthPx, Element element, int position) {
         if (isTimelineOverflowingHorizontally()) {
-            element.getStyle().setWidth(position * minDayResolutionWidth,
-                    Unit.PX);
+            element.getStyle().setWidth(position * minResolutionWidth, Unit.PX);
         } else {
             if (isAlwaysCalculatePixelWidths()) {
                 element.getStyle().setWidth(position * dayWidthPx, Unit.PX);
@@ -894,44 +1090,75 @@ public class TimelineWidget extends Widget {
         }
     }
 
-    private void addResolutionBlock(Date date, int index, Weekday weekDay,
+    private void addDayResolutionBlock(Date date, int index, boolean weekend) {
+        DivElement resBlock = createResolutionBLock();
+        resBlock.setInnerText(getDayDateTimeFormat().format(date));
+        if (weekend) {
+            resBlock.addClassName(STYLE_WEEKEND);
+        }
+        resolutionDiv.appendChild(resBlock);
+        blocksInRange++;
+    }
+
+    private void addWeekResolutionBlock(Date date, int index, Weekday weekDay,
             boolean weekend, boolean lastBlock) {
         DivElement resBlock;
 
-        if (resolution == Resolution.Week) {
-            if (index == 0 || weekDay == Weekday.First) {
-                resBlock = createResolutionBLock();
-                resBlock.addClassName("w");
-                resBlock.setInnerText(DateTimeFormat.getFormat("d")
-                        .format(date));
-
-                if (index > 0) {
-                    even = !even;
-                }
-                if (even) {
-                    resBlock.addClassName(STYLE_EVEN);
-                }
-
-                // append just one week resolution block per week.
-                resolutionDiv.appendChild(resBlock);
-            }
-
-            if (firstWeek && (weekDay == Weekday.Last || lastBlock)) {
-                firstWeek = false;
-                firstWeekDayCount = index + 1;
-            } else if (lastBlock) {
-                lastWeekDayCount = (index + 1 - firstWeekDayCount) % 7;
-            }
-
-        } else {
+        if (index == 0 || weekDay == Weekday.First) {
             resBlock = createResolutionBLock();
-            resBlock.setInnerText(DateTimeFormat.getFormat("d").format(date));
-            if (weekend) {
-                resBlock.addClassName(STYLE_WEEKEND);
+            resBlock.addClassName("w");
+            resBlock.setInnerText(formatWeekCaption(date));
+
+            if (index > 0) {
+                even = !even;
             }
+            if (even) {
+                resBlock.addClassName(STYLE_EVEN);
+            }
+
+            // append just one week resolution block per week.
             resolutionDiv.appendChild(resBlock);
         }
-        daysInRange++;
+
+        if (firstWeek && (weekDay == Weekday.Last || lastBlock)) {
+            firstWeek = false;
+            firstResBlockCount = index + 1;
+        } else if (lastBlock) {
+            lastResBlockCount = (index + 1 - firstResBlockCount) % 7;
+        }
+
+        blocksInRange++;
+    }
+
+    private void addHourResolutionBlock(Date date, int index, int hourCounter,
+            boolean lastBlock) {
+        DivElement resBlock;
+
+        resBlock = createResolutionBLock();
+        resBlock.addClassName("h");
+        if (getLocaleDataProvider().isTwelveHourClock()) {
+            resBlock.setInnerText(getHour12DateTimeFormat().format(date));
+        } else {
+            resBlock.setInnerText(getHour24DateTimeFormat().format(date));
+        }
+
+        if (index > 0) {
+            even = !even;
+        }
+        if (even) {
+            resBlock.addClassName(STYLE_EVEN);
+        }
+
+        resolutionDiv.appendChild(resBlock);
+
+        if (firstDay && (hourCounter == 25 || lastBlock)) {
+            firstDay = false;
+            firstResBlockCount = index + 1;
+        } else if (lastBlock) {
+            lastResBlockCount = (index + 1 - firstResBlockCount) % 24;
+        }
+
+        blocksInRange++;
     }
 
     private DivElement createResolutionBLock() {
@@ -944,7 +1171,7 @@ public class TimelineWidget extends Widget {
             long endDate, int firstDayOfWeek, int firstDayOfRange, String locale) {
         boolean resolutionChanged = this.resolution != resolution;
         if (resolutionChanged) {
-            minDayResolutionWidth = -1;
+            minResolutionWidth = -1;
         }
 
         if (forceUpdateFlag) {
@@ -960,7 +1187,7 @@ public class TimelineWidget extends Widget {
                         .equals(locale)));
     }
 
-    private int calculateMinDayResolutionWidth() {
+    private int calculateResolutionMinWidth() {
 
         if (resolution == Resolution.Week) {
             return RESOLUTION_WEEK_DAYBLOCK_WIDTH;
@@ -987,11 +1214,29 @@ public class TimelineWidget extends Widget {
         while (getElement().hasChildNodes()) {
             getElement().getLastChild().removeFromParent();
         }
-        yearSpacerBlock = null;
-        monthSpacerBlock = null;
+        spacerBlocks.clear();
         years.clear();
         yearLength.clear();
         months.clear();
         monthLength.clear();
+        days.clear();
+        dayLength.clear();
     }
+
+    public static int getWeekNumber(Date d) {
+        /*
+         * Thanks to stackoverflow.com for a easy function to calculate week
+         * number. See
+         * http://stackoverflow.com/questions/6117814/get-week-of-year
+         * -in-javascript-like-in-php
+         */
+        d = new Date(d.getTime());
+        d.setHours(0);
+        d.setDate(d.getDate() + 4 - (d.getDay() % 7));
+        Date yearStart = new Date(d.getYear(), 0, 1);
+        double weekNo = Math
+                .ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1.0) / 7.0);
+        return (int) weekNo;
+    }
+
 }

@@ -9,7 +9,8 @@
 }
 
 .gantt .year,
-.gantt .month {
+.gantt .month,
+.gantt .day {
 	padding-left: 2px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -20,10 +21,12 @@
     -webkit-box-sizing: border-box;
 }
 
-.v-ie8 .gantt .month.even {
+.v-ie8 .gantt .month.even,
+.v-ie8 .gantt .day.even {
 	background-color: #ddd;
 }
-.gantt .month:nth-of-type(even) {
+.gantt .month:nth-of-type(even),
+.gantt .day:nth-of-type(even) {
     background-color: #ddd;
 }
 .gantt .col.even {

@@ -16,6 +16,9 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     public int firstDayOfRange;
 
     @DelegateToWidget
+    public int firstHourOfRange;
+
+    @DelegateToWidget
     public long startDate = -1;
 
     @DelegateToWidget
@@ -32,6 +35,12 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
 
     @DelegateToWidget
     public boolean yearRowVisible = true;
+
+    @DelegateToWidget
+    public String weekFormat;
+
+    @DelegateToWidget
+    public String dayFormat;
 
     @DelegateToWidget
     public String monthFormat;
