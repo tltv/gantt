@@ -461,11 +461,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         if (startDate == null) {
             return;
         }
-        updateFirshHourOfRange();
+        updateFirstHourOfRange();
         updateFirstDayOfRange();
     }
 
-    private void updateFirshHourOfRange() {
+    private void updateFirstHourOfRange() {
         Calendar cal = getCalendar();
         cal.setTime(startDate);
         getState().firstHourOfRange = cal.get(Calendar.HOUR_OF_DAY);

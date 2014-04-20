@@ -76,6 +76,9 @@ public class DemoUI extends UI {
     private NativeSelect localeSelect;
     private NativeSelect reso;
 
+    private DateField start;
+    private DateField end;
+
     private ClickListener createStepClickListener = new ClickListener() {
 
         @Override
@@ -123,6 +126,7 @@ public class DemoUI extends UI {
         @Override
         public void valueChange(ValueChangeEvent event) {
             gantt.setLocale((Locale) event.getProperty().getValue());
+            syncLocaleAndTimezone();
         }
     };
 
@@ -136,6 +140,7 @@ public class DemoUI extends UI {
                 return;
             }
             gantt.setTimeZone(TimeZone.getTimeZone(tzId));
+            syncLocaleAndTimezone();
         }
     };
 
@@ -244,6 +249,13 @@ public class DemoUI extends UI {
         });
     }
 
+    private void syncLocaleAndTimezone() {
+        start.setLocale(gantt.getLocale());
+        start.setTimeZone(gantt.getTimeZone());
+        end.setLocale(gantt.getLocale());
+        end.setTimeZone(gantt.getTimeZone());
+    }
+
     private Panel createControls() {
         Panel panel = new Panel();
         panel.setWidth(100, Unit.PERCENTAGE);
@@ -253,14 +265,17 @@ public class DemoUI extends UI {
         controls.setMargin(true);
         panel.setContent(controls);
 
-        DateField start = new DateField("Start date");
+        start = new DateField("Start date");
         start.setResolution(Resolution.SECOND);
         start.setImmediate(true);
         start.addValueChangeListener(startDateValueChangeListener);
-        DateField end = new DateField("End date");
+
+        end = new DateField("End date");
         end.setResolution(Resolution.SECOND);
         end.setImmediate(true);
         end.addValueChangeListener(endDateValueChangeListener);
+
+        syncLocaleAndTimezone();
 
         Button createStep = new Button("Create New Step...",
                 createStepClickListener);
