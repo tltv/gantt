@@ -9,7 +9,7 @@ Download latest release jar from http://vaadin.com/directory#addon/gantt
 List of features that are supported:
 * Server side API allows to modify timeline options and step options like start/end date, caption, color and adding/removing steps
 * adjustable timeline range
-* timeline supports Day and Week resolutions 
+* timeline supports Hour, Day and Week resolutions 
 * modify step's start date and end date by dragging and moving the step (move and resize events)
 * scrolling enabled horizontally and vertically for a large chart content
 * scales the small timeline and content width up to fit in the space available
