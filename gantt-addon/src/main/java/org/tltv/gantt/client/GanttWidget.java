@@ -377,7 +377,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
         timeline.update(resolution, startDate, endDate, firstDayOfRange,
-                localeDataProvider);
+                firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
         updateContentWidth();
 

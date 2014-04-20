@@ -35,5 +35,8 @@ public enum Resolution {
      */
     Week,
 
+    /**
+     * Hour resolution divides the timeline in hour blocks.
+     */
     Hour
 }

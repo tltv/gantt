@@ -132,15 +132,10 @@ public class TimelineWidget extends Widget {
     private DivElement resSpacerDiv;
     private Set<DivElement> spacerBlocks = new HashSet<DivElement>();
 
-    private final Map<String, Element> years = new LinkedHashMap<String, Element>();
-    private final Map<String, Integer> yearLength = new LinkedHashMap<String, Integer>();
-
-    private final Map<String, Element> months = new LinkedHashMap<String, Element>();
-    private final Map<String, Integer> monthLength = new LinkedHashMap<String, Integer>();
-
+    private BlockRowData yearRowData = new BlockRowData();
+    private BlockRowData monthRowData = new BlockRowData();
     // days/daysLength are needed only with resolutions smaller than Day.
-    private final Map<String, Element> days = new LinkedHashMap<String, Element>();
-    private final Map<String, Integer> dayLength = new LinkedHashMap<String, Integer>();
+    private BlockRowData dayRowData = new BlockRowData();
 
     private int minResolutionWidth = -1;
     private int minWidth = -1;
@@ -181,13 +176,17 @@ public class TimelineWidget extends Widget {
      * @param firstDayOfRange
      *            First day of the whole range. Allowed values are 1-7. 1 is
      *            Sunday. Required with {@link Resolution#Week}.
+     * @param firstHourOfRange
+     *            First hour of the range. Allowed values are 0-23. Required
+     *            with {@link Resolution#Hour}.
      * @param localeDataProvider
      *            Data provider for locale specific data. month names, first day
      *            of week etc.
      * 
      */
     public void update(Resolution resolution, long startDate, long endDate,
-            int firstDayOfRange, LocaleDataProvider localeDataProvider) {
+            int firstDayOfRange, int firstHourOfRange,
+            LocaleDataProvider localeDataProvider) {
         if (localeDataProvider == null) {
             GWT.log(getClass().getSimpleName()
                     + " requires LocaleDataProvider. Can't complete update(...) operation.");
@@ -195,7 +194,7 @@ public class TimelineWidget extends Widget {
         }
         if (isChanged(resolution, startDate, endDate,
                 localeDataProvider.getFirstDayOfWeek(), firstDayOfRange,
-                localeDataProvider.getLocale())) {
+                firstHourOfRange, localeDataProvider.getLocale())) {
             clear();
             GWT.log(getClass().getSimpleName() + " content cleared.");
         } else {
@@ -213,6 +212,7 @@ public class TimelineWidget extends Widget {
         lastDayOfWeek = (firstDayOfWeek == 1) ? 7 : Math.max(
                 (firstDayOfWeek - 1) % 8, 1);
         this.firstDayOfRange = firstDayOfRange;
+        this.firstHourOfRange = firstHourOfRange;
         monthNames = localeDataProvider.getMonthNames();
         weekdayNames = localeDataProvider.getWeekdayNames();
         this.localeDataProvider = localeDataProvider;
@@ -235,13 +235,13 @@ public class TimelineWidget extends Widget {
         }
 
         if (isYearRowVisible()) {
-            appendTimelineBlocks(years, STYLE_YEAR);
+            appendTimelineBlocks(yearRowData, STYLE_YEAR);
         }
         if (isMonthRowVisible()) {
-            appendTimelineBlocks(months, STYLE_MONTH);
+            appendTimelineBlocks(monthRowData, STYLE_MONTH);
         }
         if (isDayRowVisible()) {
-            appendTimelineBlocks(days, STYLE_DAY);
+            appendTimelineBlocks(dayRowData, STYLE_DAY);
         }
         getElement().appendChild(resolutionDiv);
 
@@ -434,17 +434,16 @@ public class TimelineWidget extends Widget {
 
         if (isYearRowVisible()) {
             // update year block widths
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, years, yearLength);
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, yearRowData);
         }
 
         if (isMonthRowVisible()) {
             // update month block widths
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, months,
-                    monthLength);
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, monthRowData);
         }
 
         if (isDayRowVisible()) {
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, days, dayLength);
+            updateBlockWidths(dayWidthPercentage, dayWidthPx, dayRowData);
         }
 
         if (isAlwaysCalculatePixelWidths()) {
@@ -638,8 +637,8 @@ public class TimelineWidget extends Widget {
         return hour24DateTimeFormat;
     }
 
-    private void appendTimelineBlocks(Map<String, Element> map, String style) {
-        for (Entry<String, Element> entry : map.entrySet()) {
+    private void appendTimelineBlocks(BlockRowData rowData, String style) {
+        for (Entry<String, Element> entry : rowData.getBlockEntries()) {
             getElement().appendChild(entry.getValue());
         }
         if (isAlwaysCalculatePixelWidths()) {
@@ -691,14 +690,13 @@ public class TimelineWidget extends Widget {
     }
 
     private void updateBlockWidths(double dayWidthPercentage,
-            double dayWidthPx, Map<String, Element> elements,
-            Map<String, Integer> slots) {
+            double dayWidthPx, BlockRowData rowData) {
         int lastIndex;
         int i = 0;
-        lastIndex = elements.size() - 1;
-        for (Entry<String, Element> entry : elements.entrySet()) {
+        lastIndex = rowData.size() - 1;
+        for (Entry<String, Element> entry : rowData.getBlockEntries()) {
             setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
-                    entry.getValue(), slots.get(entry.getKey()));
+                    entry.getValue(), rowData.getBlockLength(entry.getKey()));
 
             ieFix(i, lastIndex, entry.getValue());
             i++;
@@ -749,10 +747,6 @@ public class TimelineWidget extends Widget {
         prepareTimelineForResolution(HOUR_INTERVAL, startDate, endDate,
                 new ResolutionBlockAdder() {
 
-                    /*
-                     * TODO set firstHourOfRange. Timeline range time is
-                     * currently reseted to min/max.
-                     */
                     int hourCounter = firstHourOfRange;
 
                     @Override
@@ -854,25 +848,25 @@ public class TimelineWidget extends Widget {
         return dayCounter == 1 || dayCounter == 7;
     }
 
-    private String key(String prefix, Map<String, Integer> map) {
-        return prefix + "_" + (map.size());
+    private String key(String prefix, BlockRowData rowData) {
+        return prefix + "_" + (rowData.size());
 
     }
 
-    private String newKey(String prefix, Map<String, Integer> map) {
-        return prefix + "_" + (map.size() + 1);
+    private String newKey(String prefix, BlockRowData rowData) {
+        return prefix + "_" + (rowData.size() + 1);
     }
 
     private String addBlock(String current, String target, Date date,
-            Map<String, Integer> lengths, Operation operation) {
+            BlockRowData rowData, Operation operation) {
         String key;
         if (!target.equals(current)) {
             current = target;
-            key = newKey("" + current, lengths);
+            key = newKey("" + current, rowData);
             operation.run(target, key, date);
         } else {
-            key = key("" + current, lengths);
-            lengths.put(key, lengths.get(key) + 1);
+            key = key("" + current, rowData);
+            rowData.setBlockLength(key, rowData.getBlockLength(key) + 1);
         }
         return current;
     }
@@ -884,7 +878,7 @@ public class TimelineWidget extends Widget {
     private String addDayBlock(String currentDay, Date date) {
         String day = getDay(date);
 
-        return addBlock(currentDay, day, date, dayLength, new Operation() {
+        return addBlock(currentDay, day, date, dayRowData, new Operation() {
 
             @Override
             public void run(String day, String key, Date date) {
@@ -896,8 +890,8 @@ public class TimelineWidget extends Widget {
     private String addMonthBlock(String currentMonth, Date date) {
         final int month = getMonth(date);
 
-        return addBlock(currentMonth, String.valueOf(month), date, monthLength,
-                new Operation() {
+        return addBlock(currentMonth, String.valueOf(month), date,
+                monthRowData, new Operation() {
 
                     @Override
                     public void run(String target, String key, Date date) {
@@ -909,7 +903,7 @@ public class TimelineWidget extends Widget {
     private String addYearBlock(String currentYear, Date date) {
         String year = getYear(date);
 
-        return addBlock(currentYear, year, date, yearLength, new Operation() {
+        return addBlock(currentYear, year, date, yearRowData, new Operation() {
 
             @Override
             public void run(String year, String key, Date date) {
@@ -920,30 +914,29 @@ public class TimelineWidget extends Widget {
 
     private void addMonthBlock(String key, String text) {
         DivElement monthBlock = createTimelineBlock(key, text, STYLE_MONTH,
-                monthLength, months);
+                monthRowData);
 
-        addEvenStyleIfNeeded(months.size(), monthBlock);
+        addEvenStyleIfNeeded(monthRowData.size(), monthBlock);
     }
 
     private void addYearBlock(String key, String text) {
-        createTimelineBlock(key, text, STYLE_YEAR, yearLength, years);
+        createTimelineBlock(key, text, STYLE_YEAR, yearRowData);
     }
 
     private void addDayBlock(String key, String text) {
         DivElement dayBlock = createTimelineBlock(key, text, STYLE_DAY,
-                dayLength, days);
+                dayRowData);
 
-        addEvenStyleIfNeeded(days.size(), dayBlock);
+        addEvenStyleIfNeeded(dayRowData.size(), dayBlock);
     }
 
     private DivElement createTimelineBlock(String key, String text,
-            String styleSuffix, Map<String, Integer> lengths,
-            Map<String, Element> blocks) {
+            String styleSuffix, BlockRowData rowData) {
         DivElement div = DivElement.as(DOM.createDiv());
         div.setClassName(STYLE_ROW + " " + styleSuffix);
         div.setInnerText(text);
-        lengths.put(key, 1);
-        blocks.put(key, div);
+        rowData.setBlockLength(key, 1);
+        rowData.setBlock(key, div);
         return div;
     }
 
@@ -1168,7 +1161,8 @@ public class TimelineWidget extends Widget {
     }
 
     private boolean isChanged(Resolution resolution, long startDate,
-            long endDate, int firstDayOfWeek, int firstDayOfRange, String locale) {
+            long endDate, int firstDayOfWeek, int firstDayOfRange,
+            int firstHourOfRange, String locale) {
         boolean resolutionChanged = this.resolution != resolution;
         if (resolutionChanged) {
             minResolutionWidth = -1;
@@ -1183,6 +1177,7 @@ public class TimelineWidget extends Widget {
                 || this.endDate != endDate
                 || this.firstDayOfWeek != firstDayOfWeek
                 || this.firstDayOfRange != firstDayOfRange
+                || this.firstHourOfRange != firstHourOfRange
                 || (this.locale == null && locale != null || (this.locale != null && !this.locale
                         .equals(locale)));
     }
@@ -1215,12 +1210,9 @@ public class TimelineWidget extends Widget {
             getElement().getLastChild().removeFromParent();
         }
         spacerBlocks.clear();
-        years.clear();
-        yearLength.clear();
-        months.clear();
-        monthLength.clear();
-        days.clear();
-        dayLength.clear();
+        yearRowData.clear();
+        monthRowData.clear();
+        dayRowData.clear();
     }
 
     public static int getWeekNumber(Date d) {
@@ -1239,4 +1231,38 @@ public class TimelineWidget extends Widget {
         return (int) weekNo;
     }
 
+    private class BlockRowData {
+
+        private final Map<String, Element> blocks = new LinkedHashMap<String, Element>();
+        private final Map<String, Integer> blockLength = new LinkedHashMap<String, Integer>();
+
+        public int size() {
+            return blocks.size();
+        }
+
+        public Element getBlock(String key) {
+            return blocks.get(key);
+        }
+
+        public Set<Entry<String, Element>> getBlockEntries() {
+            return blocks.entrySet();
+        }
+
+        public void setBlock(String key, Element element) {
+            blocks.put(key, element);
+        }
+
+        public Integer getBlockLength(String key) {
+            return blockLength.get(key);
+        }
+
+        public void setBlockLength(String key, Integer length) {
+            blockLength.put(key, length);
+        }
+
+        public void clear() {
+            blocks.clear();
+            blockLength.clear();
+        }
+    }
 }

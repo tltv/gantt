@@ -97,6 +97,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      * Set start date of the Gantt chart's timeline. Time will be adjusted to a
      * minimum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
      * 00:00:00).
+     * <p>
+     * For {@link Resolution#Hour}, given date is adjusted like this: 1/1/2010
+     * 12:12:12 => 1/1/2010 12:00:00.
      * 
      * @param date
      */
@@ -106,7 +109,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
                     "Setting a null start date for the Gantt is not allowed.");
         }
         startDate = resetTimeToMin(date);
-        updateFirstDayOfRange();
+        updateTimelineStartTimeDetails();
         getState().startDate = startDate.getTime();
     }
 
@@ -154,7 +157,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         if (resolution == null) {
             resolution = Resolution.Day;
         }
+        boolean changed = !resolution.equals(getResolution());
         getState().resolution = resolution;
+        if (changed) {
+            // reset start date
+            setStartDate(getStartDate());
+        }
     }
 
     /**
@@ -361,7 +369,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         boolean changed = locale != getLocale();
         super.setLocale(locale);
         if (changed) {
-            updateFirstDayOfRange();
+            updateTimelineStartTimeDetails();
             updateLocale();
         }
     }
@@ -405,7 +413,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
                 zone = TimeZone.getDefault();
             }
             getCalendar().setTimeZone(zone);
-            updateFirstDayOfRange();
+            updateTimelineStartTimeDetails();
             markAsDirty();
         }
     }
@@ -424,8 +432,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     private Date resetTimeToMin(Date date) {
         Calendar cal = getCalendar();
         cal.setTime(date);
-        cal.set(Calendar.HOUR, cal.getMinimum(Calendar.HOUR));
-        cal.set(Calendar.AM_PM, cal.getMinimum(Calendar.AM_PM));
+        if (!getResolution().equals(Resolution.Hour)) {
+            // reset hour only if the resolution is set to DAY, WEEK or MONTH
+            cal.set(Calendar.HOUR, cal.getMinimum(Calendar.HOUR));
+            cal.set(Calendar.AM_PM, cal.getMinimum(Calendar.AM_PM));
+        }
         cal.set(Calendar.MINUTE, cal.getMinimum(Calendar.MINUTE));
         cal.set(Calendar.SECOND, cal.getMinimum(Calendar.SECOND));
         cal.set(Calendar.MILLISECOND, cal.getMinimum(Calendar.MILLISECOND));
@@ -435,12 +446,29 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     private Date resetTimeToMax(Date date) {
         Calendar cal = getCalendar();
         cal.setTime(date);
-        cal.set(Calendar.HOUR, cal.getMaximum(Calendar.HOUR));
-        cal.set(Calendar.AM_PM, cal.getMaximum(Calendar.AM_PM));
+        if (!getResolution().equals(Resolution.Hour)) {
+            // reset hour only if the resolution is set to DAY, WEEK or MONTH
+            cal.set(Calendar.HOUR, cal.getMaximum(Calendar.HOUR));
+            cal.set(Calendar.AM_PM, cal.getMaximum(Calendar.AM_PM));
+        }
         cal.set(Calendar.MINUTE, cal.getMaximum(Calendar.MINUTE));
         cal.set(Calendar.SECOND, cal.getMaximum(Calendar.SECOND));
         cal.set(Calendar.MILLISECOND, cal.getMaximum(Calendar.MILLISECOND));
         return cal.getTime();
+    }
+
+    private void updateTimelineStartTimeDetails() {
+        if (startDate == null) {
+            return;
+        }
+        updateFirshHourOfRange();
+        updateFirstDayOfRange();
+    }
+
+    private void updateFirshHourOfRange() {
+        Calendar cal = getCalendar();
+        cal.setTime(startDate);
+        getState().firstHourOfRange = cal.get(Calendar.HOUR_OF_DAY);
     }
 
     private void updateFirstDayOfRange() {
