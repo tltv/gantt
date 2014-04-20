@@ -74,6 +74,7 @@ public class DemoUI extends UI {
     private Gantt gantt;
 
     private NativeSelect localeSelect;
+    private NativeSelect reso;
 
     private ClickListener createStepClickListener = new ClickListener() {
 
@@ -108,9 +109,13 @@ public class DemoUI extends UI {
 
         @Override
         public void valueChange(ValueChangeEvent event) {
-            gantt.setResolution((org.tltv.gantt.client.shared.Resolution) event
-                    .getProperty().getValue());
+            org.tltv.gantt.client.shared.Resolution res = (org.tltv.gantt.client.shared.Resolution) event
+                    .getProperty().getValue();
+            if (validateResolutionChange(res)) {
+                gantt.setResolution(res);
+            }
         }
+
     };
 
     private ValueChangeListener localeValueChangeListener = new ValueChangeListener() {
@@ -268,7 +273,7 @@ public class DemoUI extends UI {
                 Util.createWidthEditor(gantt),
                 Util.createWidthUnitEditor(gantt));
 
-        NativeSelect reso = new NativeSelect("Resolution");
+        reso = new NativeSelect("Resolution");
         reso.setNullSelectionAllowed(false);
         reso.addItem(org.tltv.gantt.client.shared.Resolution.Hour);
         reso.addItem(org.tltv.gantt.client.shared.Resolution.Day);
@@ -327,6 +332,43 @@ public class DemoUI extends UI {
         controls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
 
         return panel;
+    }
+
+    private boolean validateResolutionChange(
+            final org.tltv.gantt.client.shared.Resolution res) {
+        long max = 4 * 7 * 24 * 60 * 60000L;
+        if (res == org.tltv.gantt.client.shared.Resolution.Hour
+                && (gantt.getEndDate().getTime() - gantt.getStartDate()
+                        .getTime()) > max) {
+
+            // revert to previous resolution
+            setResolution(gantt.getResolution());
+
+            // make user to confirm hour resolution, if the timeline range is
+            // more than one week long.
+            Util.showConfirmationPopup(
+                    "Timeline range is a quite long for hour resolution. Rendering may be slow. Continue anyway?",
+                    new Runnable() {
+
+                        @Override
+                        public void run() {
+                            setResolution(res);
+                            gantt.setResolution(res);
+                        }
+                    });
+            return false;
+        }
+        return true;
+    }
+
+    private void setResolution(
+            org.tltv.gantt.client.shared.Resolution resolution) {
+        reso.removeValueChangeListener(resolutionValueChangeListener);
+        try {
+            reso.setValue(resolution);
+        } finally {
+            reso.addValueChangeListener(resolutionValueChangeListener);
+        }
     }
 
     private MenuBar controlsMenuBar() {

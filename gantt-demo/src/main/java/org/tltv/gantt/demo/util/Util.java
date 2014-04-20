@@ -6,19 +6,28 @@ import java.util.Collection;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window;
 
 public class Util {
 
     public static TextField createNumberEditor(String caption, float value,
             final Component component, final NumberValueChange valueChange) {
-        TextField expandRatioField = new TextField(caption);
-        expandRatioField.setValue("" + value);
-        expandRatioField.setImmediate(true);
-        expandRatioField.addValueChangeListener(new ValueChangeListener() {
+        TextField field = new TextField(caption);
+        field.setColumns(5);
+        field.setValue("" + value);
+        field.setImmediate(true);
+        field.addValueChangeListener(new ValueChangeListener() {
 
             @Override
             public void valueChange(ValueChangeEvent event) {
@@ -32,15 +41,15 @@ public class Util {
                 }
             }
         });
-        return expandRatioField;
+        return field;
     }
 
     public static TextField createTextEditor(String caption, String value,
             final Component component, final TextValueChange valueChange) {
-        TextField expandRatioField = new TextField(caption);
-        expandRatioField.setValue("" + value);
-        expandRatioField.setImmediate(true);
-        expandRatioField.addValueChangeListener(new ValueChangeListener() {
+        TextField field = new TextField(caption);
+        field.setValue("" + value);
+        field.setImmediate(true);
+        field.addValueChangeListener(new ValueChangeListener() {
 
             @Override
             public void valueChange(ValueChangeEvent event) {
@@ -48,7 +57,7 @@ public class Util {
                 valueChange.onValueChange(String.valueOf(v));
             }
         });
-        return expandRatioField;
+        return field;
     }
 
     public static TextField createHeightEditor(final Component component) {
@@ -116,6 +125,52 @@ public class Util {
             }
         });
         return s;
+    }
+
+    public static void showConfirmationPopup(String msg, final Runnable callback) {
+        Window window = new Window();
+        window.setModal(true);
+        window.center();
+        window.setWidth(400, Unit.PIXELS);
+        window.setClosable(false);
+        window.setResizable(false);
+
+        VerticalLayout content = new VerticalLayout();
+        content.setWidth(100, Unit.PERCENTAGE);
+        content.setSpacing(true);
+        content.setMargin(true);
+
+        Label l = new Label(msg);
+        content.addComponent(l);
+
+        HorizontalLayout buttons = new HorizontalLayout();
+        buttons.setSpacing(true);
+        Button ok = new Button("OK");
+        ok.setData(window);
+        ok.addClickListener(new ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+                callback.run();
+                ((Window) event.getButton().getData()).close();
+            }
+        });
+        Button cancel = new Button("Cancel");
+        cancel.setData(window);
+        cancel.addClickListener(new ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+                ((Window) event.getButton().getData()).close();
+            }
+        });
+        buttons.addComponent(ok);
+        buttons.addComponent(cancel);
+        content.addComponent(buttons);
+
+        window.setContent(content);
+
+        UI.getCurrent().addWindow(window);
     }
 
     public interface TextValueChange {
