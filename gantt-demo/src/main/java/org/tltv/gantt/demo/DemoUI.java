@@ -15,6 +15,7 @@
  */
 package org.tltv.gantt.demo;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -79,6 +80,17 @@ public class DemoUI extends UI {
     private DateField start;
     private DateField end;
 
+    private SimpleDateFormat dateFormat = new SimpleDateFormat(
+            "MMM dd HH:mm:ss zzz yyyy");
+
+    private AttachListener ganttAttachListener = new AttachListener() {
+
+        @Override
+        public void attach(AttachEvent event) {
+            syncLocaleAndTimezone();
+        }
+    };
+
     private ClickListener createStepClickListener = new ClickListener() {
 
         @Override
@@ -137,9 +149,9 @@ public class DemoUI extends UI {
             String tzId = (String) event.getProperty().getValue();
             if ("Default".equals(tzId)) {
                 gantt.setTimeZone(null);
-                return;
+            } else {
+                gantt.setTimeZone(TimeZone.getTimeZone(tzId));
             }
-            gantt.setTimeZone(TimeZone.getTimeZone(tzId));
             syncLocaleAndTimezone();
         }
     };
@@ -174,7 +186,7 @@ public class DemoUI extends UI {
         gantt.setHeight(500, Unit.PIXELS);
         gantt.setResizableSteps(true);
         gantt.setMovableSteps(true);
-
+        gantt.addAttachListener(ganttAttachListener);
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         gantt.setStartDate(cal.getTime());
@@ -228,11 +240,14 @@ public class DemoUI extends UI {
 
             @Override
             public void onGanttMove(MoveEvent event) {
+                Date start = new Date(event.getStartDate());
+                Date end = new Date(event.getEndDate());
+
+                dateFormat.setTimeZone(gantt.getTimeZone());
+
                 Notification.show("Moved " + event.getStep().getCaption()
-                        + " to  Start Date: "
-                        + new Date(event.getStartDate()).toString()
-                        + " End Date: "
-                        + new Date(event.getEndDate()).toString());
+                        + " to Start Date: " + dateFormat.format(start)
+                        + " End Date: " + dateFormat.format(end));
             }
         });
 
@@ -240,11 +255,14 @@ public class DemoUI extends UI {
 
             @Override
             public void onGanttResize(ResizeEvent event) {
+                Date start = new Date(event.getStartDate());
+                Date end = new Date(event.getEndDate());
+
+                dateFormat.setTimeZone(gantt.getTimeZone());
+
                 Notification.show("Resized " + event.getStep().getCaption()
-                        + " to  Start Date: "
-                        + new Date(event.getStartDate()).toString()
-                        + " End Date: "
-                        + new Date(event.getEndDate()).toString());
+                        + " to Start Date: " + dateFormat.format(start)
+                        + " End Date: " + dateFormat.format(end));
             }
         });
     }
@@ -254,6 +272,8 @@ public class DemoUI extends UI {
         start.setTimeZone(gantt.getTimeZone());
         end.setLocale(gantt.getLocale());
         end.setTimeZone(gantt.getTimeZone());
+        dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy",
+                gantt.getLocale());
     }
 
     private Panel createControls() {
@@ -274,8 +294,6 @@ public class DemoUI extends UI {
         end.setResolution(Resolution.SECOND);
         end.setImmediate(true);
         end.addValueChangeListener(endDateValueChangeListener);
-
-        syncLocaleAndTimezone();
 
         Button createStep = new Button("Create New Step...",
                 createStepClickListener);
@@ -500,11 +518,15 @@ public class DemoUI extends UI {
         group.bind(bgField, "backgroundColor");
 
         DateField startDate = new DateField("Start date");
+        startDate.setLocale(gantt.getLocale());
+        startDate.setTimeZone(gantt.getTimeZone());
         startDate.setResolution(Resolution.SECOND);
         startDate.setConverter(new DateToLongConverter());
         group.bind(startDate, "startDate");
 
         DateField endDate = new DateField("End date");
+        endDate.setLocale(gantt.getLocale());
+        endDate.setTimeZone(gantt.getTimeZone());
         endDate.setResolution(Resolution.SECOND);
         endDate.setConverter(new DateToLongConverter());
         group.bind(endDate, "endDate");
