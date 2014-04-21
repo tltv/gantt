@@ -26,7 +26,6 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
-import com.vaadin.client.DateTimeService;
 import com.vaadin.client.LocaleNotLoadedException;
 import com.vaadin.client.LocaleService;
 import com.vaadin.client.communication.RpcProxy;
@@ -49,7 +48,8 @@ public class GanttConnector extends AbstractComponentConnector {
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
     String locale;
-    DateTimeService dateTimeService;
+    long timeZoneOffset = 0;
+    GanttDateTimeService dateTimeService;
     boolean notifyHeight = false;
 
     LocaleDataProvider localeDataProvider = new LocaleDataProvider() {
@@ -96,7 +96,7 @@ public class GanttConnector extends AbstractComponentConnector {
         public String formatDate(Date date, String formatStr) {
             if (dateTimeService == null) {
                 try {
-                    dateTimeService = new DateTimeService(getLocale());
+                    dateTimeService = new GanttDateTimeService(getLocale());
                 } catch (LocaleNotLoadedException e) {
                     GWT.log("Could not create DateTimeService for the locale "
                             + getLocale(), e);
@@ -119,6 +119,11 @@ public class GanttConnector extends AbstractComponentConnector {
         @Override
         public String getLocale() {
             return locale;
+        }
+
+        @Override
+        public long getTimeZoneOffset() {
+            return timeZoneOffset;
         }
 
     };
@@ -217,11 +222,10 @@ public class GanttConnector extends AbstractComponentConnector {
         super.onStateChanged(stateChangeEvent);
 
         locale = getState().locale;
+        timeZoneOffset = getState().timeZoneOffset;
         if (stateChangeEvent.hasPropertyChanged("locale")) {
             dateTimeService = null;
         }
-
-        notifyHeight = false;
 
         if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
                 || stateChangeEvent.hasPropertyChanged("yearRowVisible")
@@ -254,5 +258,4 @@ public class GanttConnector extends AbstractComponentConnector {
             }
         });
     }
-
 }

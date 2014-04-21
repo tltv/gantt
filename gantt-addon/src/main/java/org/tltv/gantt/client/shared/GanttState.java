@@ -9,6 +9,8 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
 
     public String locale;
 
+    public long timeZoneOffset;
+
     @DelegateToWidget
     public Resolution resolution = Resolution.Day;
 

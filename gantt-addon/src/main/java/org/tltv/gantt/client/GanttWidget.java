@@ -374,10 +374,13 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
         content.getStyle().setHeight(contentHeight, Unit.PX);
 
+        long offset = getLocaleDataProvider().getTimeZoneOffset();
+        GWT.log("GanttWidget's active TimeZone offset: " + offset);
+
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
-        timeline.update(resolution, startDate, endDate, firstDayOfRange,
-                firstHourOfRange, localeDataProvider);
+        timeline.update(resolution, startDate + offset, endDate + offset,
+                firstDayOfRange, firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
         updateContentWidth();
 
@@ -686,6 +689,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         this.localeDataProvider = localeDataProvider;
     }
 
+    public LocaleDataProvider getLocaleDataProvider() {
+        return localeDataProvider;
+    }
+
     /**
      * Notify this widget if IE is used, and which version.
      * 
@@ -798,8 +805,9 @@ public class GanttWidget extends Widget implements HasEnabled {
                     || step.getEndDate() <= step.getStartDate()) {
                 bar.addClassName(STYLE_INVALID);
             } else {
-                updateBarPercentagePosition(step.getStartDate(),
-                        step.getEndDate(), bar);
+                long offset = getLocaleDataProvider().getTimeZoneOffset();
+                updateBarPercentagePosition(step.getStartDate() + offset,
+                        step.getEndDate() + offset, bar);
             }
             index++;
         }
@@ -1003,10 +1011,11 @@ public class GanttWidget extends Widget implements HasEnabled {
             return;
         }
 
+        long offset = getLocaleDataProvider().getTimeZoneOffset();
         if (move) {
-            getRpc().onMove(barIndex, startDate, endDate);
+            getRpc().onMove(barIndex, startDate - offset, endDate - offset);
         } else {
-            getRpc().onResize(barIndex, startDate, endDate);
+            getRpc().onResize(barIndex, startDate - offset, endDate - offset);
         }
     }
 

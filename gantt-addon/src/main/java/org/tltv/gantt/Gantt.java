@@ -109,8 +109,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
                     "Setting a null start date for the Gantt is not allowed.");
         }
         startDate = resetTimeToMin(date);
-        updateTimelineStartTimeDetails();
         getState().startDate = startDate.getTime();
+        updateTimelineStartTimeDetails();
     }
 
     /**
@@ -127,6 +127,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         }
         endDate = resetTimeToMax(date);
         getState().endDate = endDate.getTime();
+        updateTimelineStartTimeDetails();
     }
 
     /**
@@ -431,7 +432,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
 
     private Date resetTimeToMin(Date date) {
         Calendar cal = getCalendar();
-        cal.setTime(date);
+        cal.setTimeInMillis(date.getTime());
         if (!getResolution().equals(Resolution.Hour)) {
             // reset hour only if the resolution is set to DAY, WEEK or MONTH
             cal.set(Calendar.HOUR, cal.getMinimum(Calendar.HOUR));
@@ -445,7 +446,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
 
     private Date resetTimeToMax(Date date) {
         Calendar cal = getCalendar();
-        cal.setTime(date);
+        cal.setTimeInMillis(date.getTime());
         if (!getResolution().equals(Resolution.Hour)) {
             // reset hour only if the resolution is set to DAY, WEEK or MONTH
             cal.set(Calendar.HOUR, cal.getMaximum(Calendar.HOUR));
@@ -461,14 +462,27 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         if (startDate == null) {
             return;
         }
+        updateTimezoneOffsets();
         updateFirstHourOfRange();
         updateFirstDayOfRange();
+    }
+
+    private void updateTimezoneOffsets() {
+        if (startDate != null) {
+            getState().startDate = startDate.getTime();
+        }
+        if (endDate != null) {
+            getState().endDate = endDate.getTime();
+        }
+        getState().timeZoneOffset = getCalendar().get(Calendar.ZONE_OFFSET)
+                + getCalendar().get(Calendar.DST_OFFSET);
     }
 
     private void updateFirstHourOfRange() {
         Calendar cal = getCalendar();
         cal.setTime(startDate);
         getState().firstHourOfRange = cal.get(Calendar.HOUR_OF_DAY);
+
     }
 
     private void updateFirstDayOfRange() {

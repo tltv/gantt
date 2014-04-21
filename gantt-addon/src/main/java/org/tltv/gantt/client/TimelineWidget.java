@@ -30,6 +30,7 @@ import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.i18n.client.TimeZone;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.AbstractNativeScrollbar;
@@ -87,6 +88,8 @@ public class TimelineWidget extends Widget {
     private boolean ie, ie8, ie9;
 
     private boolean forceUpdateFlag;
+
+    private TimeZone gmt = TimeZone.createTimeZone(0);
 
     private LocaleDataProvider localeDataProvider;
     private DateTimeFormat yearDateTimeFormat;
@@ -975,15 +978,15 @@ public class TimelineWidget extends Widget {
     }
 
     private String getDay(Date date) {
-        return getDayDateTimeFormat().format(date);
+        return getDayDateTimeFormat().format(date, gmt);
     }
 
     private String getYear(Date date) {
-        return getYearDateTimeFormat().format(date);
+        return getYearDateTimeFormat().format(date, gmt);
     }
 
     private int getMonth(Date date) {
-        String m = getMonthDateTimeFormat().format(date);
+        String m = getMonthDateTimeFormat().format(date, gmt);
         return Integer.parseInt(m) - 1;
     }
 
@@ -1085,7 +1088,7 @@ public class TimelineWidget extends Widget {
 
     private void addDayResolutionBlock(Date date, int index, boolean weekend) {
         DivElement resBlock = createResolutionBLock();
-        resBlock.setInnerText(getDayDateTimeFormat().format(date));
+        resBlock.setInnerText(getDayDateTimeFormat().format(date, gmt));
         if (weekend) {
             resBlock.addClassName(STYLE_WEEKEND);
         }
@@ -1130,9 +1133,9 @@ public class TimelineWidget extends Widget {
         resBlock = createResolutionBLock();
         resBlock.addClassName("h");
         if (getLocaleDataProvider().isTwelveHourClock()) {
-            resBlock.setInnerText(getHour12DateTimeFormat().format(date));
+            resBlock.setInnerText(getHour12DateTimeFormat().format(date, gmt));
         } else {
-            resBlock.setInnerText(getHour24DateTimeFormat().format(date));
+            resBlock.setInnerText(getHour24DateTimeFormat().format(date, gmt));
         }
 
         if (index > 0) {

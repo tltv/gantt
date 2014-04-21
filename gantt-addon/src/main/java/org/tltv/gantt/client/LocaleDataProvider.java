@@ -65,4 +65,11 @@ public interface LocaleDataProvider {
      * @return Locale
      */
     String getLocale();
+
+    /**
+     * Return current timezone offset + daylight saving offset.
+     * 
+     * @return
+     */
+    long getTimeZoneOffset();
 }
