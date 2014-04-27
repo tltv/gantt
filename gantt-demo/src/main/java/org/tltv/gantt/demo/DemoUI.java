@@ -268,10 +268,19 @@ public class DemoUI extends UI {
     }
 
     private void syncLocaleAndTimezone() {
-        start.setLocale(gantt.getLocale());
-        start.setTimeZone(gantt.getTimeZone());
-        end.setLocale(gantt.getLocale());
-        end.setTimeZone(gantt.getTimeZone());
+        start.removeValueChangeListener(startDateValueChangeListener);
+        end.removeValueChangeListener(endDateValueChangeListener);
+        try {
+            start.setLocale(gantt.getLocale());
+            start.setTimeZone(gantt.getTimeZone());
+            start.setValue(gantt.getStartDate());
+            end.setLocale(gantt.getLocale());
+            end.setTimeZone(gantt.getTimeZone());
+            end.setValue(gantt.getEndDate());
+        } finally {
+            start.addValueChangeListener(startDateValueChangeListener);
+            end.addValueChangeListener(endDateValueChangeListener);
+        }
         dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy",
                 gantt.getLocale());
     }
