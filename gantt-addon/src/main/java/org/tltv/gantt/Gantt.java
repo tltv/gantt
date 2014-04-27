@@ -38,15 +38,17 @@ import com.vaadin.util.ReflectTools;
 /**
  * Gantt Chart server side component.
  * <p>
- * Default timeline resolution is {@link Resolution#Day}. Timerange is not set
- * by default. First thing to do after construction is to set timeline range by
- * {@link #setStartDate(Date)} and {@link #setEndDate(Date)}.
+ * Default timeline resolution is {@link Resolution#Day}. Timeline range is not
+ * set by default. First thing to do after construction is to set timeline range
+ * by {@link #setStartDate(Date)} and {@link #setEndDate(Date)}.
  * <p>
- * Notice current Locale in effect. It's safest to set the new Locale first (if
- * it's different than active session's current Locale), and set the dates after
- * that. Date range's time is adjusted internally to start from minimum
- * 00:00:00.000 and end to maximum 23:59:59:999 (for 24h locale, 12H is also
- * noticed).
+ * Notice current Locale and Timezone in effect. It's safest to set the new
+ * Locale and/or Timezone first (if it's different than active session's current
+ * Locale), and set the dates after that.
+ * <p>
+ * With a resolution {@link Resolution#Week} and {@link Resolution#Day} timeline
+ * range's time is adjusted internally to start from minimum 00:00:00.000 and
+ * end to maximum 23:59:59:999 (for 24h locale, 12H is also noticed).
  * 
  * @author Tltv
  * 
@@ -94,8 +96,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
-     * Set start date of the Gantt chart's timeline. Time will be adjusted to a
-     * minimum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
+     * Set start date of the Gantt chart's timeline. When resolution is
+     * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
+     * to a minimum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
      * 00:00:00).
      * <p>
      * For {@link Resolution#Hour}, given date is adjusted like this: 1/1/2010
@@ -108,14 +111,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
             throw new UnsupportedOperationException(
                     "Setting a null start date for the Gantt is not allowed.");
         }
-        startDate = resetTimeToMin(date);
-        getState().startDate = startDate.getTime();
+        setInternalStartDate(date);
         updateTimelineStartTimeDetails();
     }
 
     /**
-     * Set end date of the Gantt chart's timeline. Time will be adjusted to a
-     * maximum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
+     * Set end date of the Gantt chart's timeline. When resolution is
+     * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
+     * to a maximum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
      * 23:59:59).
      * 
      * @param date
@@ -125,8 +128,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
             throw new UnsupportedOperationException(
                     "Setting a null end date for the Gantt is not allowed.");
         }
-        endDate = resetTimeToMax(date);
-        getState().endDate = endDate.getTime();
+        setInternalEndDate(date);
         updateTimelineStartTimeDetails();
     }
 
@@ -161,8 +163,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         boolean changed = !resolution.equals(getResolution());
         getState().resolution = resolution;
         if (changed) {
-            // reset start date
-            setStartDate(getStartDate());
+            // adjust timeline range for the new resolution.
+            setInternalStartDate(getStartDate());
+            setInternalEndDate(getEndDate());
+            updateTimelineStartTimeDetails();
         }
     }
 
@@ -408,12 +412,16 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      *            Timezone
      */
     public void setTimeZone(TimeZone zone) {
-        timezone = zone;
-        if (!getCalendar().getTimeZone().equals(zone)) {
+        if (!getTimeZone().equals(zone)) {
+            timezone = zone; // internal timezone cmay be null
             if (zone == null) {
                 zone = TimeZone.getDefault();
             }
             getCalendar().setTimeZone(zone);
+            // refresh timeline range. Depending on the resolution, it might
+            // need some adjusting.
+            setInternalStartDate(getStartDate());
+            setInternalEndDate(getEndDate());
             updateTimelineStartTimeDetails();
             markAsDirty();
         }
@@ -428,6 +436,22 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
             }
         }
         return calendar;
+    }
+
+    private void setInternalStartDate(Date date) {
+        if (date == null) {
+            return;
+        }
+        startDate = resetTimeToMin(date);
+        getState().startDate = startDate.getTime();
+    }
+
+    private void setInternalEndDate(Date date) {
+        if (date == null) {
+            return;
+        }
+        endDate = resetTimeToMax(date);
+        getState().endDate = endDate.getTime();
     }
 
     private Date resetTimeToMin(Date date) {
