@@ -1,7 +1,9 @@
 @import "../reindeer/reindeer.scss";
+@import "addons.scss";
 
 .demo {
 
 	@include reindeer;
+	@include addons;
 	
 }

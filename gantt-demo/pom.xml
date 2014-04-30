@@ -75,7 +75,7 @@
 		<dependency>
 			<groupId>org.tltv.gantt</groupId>
 			<artifactId>gantt-addon</artifactId>
-			<version>${version}</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -173,6 +173,7 @@
 							<goal>resources</goal>
 							<goal>update-widgetset</goal>
 							<goal>compile</goal>
+							<goal>update-theme</goal>
 						</goals>
 					</execution>
 				</executions>
