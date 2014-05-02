@@ -136,8 +136,9 @@ public class GanttConnector extends AbstractComponentConnector {
         }
 
         @Override
-        public void onMove(int rowIndex, long startDate, long endDate) {
-            rpc.onMove(rowIndex, startDate, endDate);
+        public void onMove(int rowIndex, int newRowIndex, long startDate,
+                long endDate) {
+            rpc.onMove(rowIndex, newRowIndex, startDate, endDate);
         }
 
         @Override
