@@ -5,7 +5,7 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-addon</artifactId>
 	<packaging>jar</packaging>
-	<version>0.2.1</version>
+	<version>0.2.2</version>
 	<name>Gantt</name>
 
 	<properties>
