@@ -68,8 +68,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         }
 
         @Override
-        public void onMove(int stepIndex, long startDate, long endDate) {
-            fireMoveEvent(stepIndex, startDate, endDate);
+        public void onMove(int stepIndex, int newRowIndex, long startDate,
+                long endDate) {
+            fireMoveEvent(stepIndex, newRowIndex, startDate, endDate);
         }
 
         @Override
@@ -557,7 +558,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         fireEvent(new ClickEvent(this, getState().steps.get(stepIndex)));
     }
 
-    protected void fireMoveEvent(int stepIndex, long startDate, long endDate) {
+    protected void fireMoveEvent(int stepIndex, int newRowIndex,
+            long startDate, long endDate) {
         Step step = getState().steps.get(stepIndex);
         step.setStartDate(startDate);
         step.setEndDate(endDate);

@@ -834,9 +834,14 @@ public class GanttWidget extends Widget implements HasEnabled {
      * 
      * @param bar
      *            Moved Bar element
+     * @param deltay
      */
-    protected void moveCompleted(Element bar) {
-        internalMoveOrResizeCompleted(bar, true);
+    protected void moveCompleted(Element bar, int y) {
+        double deltay = y - capturePoint.getY();
+        GWT.log("Position delta y: " + deltay + "px");
+
+        Element newPosition = findStepElement(bar, y, deltay);
+        internalMoveOrResizeCompleted(bar, newPosition, true);
     }
 
     /**
@@ -847,7 +852,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      *            Resized Bar element
      */
     protected void resizingCompleted(Element bar) {
-        internalMoveOrResizeCompleted(bar, false);
+        internalMoveOrResizeCompleted(bar, null, false);
     }
 
     protected void onTouchOrMouseDown(NativeEvent event) {
@@ -909,7 +914,7 @@ public class GanttWidget extends Widget implements HasEnabled {
                 // moving in progress
                 removeMovingStyles(bar);
                 if (moveInProgress) {
-                    moveCompleted(bar);
+                    moveCompleted(bar, getTouchOrMouseClientY(event));
                 } else {
                     resetBarPosition(bar);
                 }
@@ -956,8 +961,9 @@ public class GanttWidget extends Widget implements HasEnabled {
         disallowClickTimer.cancel();
         clickOnNextMouseUp = false;
 
-        // calculate delta x by original position and the current one.
+        // calculate delta x and y by original position and the current one.
         double deltax = getTouchOrMouseClientX(event) - capturePoint.getX();
+        double deltay = getTouchOrMouseClientY(event) - capturePoint.getY();
 
         GWT.log("Position delta x: " + deltax + "px");
 
@@ -971,13 +977,65 @@ public class GanttWidget extends Widget implements HasEnabled {
             addResizingStyles(bar);
             bar.getStyle().clearBackgroundColor();
         } else if (isMovableSteps()) {
-            moveInProgress = deltax != 0.0;
+            updateMoveInProgressFlag(deltax, deltay);
             updateBarMovingPosition(bar, deltax);
             addMovingStyles(bar);
             bar.getStyle().clearBackgroundColor();
         }
 
         event.stopPropagation();
+    }
+
+    protected void updateMoveInProgressFlag(double deltax, double deltay) {
+        moveInProgress = deltax != 0.0;
+    }
+
+    /**
+     * Helper method to find Step element by given starting point and y-position
+     * and delta-y. Starting point is there to optimize performance a bit as
+     * there's no need to iterate through every single step element.
+     * 
+     * @param startFromBar
+     *            Starting point element
+     * @param y
+     *            target y-axis position
+     * @param deltay
+     *            delta-y relative to starting point element.
+     * @return Step element at y-axis position. May be same element as given
+     *         startFromBar element.
+     */
+    protected Element findStepElement(Element startFromBar, int y, double deltay) {
+        if (isBetween(y, startFromBar.getAbsoluteTop(),
+                startFromBar.getAbsoluteBottom())) {
+            return startFromBar;
+        }
+        int startIndex = getChildIndex(content, startFromBar);
+        Element barCanditate;
+        int i = startIndex;
+        if (deltay > 0) {
+            i++;
+            for (; i < content.getChildCount(); i++) {
+                barCanditate = Element.as(content.getChild(i));
+                if (isBetween(y, barCanditate.getAbsoluteTop(),
+                        barCanditate.getAbsoluteBottom())) {
+                    return barCanditate;
+                }
+            }
+        } else if (deltay < 0) {
+            i--;
+            for (; i >= getAdditonalContentElementCount(); i--) {
+                barCanditate = Element.as(content.getChild(i));
+                if (isBetween(y, barCanditate.getAbsoluteTop(),
+                        barCanditate.getAbsoluteBottom())) {
+                    return barCanditate;
+                }
+            }
+        }
+        return startFromBar;
+    }
+
+    private boolean isBetween(int v, int min, int max) {
+        return v >= min && v <= max;
     }
 
     private void updateMoveElementFor(Element target) {
@@ -995,8 +1053,13 @@ public class GanttWidget extends Widget implements HasEnabled {
         moveElement.getStyle().setDisplay(Display.NONE);
     }
 
-    private void internalMoveOrResizeCompleted(Element bar, boolean move) {
+    private void internalMoveOrResizeCompleted(Element bar,
+            Element newPosition, boolean move) {
         int barIndex = getStepIndex(content, bar);
+        int newBarIndex = barIndex;
+        if (newPosition != null && bar != newPosition) {
+            newBarIndex = getStepIndex(content, newPosition);
+        }
 
         double left = parseSize(bar.getStyle().getLeft(), "px");
         long startDate = timeline.getDateForLeftPosition(left);
@@ -1013,7 +1076,8 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         long offset = getLocaleDataProvider().getTimeZoneOffset();
         if (move) {
-            getRpc().onMove(barIndex, startDate - offset, endDate - offset);
+            getRpc().onMove(barIndex, newBarIndex, startDate - offset,
+                    endDate - offset);
         } else {
             getRpc().onResize(barIndex, startDate - offset, endDate - offset);
         }
