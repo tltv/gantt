@@ -16,7 +16,9 @@
 package org.tltv.gantt.demo;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -46,6 +48,7 @@ import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
@@ -511,7 +514,10 @@ public class DemoUI extends UI {
 
     private void openStepEditor(Step step) {
         final Window win = new Window("Step Editor");
+        win.setResizable(false);
         win.center();
+
+        final Collection<Component> hidden = new ArrayList<Component>();
 
         BeanItem<Step> item = new BeanItem<Step>(step);
 
@@ -522,9 +528,18 @@ public class DemoUI extends UI {
         captionField.setNullRepresentation("");
         group.bind(captionField, "caption");
 
+        NativeSelect captionMode = new NativeSelect("Caption Mode");
+        captionMode.addItem(Step.CaptionMode.TEXT);
+        captionMode.addItem(Step.CaptionMode.HTML);
+        group.bind(captionMode, "captionMode");
+        captionMode.setVisible(false);
+        hidden.add(captionMode);
+
         TextField bgField = new TextField("Background color");
         bgField.setNullRepresentation("");
         group.bind(bgField, "backgroundColor");
+        bgField.setVisible(false);
+        hidden.add(bgField);
 
         DateField startDate = new DateField("Start date");
         startDate.setLocale(gantt.getLocale());
@@ -540,15 +555,28 @@ public class DemoUI extends UI {
         endDate.setConverter(new DateToLongConverter());
         group.bind(endDate, "endDate");
 
+        CheckBox showMore = new CheckBox("Show all settings");
+        showMore.addValueChangeListener(new ValueChangeListener() {
+
+            @Override
+            public void valueChange(ValueChangeEvent event) {
+                for (Component c : hidden) {
+                    c.setVisible((Boolean) event.getProperty().getValue());
+                }
+            }
+        });
+
         VerticalLayout content = new VerticalLayout();
         content.setMargin(true);
         content.setSpacing(true);
         win.setContent(content);
 
         content.addComponent(captionField);
+        content.addComponent(captionMode);
         content.addComponent(bgField);
         content.addComponent(startDate);
         content.addComponent(endDate);
+        content.addComponent(showMore);
 
         HorizontalLayout buttons = new HorizontalLayout();
         content.addComponent(buttons);
