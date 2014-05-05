@@ -772,14 +772,20 @@ public class GanttWidget extends Widget implements HasEnabled {
         bar.setClassName(STYLE_BAR);
         bar.getStyle().setBackgroundColor(step.getBackgroundColor());
 
+        if (step.getStyleName() != null
+                && !step.getStyleName().trim().isEmpty()) {
+            bar.addClassName(step.getStyleName());
+        }
+
         DivElement caption = DivElement.as(DOM.createDiv());
         caption.setClassName(STYLE_BAR_LABEL);
-	      if (step.getCaptionStyle() == Step.CaptionStyle.HTML) {
-		        caption.setInnerHTML(step.getCaption());
-	      }
-	      else {
-		        caption.setInnerText(step.getCaption());
-	      }
+
+        if (step.getCaptionMode() == Step.CaptionMode.HTML) {
+            caption.setInnerHTML(step.getCaption());
+        } else {
+            caption.setInnerText(step.getCaption());
+        }
+
         bar.appendChild(caption);
 
         content.appendChild(bar);
