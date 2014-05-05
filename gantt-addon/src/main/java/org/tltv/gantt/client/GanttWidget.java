@@ -774,7 +774,12 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         DivElement caption = DivElement.as(DOM.createDiv());
         caption.setClassName(STYLE_BAR_LABEL);
-        caption.setInnerText(step.getCaption());
+	      if (step.getCaptionStyle() == Step.CaptionStyle.HTML) {
+		        caption.setInnerHTML(step.getCaption());
+	      }
+	      else {
+		        caption.setInnerText(step.getCaption());
+	      }
         bar.appendChild(caption);
 
         content.appendChild(bar);
