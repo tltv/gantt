@@ -829,11 +829,12 @@ public class GanttWidget extends Widget implements HasEnabled {
         if (element == null) {
             return null;
         }
-        Element parent = element.getParentElement();
-        if (parent == content) {
-            return element;
+        Element parent = element;
+        while (parent.getParentElement() != null
+                && parent.getParentElement() != content) {
+            parent = parent.getParentElement();
         }
-        if (parent != null && parent.getParentElement() == content) {
+        if (parent.getParentElement() == content) {
             return parent;
         }
         return null;
