@@ -965,7 +965,10 @@ public class TimelineWidget extends Widget {
 
     private String formatWeekCaption(Date date) {
         if (weekFormat == null || weekFormat.isEmpty()) {
-            return "" + getWeekNumber(date);
+            return ""
+                    + getWeekNumber(date, getLocaleDataProvider()
+                            .getTimeZoneOffset(), getLocaleDataProvider()
+                            .getFirstDayOfWeek());
         }
         return getLocaleDataProvider().formatDate(date, weekFormat);
     }
@@ -1218,7 +1221,8 @@ public class TimelineWidget extends Widget {
         dayRowData.clear();
     }
 
-    public static int getWeekNumber(Date d) {
+    public static int getWeekNumber(Date d, long timezoneOffset,
+            int firstDayOfWeek) {
         /*
          * Thanks to stackoverflow.com for a easy function to calculate week
          * number. See
@@ -1227,8 +1231,12 @@ public class TimelineWidget extends Widget {
          */
         d = new Date(d.getTime());
         d.setHours(0);
-        d.setDate(d.getDate() + 4 - (d.getDay() % 7));
-        Date yearStart = new Date(d.getYear(), 0, 1);
+        d.setMinutes(0);
+        d.setSeconds(0);
+        int day = d.getDay() % 7;
+        d.setDate(d.getDate() + 4 - ((d.getDay() == 0) ? 7 : d.getDay()));
+        Date yearStart = new Date(new Date(d.getYear(), 0, 1).getTime()
+                + timezoneOffset);
         double weekNo = Math
                 .ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1.0) / 7.0);
         return (int) weekNo;
