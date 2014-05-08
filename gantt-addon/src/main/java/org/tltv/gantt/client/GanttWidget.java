@@ -19,6 +19,7 @@ package org.tltv.gantt.client;
 import java.util.Collection;
 import java.util.Date;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 
@@ -78,7 +79,7 @@ import com.google.gwt.user.client.ui.Widget;
  * that, if client uses IE, make sure to call
  * {@link #setBrowserInfo(boolean, boolean, boolean)} to let this widget know
  * that. And if client supports touch events, let this widget know that by
- * calling {@link #setTouchSupportted(boolean)} method before initWidget.
+ * calling {@link #setTouchSupported(boolean)} method before initWidget.
  * <p>
  * Sample code snippet:
  * 
@@ -157,6 +158,9 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
     protected Element targetBarElement;
+
+		// this is variable is used to memorize the Y origin to scroll the container
+		int containerScrollStartPosY = -1;
 
     // additional element that appears when moving or resizing
     protected DivElement moveElement = DivElement.as(DOM.createDiv());
@@ -288,11 +292,10 @@ public class GanttWidget extends Widget implements HasEnabled {
     };
 
     private TouchStartHandler touchStartHandler = new TouchStartHandler() {
-
         @Override
         public void onTouchStart(TouchStartEvent event) {
             if (event.getTargetTouches().length() == 1) {
-                GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
+	            GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
             }
             event.preventDefault();
         }
@@ -302,17 +305,16 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onTouchEnd(TouchEndEvent event) {
-            GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
-            event.preventDefault();
+        GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
+        event.preventDefault();
         }
     };
 
     private TouchMoveHandler touchMoveHandler = new TouchMoveHandler() {
-
         @Override
         public void onTouchMove(TouchMoveEvent event) {
             if (event.getChangedTouches().length() == 1) {
-                GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
+              GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
             }
             event.preventDefault();
         }
@@ -597,7 +599,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param touchSupported
      *            True enables touch support.
      */
-    public void setTouchSupportted(boolean touchSupported) {
+    public void setTouchSupported(boolean touchSupported) {
         this.touchSupported = touchSupported;
     }
 
@@ -825,7 +827,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
         Element parent = element;
 	      while (parent.getParentElement() != null && parent.getParentElement() != content) {
-		      parent = parent.getParentElement();
+		        parent = parent.getParentElement();
 	      }
         if (parent.getParentElement() == content) {
             return parent;
@@ -839,7 +841,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      * 
      * @param bar
      *            Moved Bar element
-     * @param deltay
+     * @param y
      */
     protected void moveCompleted(Element bar, int y) {
         double deltay = y - capturePoint.getY();
@@ -861,7 +863,18 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     protected void onTouchOrMouseDown(NativeEvent event) {
-        Element bar = getBar(event);
+	      JavaScriptObject target = event.getEventTarget().cast();
+	      if (touchSupported) {
+		      if (target == container || target == content || (!isMovableSteps())) {
+		        containerScrollStartPosY = container.getScrollTop() + event.getTouches().get(0).getPageY();
+		        return;
+	        }
+	        else {
+		        containerScrollStartPosY = -1;
+	        }
+	      }
+
+	      Element bar = getBar(event);
         if (bar == null) {
             return;
         }
@@ -872,6 +885,7 @@ public class GanttWidget extends Widget implements HasEnabled {
                 getTouchOrMouseClientY(event));
         movePoint = new Point(getTouchOrMouseClientX(event),
                 getTouchOrMouseClientY(event));
+
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
         capturePointLeftPx = bar.getOffsetLeft();
@@ -891,6 +905,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     protected void onTouchOrMouseUp(NativeEvent event) {
+	      containerScrollStartPosY = -1;
+
         if (targetBarElement == null) {
             return;
         }
@@ -951,10 +967,15 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     protected void onTouchOrMouseMove(NativeEvent event) {
-        Element bar = getBar(event);
+	    // did we intend to scroll the container?
+	    if (containerScrollStartPosY != -1) {
+		    container.setScrollTop(containerScrollStartPosY - event.getChangedTouches().get(0).getPageY());
+				return;
+	    }
+
+	    Element bar = getBar(event);
         if (bar != null) {
-            movePoint = new Point(getTouchOrMouseClientX(event),
-                    getTouchOrMouseClientY(event));
+            movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
             showResizingPointer(bar, detectResizing(bar));
         }
 

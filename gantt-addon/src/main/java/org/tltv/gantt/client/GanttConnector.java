@@ -191,7 +191,7 @@ public class GanttConnector extends AbstractComponentConnector {
         getWidget().setAlwaysCalculatePixelWidths(
                 BrowserInfo.get().isSafari() || BrowserInfo.get().isOpera()
                         || BrowserInfo.get().isIE8());
-        getWidget().setTouchSupportted(BrowserInfo.get().isTouchDevice());
+        getWidget().setTouchSupported(BrowserInfo.get().isTouchDevice());
         getWidget().initWidget(ganttRpc, localeDataProvider);
         getLayoutManager().addElementResizeListener(getWidget().getElement(),
                 widgetResizeListener);
