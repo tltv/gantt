@@ -9,7 +9,7 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
 
     public String locale;
 
-    public long timeZoneOffset;
+    public Long timeZoneOffset = Long.valueOf(0);
 
     @DelegateToWidget
     public Resolution resolution = Resolution.Day;
@@ -21,10 +21,10 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     public int firstHourOfRange;
 
     @DelegateToWidget
-    public long startDate = -1;
+    public Long startDate = Long.valueOf(-1);
 
     @DelegateToWidget
-    public long endDate = -1;
+    public Long endDate = Long.valueOf(-1);
 
     @DelegateToWidget
     public boolean resizableSteps = true;

@@ -36,14 +36,6 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.dom.client.MsPointerCancelEvent;
-import com.google.gwt.event.dom.client.MsPointerCancelHandler;
-import com.google.gwt.event.dom.client.MsPointerDownEvent;
-import com.google.gwt.event.dom.client.MsPointerDownHandler;
-import com.google.gwt.event.dom.client.MsPointerMoveEvent;
-import com.google.gwt.event.dom.client.MsPointerMoveHandler;
-import com.google.gwt.event.dom.client.MsPointerUpEvent;
-import com.google.gwt.event.dom.client.MsPointerUpHandler;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.dom.client.TouchCancelEvent;
@@ -60,6 +52,14 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.client.event.PointerCancelEvent;
+import com.vaadin.client.event.PointerCancelHandler;
+import com.vaadin.client.event.PointerDownEvent;
+import com.vaadin.client.event.PointerDownHandler;
+import com.vaadin.client.event.PointerMoveEvent;
+import com.vaadin.client.event.PointerMoveHandler;
+import com.vaadin.client.event.PointerUpEvent;
+import com.vaadin.client.event.PointerUpHandler;
 
 /**
  * GWT Gantt chart widget. Includes {@link TimelineWidget} to show timeline, and
@@ -230,10 +230,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     };
 
-    private MsPointerDownHandler msPointerDownHandler = new MsPointerDownHandler() {
+    private PointerDownHandler msPointerDownHandler = new PointerDownHandler() {
 
         @Override
-        public void onPointerDown(MsPointerDownEvent event) {
+        public void onPointerDown(PointerDownEvent event) {
             if (currentPointerEventId == -1) {
                 currentPointerEventId = event.getPointerId();
             } else {
@@ -249,10 +249,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     };
 
-    private MsPointerUpHandler msPointerUpHandler = new MsPointerUpHandler() {
+    private PointerUpHandler msPointerUpHandler = new PointerUpHandler() {
 
         @Override
-        public void onPointerUp(MsPointerUpEvent event) {
+        public void onPointerUp(PointerUpEvent event) {
             currentPointerEventId = -1;
             pointerTouchStartedTimer.cancel();
             pendingPointerDownEvent = null;
@@ -261,10 +261,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     };
 
-    private MsPointerMoveHandler msPointerMoveHandler = new MsPointerMoveHandler() {
+    private PointerMoveHandler msPointerMoveHandler = new PointerMoveHandler() {
 
         @Override
-        public void onPointerMove(MsPointerMoveEvent event) {
+        public void onPointerMove(PointerMoveEvent event) {
             if (capturePoint == null) {
                 return;
             }
@@ -280,10 +280,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     };
 
-    private MsPointerCancelHandler msPointerCancelHandler = new MsPointerCancelHandler() {
+    private PointerCancelHandler msPointerCancelHandler = new PointerCancelHandler() {
 
         @Override
-        public void onPointerCancel(MsPointerCancelEvent event) {
+        public void onPointerCancel(PointerCancelEvent event) {
             currentPointerEventId = -1;
             pointerTouchStartedTimer.cancel();
             pendingPointerDownEvent = null;
@@ -479,8 +479,8 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param startDate
      *            New start date in milliseconds.
      */
-    public void setStartDate(long startDate) {
-        this.startDate = startDate;
+    public void setStartDate(Long startDate) {
+        this.startDate = startDate.longValue();
     }
 
     /**
@@ -500,8 +500,8 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param endDate
      *            New end date in milliseconds.
      */
-    public void setEndDate(long endDate) {
-        this.endDate = endDate;
+    public void setEndDate(Long endDate) {
+        this.endDate = endDate.longValue();
     }
 
     /**
@@ -598,11 +598,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         addDomHandler(scrollHandler, ScrollEvent.getType());
         if (isMsTouchSupported()) {
             // IE10 pointer events (ms-prefixed events)
-            addDomHandler(msPointerDownHandler, MsPointerDownEvent.getType());
-            addDomHandler(msPointerUpHandler, MsPointerUpEvent.getType());
-            addDomHandler(msPointerMoveHandler, MsPointerMoveEvent.getType());
-            addDomHandler(msPointerCancelHandler,
-                    MsPointerCancelEvent.getType());
+            addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
+            addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
+            addDomHandler(msPointerMoveHandler, PointerMoveEvent.getType());
+            addDomHandler(msPointerCancelHandler, PointerCancelEvent.getType());
 
         } else if (touchSupported) {
             // touch events replaces mouse events
@@ -1171,12 +1170,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private int getChildIndex(Element parent, Element child) {
-        return DOM
-                .getChildIndex(
-                        (com.google.gwt.user.client.Element) com.google.gwt.user.client.Element
-                                .as(parent),
-                        (com.google.gwt.user.client.Element) com.google.gwt.user.client.Element
-                                .as(child));
+        return DOM.getChildIndex(com.google.gwt.user.client.Element.as(parent),
+                com.google.gwt.user.client.Element.as(child));
     }
 
     private boolean detectResizing(Element bar) {

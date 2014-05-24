@@ -499,8 +499,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         if (endDate != null) {
             getState().endDate = endDate.getTime();
         }
-        getState().timeZoneOffset = getCalendar().get(Calendar.ZONE_OFFSET)
-                + getCalendar().get(Calendar.DST_OFFSET);
+        getState().timeZoneOffset = Long.valueOf(getCalendar().get(
+                Calendar.ZONE_OFFSET)
+                + getCalendar().get(Calendar.DST_OFFSET));
     }
 
     private void updateFirstHourOfRange() {
