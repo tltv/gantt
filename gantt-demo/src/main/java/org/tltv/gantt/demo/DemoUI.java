@@ -86,6 +86,8 @@ public class DemoUI extends UI {
     private SimpleDateFormat dateFormat = new SimpleDateFormat(
             "MMM dd HH:mm:ss zzz yyyy");
 
+    private HorizontalLayout controls;
+
     private AttachListener ganttAttachListener = new AttachListener() {
 
         @Override
@@ -141,6 +143,16 @@ public class DemoUI extends UI {
         @Override
         public void valueChange(ValueChangeEvent event) {
             gantt.setLocale((Locale) event.getProperty().getValue());
+
+            // workaround for Vaadin bug #13722. Re-create date fields to avoid
+            // NPE. TODO remove this, when fixed to core.
+            DateField newStartField = createStartDateField();
+            DateField newEndField = createEndDateField();
+            controls.replaceComponent(start, newStartField);
+            controls.replaceComponent(end, newEndField);
+            start = newStartField;
+            end = newEndField;
+
             syncLocaleAndTimezone();
         }
     };
@@ -292,20 +304,13 @@ public class DemoUI extends UI {
         Panel panel = new Panel();
         panel.setWidth(100, Unit.PERCENTAGE);
 
-        HorizontalLayout controls = new HorizontalLayout();
+        controls = new HorizontalLayout();
         controls.setSpacing(true);
         controls.setMargin(true);
         panel.setContent(controls);
 
-        start = new DateField("Start date");
-        start.setResolution(Resolution.SECOND);
-        start.setImmediate(true);
-        start.addValueChangeListener(startDateValueChangeListener);
-
-        end = new DateField("End date");
-        end.setResolution(Resolution.SECOND);
-        end.setImmediate(true);
-        end.addValueChangeListener(endDateValueChangeListener);
+        start = createStartDateField();
+        end = createEndDateField();
 
         Button createStep = new Button("Create New Step...",
                 createStepClickListener);
@@ -377,6 +382,22 @@ public class DemoUI extends UI {
         controls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
 
         return panel;
+    }
+
+    private DateField createStartDateField() {
+        DateField f = new DateField("Start date");
+        f.setResolution(Resolution.SECOND);
+        f.setImmediate(true);
+        f.addValueChangeListener(startDateValueChangeListener);
+        return f;
+    }
+
+    private DateField createEndDateField() {
+        DateField f = new DateField("End date");
+        f.setResolution(Resolution.SECOND);
+        f.setImmediate(true);
+        f.addValueChangeListener(endDateValueChangeListener);
+        return f;
     }
 
     private boolean validateResolutionChange(
