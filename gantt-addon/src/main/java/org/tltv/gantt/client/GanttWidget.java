@@ -22,6 +22,7 @@ import java.util.Date;
 import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
@@ -78,7 +79,7 @@ import com.google.gwt.user.client.ui.Widget;
  * that, if client uses IE, make sure to call
  * {@link #setBrowserInfo(boolean, boolean, boolean)} to let this widget know
  * that. And if client supports touch events, let this widget know that by
- * calling {@link #setTouchSupportted(boolean)} method before initWidget.
+ * calling {@link #setTouchSupported(boolean)} method before initWidget.
  * <p>
  * Sample code snippet:
  * 
@@ -157,6 +158,9 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
     protected Element targetBarElement;
+
+    // this variable is used to memorize the Y origin to scroll the container
+    protected int containerScrollStartPosY = -1;
 
     // additional element that appears when moving or resizing
     protected DivElement moveElement = DivElement.as(DOM.createDiv());
@@ -288,10 +292,23 @@ public class GanttWidget extends Widget implements HasEnabled {
     };
 
     private TouchStartHandler touchStartHandler = new TouchStartHandler() {
-
         @Override
         public void onTouchStart(TouchStartEvent event) {
             if (event.getTargetTouches().length() == 1) {
+                JavaScriptObject target = event.getNativeEvent()
+                        .getEventTarget().cast();
+                containerScrollStartPosY = -1;
+
+                if (target == container || target == content
+                        || (!isMovableSteps())) {
+                    if (isContentOverflowingVertically()) {
+                        // store position for 'manual' vertical scrolling
+                        containerScrollStartPosY = container.getScrollTop()
+                                + event.getTouches().get(0).getPageY();
+                        event.preventDefault();
+                        return;
+                    }
+                }
                 GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
             }
             event.preventDefault();
@@ -302,19 +319,28 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onTouchEnd(TouchEndEvent event) {
+            containerScrollStartPosY = -1;
             GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
             event.preventDefault();
         }
     };
 
     private TouchMoveHandler touchMoveHandler = new TouchMoveHandler() {
-
         @Override
         public void onTouchMove(TouchMoveEvent event) {
             if (event.getChangedTouches().length() == 1) {
-                GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
+                // did we intend to scroll the container?
+                if (containerScrollStartPosY != -1) {
+                    // apply 'manual' vertical scrolling
+                    container.setScrollTop(containerScrollStartPosY
+                            - event.getChangedTouches().get(0).getPageY());
+                    event.preventDefault();
+                    return;
+                }
+                if (GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent())) {
+                    event.preventDefault();
+                }
             }
-            event.preventDefault();
         }
     };
 
@@ -322,6 +348,7 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onTouchCancel(TouchCancelEvent event) {
+            containerScrollStartPosY = -1;
             onCancelTouch(event.getNativeEvent());
         }
     };
@@ -597,7 +624,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param touchSupported
      *            True enables touch support.
      */
-    public void setTouchSupportted(boolean touchSupported) {
+    public void setTouchSupported(boolean touchSupported) {
         this.touchSupported = touchSupported;
     }
 
@@ -846,7 +873,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      * 
      * @param bar
      *            Moved Bar element
-     * @param deltay
+     * @param y
      */
     protected void moveCompleted(Element bar, int y) {
         double deltay = y - capturePoint.getY();
@@ -879,6 +906,7 @@ public class GanttWidget extends Widget implements HasEnabled {
                 getTouchOrMouseClientY(event));
         movePoint = new Point(getTouchOrMouseClientX(event),
                 getTouchOrMouseClientY(event));
+
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
         capturePointLeftPx = bar.getOffsetLeft();
@@ -957,7 +985,14 @@ public class GanttWidget extends Widget implements HasEnabled {
         stopDrag(event);
     }
 
-    protected void onTouchOrMouseMove(NativeEvent event) {
+    /**
+     * Handle step's move event.
+     * 
+     * @param event
+     *            NativeEvent
+     * @return True, if this event was handled and had effect on step.
+     */
+    protected boolean onTouchOrMouseMove(NativeEvent event) {
         Element bar = getBar(event);
         if (bar != null) {
             movePoint = new Point(getTouchOrMouseClientX(event),
@@ -966,7 +1001,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
 
         if (targetBarElement == null) {
-            return;
+            return false;
         }
         bar = targetBarElement;
 
@@ -996,6 +1031,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
 
         event.stopPropagation();
+        return true;
     }
 
     protected void updateMoveInProgressFlag(double deltax, double deltay) {
