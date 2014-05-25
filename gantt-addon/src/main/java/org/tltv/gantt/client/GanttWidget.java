@@ -480,7 +480,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      *            New start date in milliseconds.
      */
     public void setStartDate(Long startDate) {
-        this.startDate = startDate.longValue();
+        this.startDate = (startDate != null) ? startDate : 0;
     }
 
     /**
@@ -501,7 +501,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      *            New end date in milliseconds.
      */
     public void setEndDate(Long endDate) {
-        this.endDate = endDate.longValue();
+        this.endDate = (endDate != null) ? endDate : 0;
     }
 
     /**
@@ -1170,8 +1170,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private int getChildIndex(Element parent, Element child) {
-        return DOM.getChildIndex(com.google.gwt.user.client.Element.as(parent),
-                com.google.gwt.user.client.Element.as(child));
+        return DOM.getChildIndex(com.google.gwt.dom.client.Element.as(parent),
+                com.google.gwt.dom.client.Element.as(child));
     }
 
     private boolean detectResizing(Element bar) {

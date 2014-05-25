@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
 
 import com.google.gwt.core.client.GWT;
@@ -1223,23 +1224,7 @@ public class TimelineWidget extends Widget {
 
     public static int getWeekNumber(Date d, long timezoneOffset,
             int firstDayOfWeek) {
-        /*
-         * Thanks to stackoverflow.com for a easy function to calculate week
-         * number. See
-         * http://stackoverflow.com/questions/6117814/get-week-of-year
-         * -in-javascript-like-in-php
-         */
-        d = new Date(d.getTime());
-        d.setHours(0);
-        d.setMinutes(0);
-        d.setSeconds(0);
-        int day = d.getDay() % 7;
-        d.setDate(d.getDate() + 4 - ((d.getDay() == 0) ? 7 : d.getDay()));
-        Date yearStart = new Date(new Date(d.getYear(), 0, 1).getTime()
-                + timezoneOffset);
-        double weekNo = Math
-                .ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1.0) / 7.0);
-        return (int) weekNo;
+        return GanttUtil.getWeekNumber(d, timezoneOffset, firstDayOfWeek);
     }
 
     private class BlockRowData {

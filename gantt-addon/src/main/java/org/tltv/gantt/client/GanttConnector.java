@@ -223,7 +223,8 @@ public class GanttConnector extends AbstractComponentConnector {
         super.onStateChanged(stateChangeEvent);
 
         locale = getState().locale;
-        timeZoneOffset = getState().timeZoneOffset;
+        timeZoneOffset = (getState().timeZoneOffset != null ? getState().timeZoneOffset
+                : 0);
         if (stateChangeEvent.hasPropertyChanged("locale")) {
             dateTimeService = null;
         }
