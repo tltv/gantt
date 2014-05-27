@@ -6,6 +6,9 @@ You can read more about Gantt charts in general from here: http://en.wikipedia.o
 
 Download latest release jar from http://vaadin.com/directory#addon/gantt
 
+Please use version 0.3.0 or later with Vaadin Framework 7.2+. It's not backward compatible with earlier Vaadin Framework versions. 
+Version 0.2.2 is the last version for Vaadin Framework 7.0-7.1.
+
 List of features that are supported:
 * Server side API allows to modify timeline options and step options like start/end date, caption, color and adding/removing steps
 * adjustable timeline range
