@@ -50,6 +50,7 @@ import com.google.gwt.touch.client.Point;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.AbstractNativeScrollbar;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.event.PointerCancelEvent;
@@ -140,6 +141,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected TimelineWidget timeline;
     protected DivElement container;
     protected DivElement content;
+    protected DivElement scrollbarSpacer;
 
     protected boolean clickOnNextMouseUp = true;
     protected Point movePoint;
@@ -371,8 +373,14 @@ public class GanttWidget extends Widget implements HasEnabled {
         content.setClassName(STYLE_GANTT_CONTENT);
         container.appendChild(content);
 
+        scrollbarSpacer = DivElement.as(DOM.createDiv());
+        scrollbarSpacer.getStyle().setHeight(
+                AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
+        scrollbarSpacer.getStyle().setDisplay(Display.NONE);
+
         getElement().appendChild(timeline.getElement());
         getElement().appendChild(container);
+        getElement().appendChild(scrollbarSpacer);
     }
 
     public void initWidget(GanttRpc ganttRpc,
@@ -529,7 +537,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyHeightChanged(int height) {
         if (container != null && timeline != null) {
             container.getStyle().setHeight(
-                    height - timeline.getElement().getClientHeight(), Unit.PX);
+                    height - getTimelineHeight()
+                            - getHorizontalScrollbarSpacerHeight(), Unit.PX);
 
             boolean overflow = isContentOverflowingVertically();
             if (wasContentOverflowingVertically != overflow) {
@@ -540,6 +549,18 @@ public class GanttWidget extends Widget implements HasEnabled {
                 internalHandleWidthChange();
             }
         }
+    }
+
+    /**
+     * Get Timeline widget height.
+     * 
+     * @return
+     */
+    public int getTimelineHeight() {
+        if (timeline != null) {
+            return timeline.getElement().getClientHeight();
+        }
+        return 0;
     }
 
     /**
@@ -759,6 +780,71 @@ public class GanttWidget extends Widget implements HasEnabled {
     @Override
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Element getScrollContainer() {
+        return container;
+    }
+
+    /**
+     * Get height of the scroll container. Includes the horizontal scrollbar
+     * spacer.
+     * 
+     * @return
+     */
+    public int getScrollContainerHeight() {
+        if (scrollbarSpacer.getStyle().getDisplay().isEmpty()) {
+            return getScrollContainer().getClientHeight()
+                    + scrollbarSpacer.getClientHeight();
+        }
+        return getScrollContainer().getClientHeight();
+    }
+
+    /**
+     * Return true, if content is overflowing vertically. This means also that
+     * vertical scroll bar is visible.
+     * 
+     * @return
+     */
+    public boolean isContentOverflowingVertically() {
+        if (content == null || container == null) {
+            return false;
+        }
+        return content.getClientHeight() > container.getClientHeight();
+    }
+
+    /**
+     * Return true, if content is overflowing horizontally. This means also that
+     * horizontal scroll bar is visible.
+     * 
+     * @return
+     */
+    public boolean isContentOverflowingHorizontally() {
+        // state of horizontal overflow is handled by timeline widget
+        if (content == null || container == null || timeline == null) {
+            return false;
+        }
+        return timeline.isTimelineOverflowingHorizontally();
+    }
+
+    /**
+     * Show empty spacing in horizontal scrollbar's position.
+     */
+    public void showHorizontalScrollbarSpacer() {
+        if (!scrollbarSpacer.getStyle().getDisplay().isEmpty()) {
+            scrollbarSpacer.getStyle().clearDisplay();
+            notifyHeightChanged(getOffsetHeight());
+        }
+    }
+
+    /**
+     * Hide empty spacing in horizontal scrollbar's position.
+     */
+    public void hideHorizontalScrollbarSpacer() {
+        if (scrollbarSpacer.getStyle().getDisplay().isEmpty()) {
+            scrollbarSpacer.getStyle().setDisplay(Display.NONE);
+            notifyHeightChanged(getOffsetHeight());
+        }
     }
 
     public native boolean isMsTouchSupported()
@@ -1267,10 +1353,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         return resizingInProgress;
     }
 
-    private boolean isContentOverflowingVertically() {
-        if (content == null || container == null) {
-            return false;
+    private int getHorizontalScrollbarSpacerHeight() {
+        if (scrollbarSpacer.getStyle().getDisplay().isEmpty()) {
+            return scrollbarSpacer.getClientHeight();
         }
-        return content.getClientHeight() > container.getClientHeight();
+        return 0;
     }
 }

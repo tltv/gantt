@@ -3,6 +3,7 @@ package org.tltv.gantt.client.shared;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.vaadin.shared.Connector;
 import com.vaadin.shared.annotations.DelegateToWidget;
 
 public class GanttState extends com.vaadin.shared.AbstractComponentState {
@@ -51,5 +52,7 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     public String yearFormat;
 
     public List<Step> steps = new LinkedList<Step>();
+
+    public Connector verticalScrollDelegateTarget;
 
 }

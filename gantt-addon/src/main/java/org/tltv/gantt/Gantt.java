@@ -33,6 +33,7 @@ import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Table;
 import com.vaadin.util.ReflectTools;
 
 /**
@@ -425,6 +426,30 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
             setInternalEndDate(getEndDate());
             updateTimelineStartTimeDetails();
             markAsDirty();
+        }
+    }
+
+    /**
+     * Set target Table component that will scroll vertically with the Gantt
+     * component and vice versa.
+     * <p>
+     * Table height is maintained by Gantt after this call. Table rows have to
+     * have exactly same heights as the Gantt steps have.
+     * 
+     * @param table
+     *            Target Table component.
+     */
+    public void setVerticalScrollDelegateTarget(Table table) {
+        table.setHeight(getHeight(), getHeightUnits());
+        getState().verticalScrollDelegateTarget = table;
+    }
+
+    @Override
+    public void setHeight(float height, Unit unit) {
+        super.setHeight(height, unit);
+        if (getState().verticalScrollDelegateTarget != null) {
+            ((Component) getState().verticalScrollDelegateTarget).setHeight(
+                    getHeight(), getHeightUnits());
         }
     }
 

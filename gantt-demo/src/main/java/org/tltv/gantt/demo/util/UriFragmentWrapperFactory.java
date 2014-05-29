@@ -1,5 +1,9 @@
 package org.tltv.gantt.demo.util;
 
+import org.tltv.gantt.Gantt;
+import org.tltv.gantt.demo.TableGanttLayout;
+import org.tltv.gantt.demo.TreeTableGanttLayout;
+
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.Tab;
@@ -18,18 +22,25 @@ public class UriFragmentWrapperFactory {
      * @param component
      * @return
      */
-    public static Component wrapByUriFragment(String uriragment,
-            Component component) {
+    public static Component wrapByUriFragment(String uriragment, Gantt gantt) {
         if (uriragment == null) {
-            return component;
+            return gantt;
         }
         if (uriragment.contains("tabsheet")) {
             TabSheet tabsheet = new TabSheet();
             tabsheet.setSizeFull();
-            Tab tab = tabsheet.addTab(component);
+            Tab tab = tabsheet.addTab(gantt);
             tab.setCaption("Tabsheet test");
             return tabsheet;
+
+        } else if (uriragment.contains("table")) {
+            return new TableGanttLayout(gantt);
+
+        } else if (uriragment.contains("treetable")) {
+            return new TreeTableGanttLayout(gantt);
+
         }
-        return component;
+        return gantt;
     }
+
 }
