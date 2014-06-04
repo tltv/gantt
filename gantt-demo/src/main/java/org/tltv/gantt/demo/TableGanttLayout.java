@@ -3,14 +3,15 @@ package org.tltv.gantt.demo;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.Step;
 
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.RowHeaderMode;
 import com.vaadin.ui.UI;
 
-public class TableGanttLayout extends HorizontalLayout {
+public class TableGanttLayout extends HorizontalLayout implements GanttListener {
 
     Gantt gantt;
+    Table ganttTable;
 
     public TableGanttLayout(Gantt gantt) {
         this.gantt = gantt;
@@ -21,21 +22,36 @@ public class TableGanttLayout extends HorizontalLayout {
 
         UI.getCurrent().getPage().getStyles()
                 .add(".v-table-row, .v-table-row-odd { height: 30px; }");
+        ganttTable = createTableForGantt();
 
-        addComponent(createTableForGantt());
+        addComponent(ganttTable);
         addComponent(gantt);
     }
 
     private Table createTableForGantt() {
-        Table table = new Table();
+        BeanItemContainer<Step> container = new BeanItemContainer<Step>(
+                Step.class);
+
+        Table table = new Table(null, container);
+        table.setSortEnabled(false);
+        table.setBuffered(false);
         table.setSizeFull();
-        table.setRowHeaderMode(RowHeaderMode.EXPLICIT);
-        for (Step step : gantt.getSteps()) {
-            table.addItem(step);
-            table.setItemCaption(step, step.getCaption());
-        }
+        container.addAll(gantt.getSteps());
+        table.setVisibleColumns("caption");
+
         gantt.setVerticalScrollDelegateTarget(table);
         table.setColumnWidth(null, 500);
         return table;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void stepModified(Step step) {
+        if (!ganttTable.containsId(step)) {
+            ((BeanItemContainer<Step>) ganttTable.getContainerDataSource())
+                    .addBean(step);
+        } else {
+            ganttTable.refreshRowCache();
+        }
     }
 }

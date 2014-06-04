@@ -88,6 +88,8 @@ public class DemoUI extends UI {
 
     private HorizontalLayout controls;
 
+    private GanttListener ganttListener;
+
     private AttachListener ganttAttachListener = new AttachListener() {
 
         @Override
@@ -173,6 +175,7 @@ public class DemoUI extends UI {
 
     @Override
     protected void init(VaadinRequest request) {
+        ganttListener = null;
         createGantt();
 
         MenuBar menu = controlsMenuBar();
@@ -183,6 +186,9 @@ public class DemoUI extends UI {
 
         Component wrapper = UriFragmentWrapperFactory.wrapByUriFragment(UI
                 .getCurrent().getPage().getUriFragment(), gantt);
+        if (wrapper instanceof GanttListener) {
+            ganttListener = (GanttListener) wrapper;
+        }
 
         final VerticalLayout layout = new VerticalLayout();
         layout.setStyleName("demoContentLayout");
@@ -441,6 +447,7 @@ public class DemoUI extends UI {
         MenuBar menu = new MenuBar();
         MenuItem editItem = menu.addItem("Edit", null);
         MenuItem formatItem = menu.addItem("Format", null);
+        MenuItem viewItem = menu.addItem("View", null);
 
         MenuItem item = editItem.addItem("Enabled", new Command() {
 
@@ -530,6 +537,32 @@ public class DemoUI extends UI {
                         gantt.setTimelineDayFormat("dd. EEEE");
                     }
                 });
+
+        item = viewItem.addItem("Show Table view", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#table");
+                getPage().reload();
+            }
+        });
+        item = viewItem.addItem("Show TreeTable view", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#treetable");
+                getPage().reload();
+            }
+        });
+        item = viewItem.addItem("Show normal view", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#");
+                getPage().reload();
+            }
+        });
+
         return menu;
     }
 
@@ -612,6 +645,9 @@ public class DemoUI extends UI {
                             .getBean();
                     if (!gantt.getSteps().contains(step)) {
                         gantt.addStep(step);
+                    }
+                    if (ganttListener != null) {
+                        ganttListener.stepModified(step);
                     }
                     win.close();
                 } catch (CommitException e) {

@@ -33,7 +33,7 @@ public class UriFragmentWrapperFactory {
             tab.setCaption("Tabsheet test");
             return tabsheet;
 
-        } else if (uriragment.contains("table")) {
+        } else if (uriragment.startsWith("table")) {
             return new TableGanttLayout(gantt);
 
         } else if (uriragment.contains("treetable")) {

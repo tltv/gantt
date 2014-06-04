@@ -38,6 +38,7 @@ import com.vaadin.client.LocaleService;
 import com.vaadin.client.Util;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
+import com.vaadin.client.communication.StateChangeEvent.StateChangeHandler;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.client.ui.FocusableScrollPanel;
 import com.vaadin.client.ui.VScrollTable;
@@ -64,6 +65,7 @@ public class GanttConnector extends AbstractComponentConnector {
     GanttDateTimeService dateTimeService;
     boolean notifyHeight = false;
 
+    ComponentConnector delegateScrollConnector;
     FocusableScrollPanel delegateScrollPanelTarget;
     VScrollTable delegateScrollTableTarget;
     HandlerRegistration ganttScrollHandlerRegistration;
@@ -130,6 +132,20 @@ public class GanttConnector extends AbstractComponentConnector {
             } finally {
                 scrollDelay.schedule(20);
             }
+        }
+    };
+
+    private final StateChangeHandler scrollDelegateTargetStateChangeHandler = new StateChangeHandler() {
+
+        @Override
+        public void onStateChanged(StateChangeEvent stateChangeEvent) {
+            Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+                @Override
+                public void execute() {
+                    updateDelegateTargetHeight();
+                }
+            });
         }
     };
 
@@ -343,12 +359,20 @@ public class GanttConnector extends AbstractComponentConnector {
             if (ganttScrollHandlerRegistration != null) {
                 ganttScrollHandlerRegistration.removeHandler();
             }
+            if (delegateScrollConnector != null) {
+                delegateScrollConnector
+                        .removeStateChangeHandler(scrollDelegateTargetStateChangeHandler);
+            }
+            delegateScrollConnector = null;
             delegateScrollTableTarget = null;
             delegateScrollPanelTarget = null;
             if (c instanceof TableConnector) {
+                delegateScrollConnector = (TableConnector) c;
                 VScrollTable scrolltable = ((TableConnector) c).getWidget();
                 delegateScrollTableTarget = scrolltable;
                 delegateScrollPanelTarget = scrolltable.scrollBodyPanel;
+                delegateScrollConnector
+                        .addStateChangeHandler(scrollDelegateTargetStateChangeHandler);
             }
         }
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {

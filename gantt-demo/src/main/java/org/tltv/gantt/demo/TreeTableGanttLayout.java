@@ -3,15 +3,17 @@ package org.tltv.gantt.demo;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.Step;
 
+import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.RowHeaderMode;
 import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 
-public class TreeTableGanttLayout extends HorizontalLayout {
+public class TreeTableGanttLayout extends HorizontalLayout implements
+        GanttListener {
 
     Gantt gantt;
+    TreeTable ganttTable;
+    BeanItemContainer<Step> container;
 
     public TreeTableGanttLayout(Gantt gantt) {
         this.gantt = gantt;
@@ -22,21 +24,32 @@ public class TreeTableGanttLayout extends HorizontalLayout {
 
         UI.getCurrent().getPage().getStyles()
                 .add(".v-table-row, .v-table-row-odd { height: 30px; }");
+        ganttTable = createTreeTableForGantt();
 
-        addComponent(createTreeTableForGantt());
+        addComponent(ganttTable);
         addComponent(gantt);
     }
 
-    private Table createTreeTableForGantt() {
-        TreeTable table = new TreeTable();
+    private TreeTable createTreeTableForGantt() {
+        container = new BeanItemContainer<Step>(Step.class);
+
+        TreeTable table = new TreeTable(null, container);
+        table.setBuffered(false);
         table.setSizeFull();
-        table.setRowHeaderMode(RowHeaderMode.EXPLICIT);
-        for (Step step : gantt.getSteps()) {
-            table.addItem(step);
-            table.setItemCaption(step, step.getCaption());
-        }
+        container.addAll(gantt.getSteps());
+        table.setVisibleColumns("caption");
+
         gantt.setVerticalScrollDelegateTarget(table);
         table.setColumnWidth(null, 500);
         return table;
+    }
+
+    @Override
+    public void stepModified(Step step) {
+        if (!ganttTable.containsId(step)) {
+            container.addBean(step);
+        } else {
+            ganttTable.refreshRowCache();
+        }
     }
 }
