@@ -18,6 +18,7 @@ package org.tltv.gantt.client;
 import java.util.Date;
 
 import org.tltv.gantt.Gantt;
+import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
 
@@ -74,7 +75,7 @@ public class GanttConnector extends AbstractComponentConnector {
     boolean ganttDelegatingVerticalScroll = false;
     boolean delegatingVerticalScroll = false;
 
-    private Timer ganttScrollDelay = new Timer() {
+    Timer ganttScrollDelay = new Timer() {
 
         @Override
         public void run() {
@@ -82,7 +83,7 @@ public class GanttConnector extends AbstractComponentConnector {
         }
     };
 
-    private Timer scrollDelay = new Timer() {
+    Timer scrollDelay = new Timer() {
 
         @Override
         public void run() {
@@ -93,7 +94,7 @@ public class GanttConnector extends AbstractComponentConnector {
     /**
      * Scroll handler for Gantt component to delegate to other component.
      */
-    private final ScrollHandler ganttScrollHandler = new ScrollHandler() {
+    final ScrollHandler ganttScrollHandler = new ScrollHandler() {
 
         @Override
         public void onScroll(ScrollEvent event) {
@@ -116,7 +117,7 @@ public class GanttConnector extends AbstractComponentConnector {
      * Scroll handler for scroll events from other component that Gantt may
      * react to.
      */
-    private final ScrollHandler scrollDelegateTargetHandler = new ScrollHandler() {
+    final ScrollHandler scrollDelegateTargetHandler = new ScrollHandler() {
 
         @Override
         public void onScroll(ScrollEvent event) {
@@ -135,7 +136,7 @@ public class GanttConnector extends AbstractComponentConnector {
         }
     };
 
-    private final StateChangeHandler scrollDelegateTargetStateChangeHandler = new StateChangeHandler() {
+    final StateChangeHandler scrollDelegateTargetStateChangeHandler = new StateChangeHandler() {
 
         @Override
         public void onStateChanged(StateChangeEvent stateChangeEvent) {
@@ -266,10 +267,18 @@ public class GanttConnector extends AbstractComponentConnector {
         }
     };
 
-    private int previousHeight = -1;
-    private int previousWidth = -1;
+    GanttClientRpc ganttClientRpc = new GanttClientRpc() {
 
-    private final ElementResizeListener widgetResizeListener = new ElementResizeListener() {
+        @Override
+        public void updateDelegateTargetHeight() {
+            GanttConnector.this.adjustDelegateTargetHeightLazily();
+        }
+    };
+
+    int previousHeight = -1;
+    int previousWidth = -1;
+
+    final ElementResizeListener widgetResizeListener = new ElementResizeListener() {
 
         @Override
         public void onElementResize(ElementResizeEvent e) {
@@ -302,6 +311,7 @@ public class GanttConnector extends AbstractComponentConnector {
     };
 
     public GanttConnector() {
+        registerRpc(GanttClientRpc.class, ganttClientRpc);
     }
 
     @Override
@@ -372,19 +382,7 @@ public class GanttConnector extends AbstractComponentConnector {
         }
 
         if (stateChangeEvent.hasPropertyChanged("verticalScrollDelegateTarget")) {
-            Connector c = getState().verticalScrollDelegateTarget;
-            unRegisterScrollDelegateHandlers();
-
-            delegateScrollConnector = null;
-            delegateScrollTableTarget = null;
-            delegateScrollPanelTarget = null;
-            if (c instanceof TableConnector) {
-                delegateScrollConnector = (TableConnector) c;
-                VScrollTable scrolltable = ((TableConnector) c).getWidget();
-                delegateScrollTableTarget = scrolltable;
-                delegateScrollPanelTarget = scrolltable.scrollBodyPanel;
-                registerScrollDelegateHandlers();
-            }
+            handleVerticalScrollDelegateTargetChange();
         }
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 
@@ -395,13 +393,29 @@ public class GanttConnector extends AbstractComponentConnector {
                     getWidget().notifyHeightChanged(previousHeight);
                 }
 
-                updateVerticallScrollDelegation();
+                updateVerticalScrollDelegation();
                 adjustDelegateTargetHeightLazily();
             }
         });
     }
 
-    private void unRegisterScrollDelegateHandlers() {
+    void handleVerticalScrollDelegateTargetChange() {
+        Connector c = getState().verticalScrollDelegateTarget;
+        unRegisterScrollDelegateHandlers();
+
+        delegateScrollConnector = null;
+        delegateScrollTableTarget = null;
+        delegateScrollPanelTarget = null;
+        if (c instanceof TableConnector) {
+            delegateScrollConnector = (TableConnector) c;
+            VScrollTable scrolltable = ((TableConnector) c).getWidget();
+            delegateScrollTableTarget = scrolltable;
+            delegateScrollPanelTarget = scrolltable.scrollBodyPanel;
+            registerScrollDelegateHandlers();
+        }
+    }
+
+    void unRegisterScrollDelegateHandlers() {
         if (scrollDelegateHandlerRegistration != null) {
             scrollDelegateHandlerRegistration.removeHandler();
         }
@@ -419,7 +433,7 @@ public class GanttConnector extends AbstractComponentConnector {
         }
     }
 
-    private void registerScrollDelegateHandlers() {
+    void registerScrollDelegateHandlers() {
         delegateScrollConnector
                 .addStateChangeHandler(scrollDelegateTargetStateChangeHandler);
         getLayoutManager().addElementResizeListener(
@@ -427,7 +441,7 @@ public class GanttConnector extends AbstractComponentConnector {
                 scrollDelegateTargetResizeListener);
     }
 
-    private void updateVerticallScrollDelegation() {
+    void updateVerticalScrollDelegation() {
         if (delegateScrollPanelTarget == null) {
             return; // scroll delegation is not set
         }
@@ -452,7 +466,7 @@ public class GanttConnector extends AbstractComponentConnector {
         });
     }
 
-    private void updateDelegateTargetHeight() {
+    void updateDelegateTargetHeight() {
         if (delegateScrollTableTarget == null) {
             return;
         }
@@ -499,7 +513,7 @@ public class GanttConnector extends AbstractComponentConnector {
                 (ComponentConnector) getState().verticalScrollDelegateTarget);
     }
 
-    private void adjustDelegateTargetHeightLazily() {
+    void adjustDelegateTargetHeightLazily() {
         lazyAdjustDelegateTargetHeight.cancel();
         // delay must be more than VScrollTable widget's lazy column adjusting.
         lazyAdjustDelegateTargetHeight.schedule(350);

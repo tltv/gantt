@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
 import org.tltv.gantt.client.shared.Resolution;
@@ -34,6 +35,13 @@ import org.tltv.gantt.client.shared.Step;
 
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Table;
+import com.vaadin.ui.Table.ColumnResizeEvent;
+import com.vaadin.ui.Table.ColumnResizeListener;
+import com.vaadin.ui.Tree.CollapseEvent;
+import com.vaadin.ui.Tree.CollapseListener;
+import com.vaadin.ui.Tree.ExpandEvent;
+import com.vaadin.ui.Tree.ExpandListener;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.util.ReflectTools;
 
 /**
@@ -77,6 +85,30 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         @Override
         public void onResize(int stepIndex, long startDate, long endDate) {
             fireResizeEvent(stepIndex, startDate, endDate);
+        }
+    };
+
+    protected ExpandListener scrollDelegateTargetExpandListener = new ExpandListener() {
+
+        @Override
+        public void nodeExpand(ExpandEvent event) {
+            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
+        }
+    };
+
+    protected CollapseListener scrollDelegateTargetCollapseListener = new CollapseListener() {
+
+        @Override
+        public void nodeCollapse(CollapseEvent event) {
+            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
+        }
+    };
+
+    protected ColumnResizeListener scrollDelegateTargetColumnResizeListener = new ColumnResizeListener() {
+
+        @Override
+        public void columnResize(ColumnResizeEvent event) {
+            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
         }
     };
 
@@ -209,6 +241,13 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      */
     public List<Step> getSteps() {
         return Collections.unmodifiableList(getState().steps);
+    }
+
+    /**
+     * Removes all the steps in this Gantt chart.
+     */
+    public void removeSteps() {
+        getState().steps.clear();
     }
 
     /**
@@ -433,15 +472,59 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      * Set target Table component that will scroll vertically with the Gantt
      * component and vice versa.
      * <p>
-     * Table height is maintained by Gantt after this call. Table rows have to
-     * have exactly same heights as the Gantt steps have.
+     * Table height is maintained by Gantt after this call. Table header height
+     * is changed to match the Gantt header. Table rows have to have exactly
+     * same heights as the Gantt steps have.
+     * <p>
+     * Given Table is set to immediate mode.
+     * <p>
+     * Component resize events of the Table and Gantt widgets are handled by
+     * this component. Column resizing (and row expanding and collapsing if
+     * given component is {@link TreeTable}) are listened to keep content
+     * heights equal. As long as the row heights match each others.
+     * <p>
+     * Table's internal column reordering and sorting are not listened by Gantt
+     * and can be handled explicitly via Table's server side event listeners.
      * 
      * @param table
      *            Target Table component.
      */
     public void setVerticalScrollDelegateTarget(Table table) {
-        table.setHeight(getHeight(), getHeightUnits());
+        if (table != null) {
+            table.setHeight(getHeight(), getHeightUnits());
+        }
+        if (getState().verticalScrollDelegateTarget != null
+                && getState().verticalScrollDelegateTarget != table) {
+            // target has changed. Remove value change listener from the old
+            // target.
+            cleanScrollDelegateTargetListeners();
+        }
         getState().verticalScrollDelegateTarget = table;
+        if (table != null) {
+            table.setImmediate(true);
+            addScrollDelegateTargetListeners(table);
+        }
+    }
+
+    protected void addScrollDelegateTargetListeners(Table table) {
+        table.addColumnResizeListener(scrollDelegateTargetColumnResizeListener);
+        if (table instanceof TreeTable) {
+            ((TreeTable) table)
+                    .addExpandListener(scrollDelegateTargetExpandListener);
+            ((TreeTable) table)
+                    .addCollapseListener(scrollDelegateTargetCollapseListener);
+        }
+    }
+
+    protected void cleanScrollDelegateTargetListeners() {
+        ((Table) getState().verticalScrollDelegateTarget)
+                .removeColumnResizeListener(scrollDelegateTargetColumnResizeListener);
+        if (getState().verticalScrollDelegateTarget instanceof TreeTable) {
+            ((TreeTable) getState().verticalScrollDelegateTarget)
+                    .removeExpandListener(scrollDelegateTargetExpandListener);
+            ((TreeTable) getState().verticalScrollDelegateTarget)
+                    .removeCollapseListener(scrollDelegateTargetCollapseListener);
+        }
     }
 
     @Override

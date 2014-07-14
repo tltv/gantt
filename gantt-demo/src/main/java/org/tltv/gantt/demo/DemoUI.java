@@ -471,28 +471,6 @@ public class DemoUI extends UI {
         item.setCheckable(true);
         item.setChecked(gantt.isReadOnly());
 
-        item = editItem.addItem("Show years", new Command() {
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                gantt.setYearsVisible(!gantt.isYearsVisible());
-                selectedItem.setChecked(gantt.isYearsVisible());
-            }
-        });
-        item.setCheckable(true);
-        item.setChecked(gantt.isYearsVisible());
-
-        item = editItem.addItem("Show months", new Command() {
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                gantt.setMonthsVisible(!gantt.isMonthsVisible());
-                selectedItem.setChecked(gantt.isMonthsVisible());
-            }
-        });
-        item.setCheckable(true);
-        item.setChecked(gantt.isMonthsVisible());
-
         item = formatItem.addItem("Set 'MMM' month format", new Command() {
 
             @Override
@@ -538,7 +516,29 @@ public class DemoUI extends UI {
                     }
                 });
 
-        item = viewItem.addItem("Show Table view", new Command() {
+        item = viewItem.addItem("Show years", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setYearsVisible(!gantt.isYearsVisible());
+                selectedItem.setChecked(gantt.isYearsVisible());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isYearsVisible());
+
+        item = viewItem.addItem("Show months", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setMonthsVisible(!gantt.isMonthsVisible());
+                selectedItem.setChecked(gantt.isMonthsVisible());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isMonthsVisible());
+
+        item = viewItem.addItem("Show Gantt with Table", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
@@ -546,7 +546,7 @@ public class DemoUI extends UI {
                 getPage().reload();
             }
         });
-        item = viewItem.addItem("Show TreeTable view", new Command() {
+        item = viewItem.addItem("Show Gantt with TreeTable", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
@@ -554,7 +554,7 @@ public class DemoUI extends UI {
                 getPage().reload();
             }
         });
-        item = viewItem.addItem("Show normal view", new Command() {
+        item = viewItem.addItem("Show Gantt alone", new Command() {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
