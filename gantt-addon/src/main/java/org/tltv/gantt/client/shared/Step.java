@@ -1,6 +1,7 @@
 package org.tltv.gantt.client.shared;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class Step implements Serializable {
 
@@ -65,12 +66,28 @@ public class Step implements Serializable {
         this.startDate = startDate;
     }
 
+    public void setStartDate(Date startDate) {
+        if (startDate != null) {
+            this.startDate = startDate.getTime();
+        } else {
+            this.startDate = -1;
+        }
+    }
+
     public long getEndDate() {
         return endDate;
     }
 
     public void setEndDate(long endDate) {
         this.endDate = endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        if (endDate != null) {
+            this.endDate = endDate.getTime();
+        } else {
+            this.endDate = -1;
+        }
     }
 
     public String getStyleName() {
