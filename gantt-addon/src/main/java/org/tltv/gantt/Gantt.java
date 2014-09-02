@@ -224,6 +224,17 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     /**
+     * Add new {@link Step} at a specific index and shifts the current object at
+     * that index and any subsequent objects forward.
+     * 
+     * @param step
+     *            New Step object
+     */
+    public void addStep(int index, Step step) {
+        getState().steps.add(index, step);
+    }
+
+    /**
      * Remove {@link Step}.
      * 
      * @param step
@@ -232,6 +243,20 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      */
     public boolean removeStep(Step step) {
         return getState().steps.remove(step);
+    }
+
+    /**
+     * Return a step at a specific index in list of steps. Returns null if index
+     * is out of bounds.
+     * 
+     * @param index
+     * @return
+     */
+    public Step getStep(int index) {
+        if (index >= 0 && index < getState().steps.size()) {
+            return getState().steps.get(index);
+        }
+        return null;
     }
 
     /**
