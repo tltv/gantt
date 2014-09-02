@@ -903,7 +903,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         content.appendChild(bar);
 
         // bar height should be defined in css
-        int height = bar.getClientHeight();
+        int height = getElementHeightWithMargin(bar);
         bar.getStyle().setTop(currentHeight, Unit.PX);
         currentHeight += height;
 
@@ -1166,6 +1166,32 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
         return startFromBar;
     }
+
+    private int getElementHeightWithMargin(DivElement div) {
+        int height = div.getClientHeight();
+        double marginHeight = getMarginByComputedStyle(div);
+        return height + (int) Math.round(marginHeight);
+    }
+
+    /**
+     * Parse computed styles to get precise margin height for the given element.
+     * Returns zero if computed styles is not defined.
+     * 
+     * @param elem
+     *            Target element to measure
+     */
+    private static native double getMarginByComputedStyle(
+            com.google.gwt.dom.client.Element elem)
+    /*-{
+        var cs = elem.ownerDocument.defaultView.getComputedStyle(elem);
+        if (cs) {
+            size = parseInt(cs.getPropertyValue('margin-top'))
+                        + parseInt(cs.getPropertyValue('margin-bottom'));
+        } else {
+            size = 0;
+        }
+        return size;
+     }-*/;
 
     private boolean isBetween(int v, int min, int max) {
         return v >= min && v <= max;
