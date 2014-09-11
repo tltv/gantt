@@ -30,6 +30,7 @@ public class GanttTest {
 
         DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000);
         DateTime expectedEnd = new DateTime(2015, 1, 1, 23, 59, 59, 999);
+        expectedEnd = expectedEnd.minusMillis(expectedEnd.getZone().toTimeZone().getDSTSavings());
 
         DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
         DateTime end = new DateTime(2015, 1, 1, 10, 30, 30, 123);
@@ -37,8 +38,8 @@ public class GanttTest {
         gantt.setStartDate(start.toDate());
         gantt.setEndDate(end.toDate());
 
-        Assert.assertEquals(gantt.getStartDate(), expectedStart.toDate());
-        Assert.assertEquals(gantt.getEndDate(), expectedEnd.toDate());
+        Assert.assertEquals(expectedStart.toDate(), gantt.getStartDate());
+        Assert.assertEquals(expectedEnd.toDate(), gantt.getEndDate());
     }
 
     @Test
