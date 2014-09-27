@@ -36,4 +36,66 @@ public class GanttUtil {
                 .ceil((((d.getTime() - yearStart.getTime()) / 86400000.0) + 1.0) / 7.0);
         return (int) weekNo;
     }
+    
+    /**
+     * Parse computed styles to get precise margin height for the given element.
+     * Returns zero if computed styles is not defined.
+     * 
+     * @param elem
+     *            Target element to measure
+     */
+    public static native double getMarginByComputedStyle(
+            com.google.gwt.dom.client.Element elem)
+    /*-{
+        var cs = elem.ownerDocument.defaultView.getComputedStyle(elem);
+        if (cs) {
+            size = parseInt(cs.getPropertyValue('margin-top'))
+                        + parseInt(cs.getPropertyValue('margin-bottom'));
+        } else {
+            size = 0;
+        }
+        return size;
+     }-*/;
+
+    public static native double getBoundingClientRectRight(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.right;
+        } else {
+          return element.offsetLeft + element.offsetWidth;
+        }
+    }-*/;
+    
+    public static native double getBoundingClientRectLeft(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.left;
+        } else {
+          return element.offsetLeft;
+        }
+    }-*/;
+    
+    public static native double getBoundingClientRectWidth(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.right - rect.left;
+        } else {
+          return element.offsetWidth;
+        }
+    }-*/;
 }

@@ -40,6 +40,9 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     public boolean yearRowVisible = true;
 
     @DelegateToWidget
+    public boolean backgroundGridEnabled = true;
+    
+    @DelegateToWidget
     public String weekFormat;
 
     @DelegateToWidget

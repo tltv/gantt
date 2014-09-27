@@ -16,6 +16,11 @@
 
 package org.tltv.gantt.client;
 
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectLeft;
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectRight;
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
+import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
+
 import java.util.Collection;
 import java.util.Date;
 
@@ -87,7 +92,7 @@ import com.vaadin.client.event.PointerUpHandler;
  * <code>
  * <pre>
  * GanttWidget widget = new GanttWidget();    
- * widget.setIEInfo(isIe(), isIe8(), isIe9());
+ * widget.setBrowserInfo(isIe(), isIe8(), isIe9());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>
@@ -123,6 +128,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     private boolean touchSupported = false;
     private boolean movableSteps;
     private boolean resizableSteps;
+    private boolean backgroundGridEnabled;
 
     private GanttRpc ganttRpc;
     private LocaleDataProvider localeDataProvider;
@@ -355,6 +361,8 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     };
 
+    private boolean ie, ie8, chrome, safari, webkit;
+
     public GanttWidget() {
 
         setElement(DivElement.as(DOM.createDiv()));
@@ -417,18 +425,13 @@ public class GanttWidget extends Widget implements HasEnabled {
         timeline.update(resolution, startDate + offset, endDate + offset,
                 firstDayOfRange, firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
+        updateContainerStyle();
         updateContentWidth();
 
         updateStepWidths(steps);
 
         wasTimelineOverflowingHorizontally = timeline
                 .isTimelineOverflowingHorizontally();
-    }
-
-    private void updateContentWidth() {
-        if (timeline.isAlwaysCalculatePixelWidths()) {
-            content.getStyle().setWidth(timeline.getResolutionWidth(), Unit.PX);
-        }
     }
 
     /**
@@ -573,6 +576,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyWidthChanged(int width) {
         if (timeline != null) {
 
+            boolean bgUpdated = false;
+
             boolean overflow = timeline.checkTimelineOverflowingHorizontally();
             if (timeline.isAlwaysCalculatePixelWidths()
                     || wasTimelineOverflowingHorizontally != overflow) {
@@ -582,12 +587,18 @@ public class GanttWidget extends Widget implements HasEnabled {
                     timeline.setScrollLeft(0);
                 }
                 internalHandleWidthChange();
+                bgUpdated = true;
+            }
+
+            if (useAlwaysPxSizeInBackground() && !bgUpdated && !overflow) {
+                updateContainerStyle();
             }
         }
     }
 
     protected void internalHandleWidthChange() {
         timeline.updateWidths();
+        updateContainerStyle();
         updateContentWidth();
     }
 
@@ -636,6 +647,26 @@ public class GanttWidget extends Widget implements HasEnabled {
             addDomHandler(mouseUpHandler, MouseUpEvent.getType());
             addDomHandler(mouseMoveHandler, MouseMoveEvent.getType());
         }
+    }
+
+    /**
+     * Return true if background grid is enabled.
+     * 
+     * @return True if background grid is enabled.
+     */
+    public boolean isBackgroundGridEnabled() {
+        return backgroundGridEnabled;
+    }
+
+    /**
+     * Set background grid enabled. Next time the widget is painted, the grid is
+     * shown on the background of the container.
+     * 
+     * @param backgroundGridEnabled
+     *            True sets background grid enabled.
+     */
+    public void setBackgroundGridEnabled(boolean backgroundGridEnabled) {
+        this.backgroundGridEnabled = backgroundGridEnabled;
     }
 
     /**
@@ -741,14 +772,23 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
-     * Notify this widget if IE is used, and which version.
+     * Notify which browser this widget should optimize to. Usually just one argument is true.
      * 
      * @param ie
      * @param ie8
      * @param ie9
+     * @param chrome
+     * @param safari
+     * @param webkit
      */
-    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
-        timeline.setBrowserInfo(ie, ie8, ie9);
+    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9,
+            boolean chrome, boolean safari, boolean webkit) {
+        this.ie = ie;
+        this.ie8 = ie8;
+        this.chrome = chrome;
+        this.safari = safari;
+        this.webkit = webkit;
+        timeline.setBrowserInfo(ie, ie8);
     }
 
     /**
@@ -1167,31 +1207,138 @@ public class GanttWidget extends Widget implements HasEnabled {
         return startFromBar;
     }
 
-    private int getElementHeightWithMargin(DivElement div) {
-        int height = div.getClientHeight();
-        double marginHeight = getMarginByComputedStyle(div);
-        return height + (int) Math.round(marginHeight);
+    private double calculateBackgroundGridWidth() {
+        double r = getBoundingClientRectRight(timeline
+                .getLastResolutionElement());
+        double l = getBoundingClientRectLeft(timeline
+                .getFirstResolutionElement());
+        double timelineRealWidth = r - l;
+        return timelineRealWidth;
     }
 
-    /**
-     * Parse computed styles to get precise margin height for the given element.
-     * Returns zero if computed styles is not defined.
-     * 
-     * @param elem
-     *            Target element to measure
-     */
-    private static native double getMarginByComputedStyle(
-            com.google.gwt.dom.client.Element elem)
-    /*-{
-        var cs = elem.ownerDocument.defaultView.getComputedStyle(elem);
-        if (cs) {
-            size = parseInt(cs.getPropertyValue('margin-top'))
-                        + parseInt(cs.getPropertyValue('margin-bottom'));
-        } else {
-            size = 0;
+    private void updateContainerStyle() {
+        // Container element has a background image that is positioned, sized
+        // and repeated to fill the whole container with a nice grid background.
+        
+        // Update 'background-size' in container element to match the background
+        // grid's cell width and height to match with the timeline and rows.
+        // Update also 'background-position' in container to match the first
+        // resolution element width in the timeline, IF it's not same as all
+        // other resolution element widths.
+        int resDivElementCount = timeline.getResolutionDiv().getChildCount();
+        if (resDivElementCount == 0) {
+            return;
         }
-        return size;
-     }-*/;
+        Element secondResolutionBlock = null;
+        Element firstResolutionBlock = timeline.getFirstResolutionElement();
+        if (firstResolutionBlock == null) {
+            return;
+        }
+        String firstResolutionBlockWidth = firstResolutionBlock.getStyle()
+                .getWidth();
+        String secondResolutionBlockWidth = null;
+        if (resDivElementCount > 2) {
+            secondResolutionBlock = Element.as(timeline.getResolutionDiv()
+                    .getChild(1));
+            secondResolutionBlockWidth = secondResolutionBlock.getStyle()
+                    .getWidth();
+        }
+    
+        boolean contentOverflowingHorizontally = isContentOverflowingHorizontally();
+    
+        boolean adjustBgPosition = secondResolutionBlockWidth != null
+                && !firstResolutionBlockWidth
+                        .equals(secondResolutionBlockWidth);
+        double gridBlockWidthPx = 0.0;
+        if (!adjustBgPosition) {
+            gridBlockWidthPx = getBoundingClientRectWidth(firstResolutionBlock);
+        } else {
+            gridBlockWidthPx = getBoundingClientRectWidth(secondResolutionBlock);
+        }
+    
+        updateContainerBackgroundSize(contentOverflowingHorizontally,
+                gridBlockWidthPx);
+    
+        updateContainerBackgroundPosition(firstResolutionBlock,
+                contentOverflowingHorizontally, gridBlockWidthPx,
+                adjustBgPosition);
+    }
+
+    private void updateContainerBackgroundSize(
+            boolean contentOverflowingHorizontally, double gridBlockWidthPx) {
+        String gridBlockWidth = null;
+        if (contentOverflowingHorizontally || useAlwaysPxSizeInBackground()) {
+            gridBlockWidth = timeline.toCssCalcOrNumberString(gridBlockWidthPx,
+                    "px");
+        } else {
+            double contentWidth = getBoundingClientRectWidth(content);
+            gridBlockWidth = timeline.toCssCalcOrNumberString(
+                    (100.0 / contentWidth) * gridBlockWidthPx, "%");
+        }
+    
+        int gridBlockHeightPx = getBgGridCellHeight();
+        container.getStyle().setProperty("backgroundSize",
+                gridBlockWidth + " " + gridBlockHeightPx + "px");
+    }
+
+    private void updateContainerBackgroundPosition(
+            Element firstResolutionBlock,
+            boolean contentOverflowingHorizontally, double gridBlockWidthPx,
+            boolean adjustBgPosition) {
+        if (adjustBgPosition) {
+            double firstResolutionBlockRealWidth = getBoundingClientRectWidth(firstResolutionBlock);
+            double realBgPosXPx = firstResolutionBlockRealWidth - 1.0;
+    
+            if (useAlwaysPxSizeInBackground() || contentOverflowingHorizontally) {
+                container.getStyle().setProperty(
+                        "backgroundPosition",
+                        timeline.toCssCalcOrNumberString(realBgPosXPx, "px")
+                                + " 0px");
+            } else {
+                double timelineWidth = calculateBackgroundGridWidth();
+                double relativeBgAreaWidth = timelineWidth - gridBlockWidthPx;
+                double bgPosX = (100.0 / relativeBgAreaWidth) * realBgPosXPx;
+                container.getStyle().setProperty("backgroundPosition",
+                        timeline.toCssCalcOrNumberString(bgPosX, "%") + " 0px");
+            }
+        } else {
+            container.getStyle().setProperty("backgroundPosition", "-1px 0");
+        }
+    }
+
+    private boolean useAlwaysPxSizeInBackground() {
+        return ie || chrome || safari || webkit;
+    }
+
+    private int getBgGridCellHeight() {
+        int gridBlockHeightPx = 0;
+        int firstStepIndex = getAdditonalContentElementCount();
+        if (firstStepIndex < content.getChildCount()) {
+            Element firstBar = Element.as(content.getChild(firstStepIndex));
+            gridBlockHeightPx = getElementHeightWithMargin(firstBar);
+            if ((contentHeight % gridBlockHeightPx) != 0) {
+                // height is not divided evenly for each bar.
+                // Can't use background grid with background-size trick.
+                gridBlockHeightPx = 0;
+            }
+        }
+        return gridBlockHeightPx;
+    }
+
+    private void updateContentWidth() {
+        if (timeline.isAlwaysCalculatePixelWidths()) {
+            content.getStyle().setWidth(timeline.getResolutionWidth(), Unit.PX);
+        }
+    }
+
+    private int getElementHeightWithMargin(Element div) {
+        int height = div.getClientHeight();
+        double marginHeight = 0;
+        if (!ie8) {
+            marginHeight = getMarginByComputedStyle(div);
+        }
+        return height + (int) Math.round(marginHeight);
+    }
 
     private boolean isBetween(int v, int min, int max) {
         return v >= min && v <= max;
@@ -1244,8 +1391,8 @@ public class GanttWidget extends Widget implements HasEnabled {
 
     private void updateBarPercentagePosition(long startDate, long endDate,
             Element bar) {
-        String sLeft = timeline
-                .getLeftPositionPercentageStringForDate(startDate);
+        String sLeft = timeline.getLeftPositionPercentageStringForDate(
+                startDate, getContentWidth());
         bar.getStyle().setProperty("left", sLeft);
 
         String sWidth = timeline
@@ -1384,5 +1531,12 @@ public class GanttWidget extends Widget implements HasEnabled {
             return scrollbarSpacer.getClientHeight();
         }
         return 0;
+    }
+
+    private double getContentWidth() {
+        if (!ie8) {
+            return getBoundingClientRectWidth(content);
+        }
+        return content.getClientWidth();
     }
 }

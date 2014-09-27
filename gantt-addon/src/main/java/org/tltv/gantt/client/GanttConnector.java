@@ -317,12 +317,15 @@ public class GanttConnector extends AbstractComponentConnector {
     @Override
     protected void init() {
         super.init();
-        getWidget().setBrowserInfo(BrowserInfo.get().isIE(),
-                BrowserInfo.get().isIE8(), BrowserInfo.get().isIE9());
+        BrowserInfo info = BrowserInfo.get();
+        getWidget().setBrowserInfo(info.isIE(), info.isIE8(), info.isIE9(),
+                info.isChrome(), info.isSafari(), info.isWebkit());
+        // if background grid is not needed, chrome and ie9 works without
+        // setting alwaysCalculatePixelWidths flag to true.
         getWidget().setAlwaysCalculatePixelWidths(
-                BrowserInfo.get().isSafari() || BrowserInfo.get().isOpera()
-                        || BrowserInfo.get().isIE8());
-        getWidget().setTouchSupported(BrowserInfo.get().isTouchDevice());
+                info.isChrome() || info.isSafari() || info.isOpera()
+                        || info.isIE8() || info.isIE9());
+        getWidget().setTouchSupported(info.isTouchDevice());
         getWidget().initWidget(ganttRpc, localeDataProvider);
         getLayoutManager().addElementResizeListener(getWidget().getElement(),
                 widgetResizeListener);

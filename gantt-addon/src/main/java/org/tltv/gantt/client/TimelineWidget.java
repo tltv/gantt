@@ -16,6 +16,9 @@
 
 package org.tltv.gantt.client;
 
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectLeft;
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectRight;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -86,7 +89,7 @@ public class TimelineWidget extends Widget {
     public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
     public static final int RESOLUTION_HOUR_DAYBLOCK_WIDTH = 4;
 
-    private boolean ie, ie8, ie9;
+    private boolean ie, ie8;
 
     private boolean forceUpdateFlag;
 
@@ -286,12 +289,18 @@ public class TimelineWidget extends Widget {
      * 
      * @param date
      *            Target date in milliseconds.
+     * @param contentWidth
+     *            Width of the content that the given 'date' is relative to.
      * @return Left offset in percentage.
      */
-    public double getLeftPositionPercentageForDate(long date) {
-        double left = getLeftPositionForDate(date);
+    public double getLeftPositionPercentageForDate(long date,
+            double contentWidth) {
+        double timelineLeft = getLeftPositionForDate(date);
+        double relativeLeft = convertRelativeLeftPosition(timelineLeft,
+                contentWidth);
+
         double width = getResolutionWidth();
-        return (100.0 / width) * left;
+        return (100.0 / width) * relativeLeft;
     }
 
     /**
@@ -302,17 +311,23 @@ public class TimelineWidget extends Widget {
      * 
      * @param date
      *            Target date in milliseconds.
+     * @param contentWidth
+     *            Width of the content that the given 'date' is relative to.
      * @return Left offset as a String value.
      */
-    public String getLeftPositionPercentageStringForDate(long date) {
-        double left = getLeftPositionForDate(date);
+    public String getLeftPositionPercentageStringForDate(long date,
+            double contentWidth) {
+        double timelineLeft = getLeftPositionForDate(date);
+        double relativeLeft = convertRelativeLeftPosition(timelineLeft,
+                contentWidth);
+
         double width = getResolutionWidth();
-        String calc = createCalcCssValue(width, left);
+        String calc = createCalcCssValue(width, relativeLeft);
 
         if (calc != null) {
             return calc;
         }
-        return (100.0 / width) * left + "" + Unit.PCT.getType();
+        return (100.0 / width) * relativeLeft + "" + Unit.PCT.getType();
     }
 
     /**
@@ -364,16 +379,35 @@ public class TimelineWidget extends Widget {
      */
     public long getDateForLeftPosition(double left) {
         double width = getResolutionWidth();
-        double range = endDate - startDate;
         if (width <= 0) {
             return 0;
         }
+        double range = endDate - startDate;
         double p = range / width;
         double offset = p * left;
         double date = startDate + offset;
         return (long) date;
     }
 
+    /**
+     * Convert left position for other relative target width.
+     * 
+     * @param left
+     * @param contentWidthToConvertFor
+     * @return
+     */
+    public double convertRelativeLeftPosition(double left,
+            double contentWidthToConvertFor) {
+        double width = getResolutionWidth();
+        if (width <= 0 || contentWidthToConvertFor <= 0) {
+            return 0;
+        }
+
+        double relativePosition = (1.0 / contentWidthToConvertFor) * left;
+        double timelineLeft = relativePosition * width;
+        return timelineLeft;
+    }
+    
     /**
      * Set horizontal scroll position for the time-line.
      * 
@@ -409,23 +443,18 @@ public class TimelineWidget extends Widget {
         // calculate new block width for day-resolution.
         // Year and month blocks are vertically in-line with days.
         double dayWidthPercentage = 100.0 / blocksInRange;
-        double dayWidthPx = Math.round(resolutionDiv.getClientWidth()
-                / blocksInRange);
-        while ((resolutionDiv.getClientWidth() % (blocksInRange * dayWidthPx)) >= blocksInRange) {
-            dayWidthPx++;
-        }
+        double dayOrHourWidthPx = calculateDayOrHourResolutionBlockWidthPx(blocksInRange);
 
         // calculate block width for currently selected resolution
         // (day,week,...)
         // resolution div's content may not be vertically in-line with
         // year/month blocks. This is the case for example with Week resolution.
         double resBlockMinWidthPx = minResolutionWidth;
-        double resBlockWidthPx = dayWidthPx;
+        double resBlockWidthPx = calculateActualResolutionBlockWidthPx(dayOrHourWidthPx);
         double resBlockWidthPercentage = 100.0 / resolutionBlockCount;
         String pct = createCalcCssValue(resolutionBlockCount);
         if (resolution == Resolution.Week) {
             resBlockMinWidthPx = DAYS_IN_WEEK * minResolutionWidth;
-            resBlockWidthPx = DAYS_IN_WEEK * dayWidthPx;
             resBlockWidthPercentage = dayWidthPercentage * DAYS_IN_WEEK;
             pct = createCalcCssValue(blocksInRange, DAYS_IN_WEEK);
 
@@ -433,30 +462,56 @@ public class TimelineWidget extends Widget {
 
         // update resolution block widths
         updateResolutionBlockWidths(resolutionBlockCount, dayWidthPercentage,
-                dayWidthPx, resBlockMinWidthPx, resBlockWidthPx,
+                dayOrHourWidthPx, resBlockMinWidthPx, resBlockWidthPx,
                 resBlockWidthPercentage, pct);
 
         if (isYearRowVisible()) {
             // update year block widths
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, yearRowData);
+            updateBlockWidths(dayWidthPercentage, dayOrHourWidthPx, yearRowData);
         }
 
         if (isMonthRowVisible()) {
             // update month block widths
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, monthRowData);
+            updateBlockWidths(dayWidthPercentage, dayOrHourWidthPx, monthRowData);
         }
 
         if (isDayRowVisible()) {
-            updateBlockWidths(dayWidthPercentage, dayWidthPx, dayRowData);
+            updateBlockWidths(dayWidthPercentage, dayOrHourWidthPx, dayRowData);
         }
 
         if (isAlwaysCalculatePixelWidths()) {
-            updateSpacerBlocks(dayWidthPx);
+            updateSpacerBlocks(dayOrHourWidthPx);
         }
 
         GWT.log(getClass().getSimpleName() + " Widths are updated.");
     }
 
+    /*
+     * Calculates either day or hour resolution block width depending on the
+     * current resolution.
+     */
+    private double calculateDayOrHourResolutionBlockWidthPx(int blockCount) {
+        double dayOrHourWidthPx = Math.round(resolutionDiv.getClientWidth()
+                / blockCount);
+        while ((resolutionDiv.getClientWidth() % (blockCount * dayOrHourWidthPx)) >= blockCount) {
+            dayOrHourWidthPx++;
+        }
+
+        return dayOrHourWidthPx;
+    }
+
+    /*
+     * Calculates the actual width of one resolution block element. For example:
+     * week resolution will return 7 * dayOrHourBlockWidthPx.
+     */
+    private double calculateActualResolutionBlockWidthPx(
+            double dayOrHourBlockWidthPx) {
+        if (resolution == Resolution.Week) {
+            return DAYS_IN_WEEK * dayOrHourBlockWidthPx;
+        }
+        return dayOrHourBlockWidthPx;
+    }
+    
     /**
      * Returns true if the timeline is overflowing the parent's width. This
      * works only when this widget is attached to some parent.
@@ -502,10 +557,9 @@ public class TimelineWidget extends Widget {
         }
     }
 
-    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9) {
+    public void setBrowserInfo(boolean ie, boolean ie8) {
         this.ie = ie;
         this.ie8 = ie8;
-        this.ie9 = ie9;
     }
 
     /**
@@ -538,14 +592,32 @@ public class TimelineWidget extends Widget {
      * @return
      */
     public double getResolutionWidth() {
-        double width = resolutionDiv.getClientWidth();
+        if (!ie8) {
+            double r = getBoundingClientRectRight(getLastResolutionElement());
+            double l = getBoundingClientRectLeft(getFirstResolutionElement());
+            double timelineRealWidth = r - l;
+            return timelineRealWidth;
+        }
+
+        double width = getResolutionDivWidth();
         if (isAlwaysCalculatePixelWidths() && resSpacerDiv != null
                 && resSpacerDiv.hasParentElement()) {
-            width = width - resSpacerDiv.getClientWidth();
+            width = width - getElementWidth(resSpacerDiv);
         }
         return width;
     }
 
+    private double getResolutionDivWidth() {
+        return getElementWidth(resolutionDiv);
+    }
+    
+    private double getElementWidth(Element element) {
+        if(!ie8) {
+            return GanttUtil.getBoundingClientRectWidth(element);
+        }
+        return element.getClientWidth();
+    }
+    
     public boolean isDayRowVisible() {
         return resolution == Resolution.Hour;
     }
@@ -641,6 +713,42 @@ public class TimelineWidget extends Widget {
         return hour24DateTimeFormat;
     }
 
+    public Element getFirstResolutionElement() {
+        if (getResolutionDiv().hasChildNodes()) {
+            return getResolutionDiv().getFirstChildElement();
+        }
+        return null;
+    }
+
+    public Element getLastResolutionElement() {
+        int blockCount = getResolutionDiv().getChildCount();
+        if (blockCount == 0) {
+            return null;
+        }
+        if (resSpacerDiv != null
+                && resSpacerDiv.hasParentElement()) {
+            if (blockCount > 1) {
+                return Element.as(getResolutionDiv().getChild(blockCount - 2));
+            }
+            return null;
+        }
+        return Element.as(getResolutionDiv().getLastChild());
+    }
+
+    /**
+     * Returns the amount of visible blocks in the timeline for the active
+     * resolution. Day blocks for Day/Week, hour blocks for Hour resolution.
+     * 
+     * @return
+     */
+    public int getVisibleResolutionBlockCount() {
+        int count = getResolutionDiv().getChildCount();
+        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
+            return count - 1;
+        }
+        return count;
+    }
+
     private void appendTimelineBlocks(BlockRowData rowData, String style) {
         for (Entry<String, Element> entry : rowData.getBlockEntries()) {
             getElement().appendChild(entry.getValue());
@@ -654,8 +762,8 @@ public class TimelineWidget extends Widget {
      * Update horizontal overflow state.
      */
     private void updateTimelineOverflowingHorizontally() {
-        timelineOverflowingHorizontally = resolutionDiv.getClientWidth() > getElement()
-                .getParentElement().getClientWidth();
+        timelineOverflowingHorizontally = (getElementWidth(resolutionDiv) > getElementWidth(getElement()
+                .getParentElement()));
     }
 
     private DivElement createSpacerBlock(String className) {
@@ -695,15 +803,9 @@ public class TimelineWidget extends Widget {
 
     private void updateBlockWidths(double dayWidthPercentage,
             double dayWidthPx, BlockRowData rowData) {
-        int lastIndex;
-        int i = 0;
-        lastIndex = rowData.size() - 1;
         for (Entry<String, Element> entry : rowData.getBlockEntries()) {
             setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
                     entry.getValue(), rowData.getBlockLength(entry.getKey()));
-
-            ieFix(i, lastIndex, entry.getValue());
-            i++;
         }
     }
 
@@ -735,8 +837,6 @@ public class TimelineWidget extends Widget {
                 setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
                         resBlockWidthPx, pct, resBlock);
             }
-
-            ieFix(i, lastIndex, resBlock);
         }
     }
 
@@ -745,7 +845,7 @@ public class TimelineWidget extends Widget {
             resSpacerDiv.removeFromParent();
         }
     }
-
+    
     private void prepareTimelineForHourResolution(long startDate, long endDate) {
         firstDay = true;
         prepareTimelineForResolution(HOUR_INTERVAL, startDate, endDate,
@@ -994,11 +1094,11 @@ public class TimelineWidget extends Widget {
         return Integer.parseInt(m) - 1;
     }
 
-    private String createCalcCssValue(int resolutionBlockCount) {
+    String createCalcCssValue(int resolutionBlockCount) {
         return createCalcCssValue(resolutionBlockCount, null);
     }
 
-    private String createCalcCssValue(int resolutionBlockCount,
+    String createCalcCssValue(int resolutionBlockCount,
             Integer multiplier) {
         if (ie) {
             // IEs up to 11 don't support more than two-decimal precision.
@@ -1028,6 +1128,22 @@ public class TimelineWidget extends Widget {
         return null;
     }
 
+    /**
+     * If unit is '%' , returns a 'calc(xx.xx%)' for IE9+, or just a 'xx.xx%' for other browsers. 
+     * 
+     * @param value Number
+     * @param unit unit
+     * @return Combined number value + unit string that can be passed for example to a element's css width/heigh.
+     */
+    public String toCssCalcOrNumberString(double value, String unit) {
+        if (ie) {
+            if (!ie8) {
+                return "calc(" + value + unit + ")";
+            }
+        }
+        return value + unit;
+    }
+    
     private void setWidth(int daysInRange, double dayWidthPercentage,
             double dayWidthPx, Element element, int position) {
         if (isTimelineOverflowingHorizontally()) {
@@ -1051,25 +1167,6 @@ public class TimelineWidget extends Widget {
                 element.getStyle().setWidth(pxValue, Unit.PX);
             } else {
                 setCssPercentageWidth(element, pctValue, pct);
-            }
-        }
-    }
-
-    private void ieFix(int index, int lastIndex, Element element) {
-        if (!ie) {
-            return;
-        }
-        if (index == lastIndex) {
-            // last block
-            if (ie9
-                    || !"-ms-inline-flexbox".equals(element.getParentElement()
-                            .getStyle().getProperty("display"))) {
-                // IE9 workaround: adjust last block to have a -1px right
-                // margin that helps to the lack of -ms-inline-flexbox
-                // support.
-                // Same workaround is used for all IEs when the parent element
-                // don't have 'display: -ms-inline-flexbox'
-                element.getStyle().setMarginRight(-1, Unit.PX);
             }
         }
     }
@@ -1225,6 +1322,10 @@ public class TimelineWidget extends Widget {
     public static int getWeekNumber(Date d, long timezoneOffset,
             int firstDayOfWeek) {
         return GanttUtil.getWeekNumber(d, timezoneOffset, firstDayOfWeek);
+    }
+
+    public DivElement getResolutionDiv() {
+        return resolutionDiv;
     }
 
     private class BlockRowData {
