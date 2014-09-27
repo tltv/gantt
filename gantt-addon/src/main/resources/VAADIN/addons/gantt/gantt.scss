@@ -79,23 +79,7 @@
 			
 			/* Background grid. IE 8 not supported.*/
 			
-			background: #eee;
-			/* IE9 uses SVG */
-			background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjAlIj4KICAgIDxzdG9wIG9mZnNldD0iMSUiIHN0b3AtY29sb3I9IiNjY2NjY2MiIHN0b3Atb3BhY2l0eT0iMSIvPgogICAgPHN0b3Agb2Zmc2V0PSIxJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQtdWNnZy1nZW5lcmF0ZWQyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIxJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjElIiBzdG9wLWNvbG9yPSIjY2NjY2NjIiBzdG9wLW9wYWNpdHk9IjAiLz4KICA8L2xpbmVhckdyYWRpZW50PgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InVybCgjZ3JhZC11Y2dnLWdlbmVyYXRlZDEpIiAvPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InVybCgjZ3JhZC11Y2dnLWdlbmVyYXRlZDIpIiAvPgo8L3N2Zz4=);
-			/* Webkit (Safari/Chrome 10) */ 
-			background: -webkit-gradient(linear, left top, right top, color-stop(1px, #eeeeee), color-stop(0, transparent)), -webkit-gradient(linear, left top, left bottom, color-stop(1px, #eeeeee), color-stop(0, transparent));
-			/* Webkit (Chrome 11+) */ 
-			background: -webkit-linear-gradient(#eee 1px, transparent 0px), -webkit-linear-gradient(0deg, #eee 1px, transparent 0px);
-			/* Mozilla Firefox */ 
-			background: -moz-linear-gradient(#eee 1px, transparent 0px), -moz-linear-gradient(0deg, #eee 1px, transparent 0px);
-			/* IE10 Consumer Preview */ 
-			background: -ms-linear-gradient(0deg, #eee 1px, transparent 0px), -ms-linear-gradient(90deg, #eee 1.1px, transparent 0px);
-			/* Opera */ 
-			background: -o-linear-gradient(#eee 1px, transparent 0px), -o-linear-gradient(90deg, #eee 1px, transparent 0px);
-			/* W3C Markup, IE10 Release Preview */ 
-			background: linear-gradient(0deg, #eee 1px, transparent 0px), linear-gradient(90deg, #eee 1.1px, transparent 0px);
-			
-			background-attachment: local;
+			@include ganttBgGrid(#eee);
 		}
 		
 		.gantt-content {
@@ -167,7 +151,28 @@
 	-ms-user-select: none;
 	user-select: none;
 }
-	 
+
+@mixin ganttBgGrid($gridLineColor) {
+	background: $gridLineColor;
+	/* IE9 uses SVG */
+	background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjAlIj4KICAgIDxzdG9wIG9mZnNldD0iMSUiIHN0b3AtY29sb3I9IiNjY2NjY2MiIHN0b3Atb3BhY2l0eT0iMSIvPgogICAgPHN0b3Agb2Zmc2V0PSIxJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgPC9saW5lYXJHcmFkaWVudD4KICA8bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQtdWNnZy1nZW5lcmF0ZWQyIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIxJSIgc3RvcC1jb2xvcj0iI2ZmZmZmZiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjElIiBzdG9wLWNvbG9yPSIjY2NjY2NjIiBzdG9wLW9wYWNpdHk9IjAiLz4KICA8L2xpbmVhckdyYWRpZW50PgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InVybCgjZ3JhZC11Y2dnLWdlbmVyYXRlZDEpIiAvPgogIDxyZWN0IHg9IjAiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9InVybCgjZ3JhZC11Y2dnLWdlbmVyYXRlZDIpIiAvPgo8L3N2Zz4=);
+	
+	/* Webkit (Safari/Chrome 10) */ 
+	background: -webkit-gradient(linear, left top, right top, color-stop(1px, $gridLineColor), color-stop(0, transparent)), -webkit-gradient(linear, left top, left bottom, color-stop(1px, $gridLineColor), color-stop(0, transparent));
+	/* Webkit (Chrome 11+) */ 
+	background: -webkit-linear-gradient($gridLineColor 1px, transparent 0px), -webkit-linear-gradient(0deg, $gridLineColor 1px, transparent 0px);
+	/* Mozilla Firefox */ 
+	background: -moz-linear-gradient($gridLineColor 1px, transparent 0px), -moz-linear-gradient(0deg, $gridLineColor 1px, transparent 0px);
+	/* IE10 Consumer Preview */ 
+	background: -ms-linear-gradient(0deg, $gridLineColor 1.1px, transparent 0px), -ms-linear-gradient(90deg, $gridLineColor 1.1px, transparent 0px);
+	/* Opera */ 
+	background: -o-linear-gradient($gridLineColor 1px, transparent 0px), -o-linear-gradient(90deg, $gridLineColor 1px, transparent 0px);
+	/* W3C Markup, IE10 Release Preview */ 
+	background: linear-gradient(0deg, $gridLineColor 1px, transparent 0px), linear-gradient(90deg, $gridLineColor 1.1px, transparent 0px);
+			
+	background-attachment: local;
+}
+ 
 /* IE8 hacks */
 .v-ie8 .gantt {
 	

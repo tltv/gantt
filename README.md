@@ -16,6 +16,8 @@ List of features that are supported:
 * modify step's start date and end date by dragging and moving the step (move and resize events)
 * scrolling enabled horizontally and vertically for a large chart content
 * scales the small timeline and content width up to fit in the space available
+* Vaadin Table can being used as a row header, vertical scrolling is mirrored to the table and vice versa
+* background grid (except for IE8)
 * touch support (experimental)
 
 Techincal details:
