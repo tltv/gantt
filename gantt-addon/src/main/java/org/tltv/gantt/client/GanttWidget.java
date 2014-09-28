@@ -772,7 +772,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
-     * Notify which browser this widget should optimize to. Usually just one argument is true.
+     * Notify which browser this widget should optimize to. Usually just one
+     * argument is true.
      * 
      * @param ie
      * @param ie8
@@ -1217,9 +1218,13 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private void updateContainerStyle() {
+        if (!isBackgroundGridEnabled()) {
+            container.getStyle().setBackgroundImage("none");
+            return;
+        }
         // Container element has a background image that is positioned, sized
         // and repeated to fill the whole container with a nice grid background.
-        
+
         // Update 'background-size' in container element to match the background
         // grid's cell width and height to match with the timeline and rows.
         // Update also 'background-position' in container to match the first
@@ -1243,9 +1248,9 @@ public class GanttWidget extends Widget implements HasEnabled {
             secondResolutionBlockWidth = secondResolutionBlock.getStyle()
                     .getWidth();
         }
-    
+
         boolean contentOverflowingHorizontally = isContentOverflowingHorizontally();
-    
+
         boolean adjustBgPosition = secondResolutionBlockWidth != null
                 && !firstResolutionBlockWidth
                         .equals(secondResolutionBlockWidth);
@@ -1255,10 +1260,10 @@ public class GanttWidget extends Widget implements HasEnabled {
         } else {
             gridBlockWidthPx = getBoundingClientRectWidth(secondResolutionBlock);
         }
-    
+
         updateContainerBackgroundSize(contentOverflowingHorizontally,
                 gridBlockWidthPx);
-    
+
         updateContainerBackgroundPosition(firstResolutionBlock,
                 contentOverflowingHorizontally, gridBlockWidthPx,
                 adjustBgPosition);
@@ -1275,7 +1280,7 @@ public class GanttWidget extends Widget implements HasEnabled {
             gridBlockWidth = timeline.toCssCalcOrNumberString(
                     (100.0 / contentWidth) * gridBlockWidthPx, "%");
         }
-    
+
         int gridBlockHeightPx = getBgGridCellHeight();
         container.getStyle().setProperty("backgroundSize",
                 gridBlockWidth + " " + gridBlockHeightPx + "px");
@@ -1288,7 +1293,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         if (adjustBgPosition) {
             double firstResolutionBlockRealWidth = getBoundingClientRectWidth(firstResolutionBlock);
             double realBgPosXPx = firstResolutionBlockRealWidth - 1.0;
-    
+
             if (useAlwaysPxSizeInBackground() || contentOverflowingHorizontally) {
                 container.getStyle().setProperty(
                         "backgroundPosition",
