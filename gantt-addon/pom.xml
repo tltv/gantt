@@ -5,7 +5,7 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-addon</artifactId>
 	<packaging>jar</packaging>
-	<version>0.3.0</version>
+	<version>0.4.0</version>
 	<name>Gantt</name>
 
 	<properties>
@@ -155,9 +155,9 @@
                             <goals>
                                 <goal>jar</goal>
                             </goals>
-                            <configuration>
+                            <!-- configuration>
                                 <additionalparam>-Xdoclint:none</additionalparam>
-                            </configuration>
+                            </configuration-->
                     </execution>
 				</executions>
 			</plugin>
