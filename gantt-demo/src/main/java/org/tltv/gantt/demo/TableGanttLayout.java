@@ -20,8 +20,15 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
         setMargin(false);
         setSpacing(false);
 
-        UI.getCurrent().getPage().getStyles()
-                .add(".v-table-row, .v-table-row-odd { height: 30px; }");
+        UI.getCurrent()
+                .getPage()
+                .getStyles()
+                .add(".v-table-table tr td.v-table-cell-content { height: 36px; }");
+        UI.getCurrent()
+                .getPage()
+                .getStyles()
+                .add(".v-table-table tr:first-child td.v-table-cell-content { height: 37px; }");
+
         ganttTable = createTableForGantt();
 
         addComponent(ganttTable);
