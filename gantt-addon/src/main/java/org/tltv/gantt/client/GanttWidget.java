@@ -82,17 +82,18 @@ import com.vaadin.client.event.PointerUpHandler;
  * Here are few steps that need to be notified when taking this widget in use. <br/>
  * First of all, after constructing this widget, you need to initialize it by
  * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
- * that, if client uses IE, make sure to call
- * {@link #setBrowserInfo(boolean, boolean, boolean)} to let this widget know
- * that. And if client supports touch events, let this widget know that by
- * calling {@link #setTouchSupported(boolean)} method before initWidget.
+ * that, make sure to call
+ * {@link #setBrowserInfo(boolean, boolean, boolean, boolean, boolean, boolean)}
+ * to let this widget know some details of the browser. And if client supports
+ * touch events, let this widget know that by calling
+ * {@link #setTouchSupported(boolean)} method before initWidget.
  * <p>
  * Sample code snippet:
  * 
  * <code>
  * <pre>
  * GanttWidget widget = new GanttWidget();    
- * widget.setBrowserInfo(isIe(), isIe8(), isIe9());
+ * widget.setBrowserInfo(isIe(), isIe8(), isIe9(), isChrome(), isSafari(), isWebkit());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>

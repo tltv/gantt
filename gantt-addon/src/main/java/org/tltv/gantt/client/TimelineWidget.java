@@ -407,7 +407,7 @@ public class TimelineWidget extends Widget {
         double timelineLeft = relativePosition * width;
         return timelineLeft;
     }
-    
+
     /**
      * Set horizontal scroll position for the time-line.
      * 
@@ -472,7 +472,8 @@ public class TimelineWidget extends Widget {
 
         if (isMonthRowVisible()) {
             // update month block widths
-            updateBlockWidths(dayWidthPercentage, dayOrHourWidthPx, monthRowData);
+            updateBlockWidths(dayWidthPercentage, dayOrHourWidthPx,
+                    monthRowData);
         }
 
         if (isDayRowVisible()) {
@@ -511,7 +512,7 @@ public class TimelineWidget extends Widget {
         }
         return dayOrHourBlockWidthPx;
     }
-    
+
     /**
      * Returns true if the timeline is overflowing the parent's width. This
      * works only when this widget is attached to some parent.
@@ -610,14 +611,14 @@ public class TimelineWidget extends Widget {
     private double getResolutionDivWidth() {
         return getElementWidth(resolutionDiv);
     }
-    
+
     private double getElementWidth(Element element) {
-        if(!ie8) {
+        if (!ie8) {
             return GanttUtil.getBoundingClientRectWidth(element);
         }
         return element.getClientWidth();
     }
-    
+
     public boolean isDayRowVisible() {
         return resolution == Resolution.Hour;
     }
@@ -725,8 +726,7 @@ public class TimelineWidget extends Widget {
         if (blockCount == 0) {
             return null;
         }
-        if (resSpacerDiv != null
-                && resSpacerDiv.hasParentElement()) {
+        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
             if (blockCount > 1) {
                 return Element.as(getResolutionDiv().getChild(blockCount - 2));
             }
@@ -845,7 +845,7 @@ public class TimelineWidget extends Widget {
             resSpacerDiv.removeFromParent();
         }
     }
-    
+
     private void prepareTimelineForHourResolution(long startDate, long endDate) {
         firstDay = true;
         prepareTimelineForResolution(HOUR_INTERVAL, startDate, endDate,
@@ -1098,8 +1098,7 @@ public class TimelineWidget extends Widget {
         return createCalcCssValue(resolutionBlockCount, null);
     }
 
-    String createCalcCssValue(int resolutionBlockCount,
-            Integer multiplier) {
+    String createCalcCssValue(int resolutionBlockCount, Integer multiplier) {
         if (ie) {
             // IEs up to 11 don't support more than two-decimal precision.
             // That's why we use calc(100% / x) or calc(123.12345%) css value to
@@ -1129,11 +1128,15 @@ public class TimelineWidget extends Widget {
     }
 
     /**
-     * If unit is '%' , returns a 'calc(xx.xx%)' for IE9+, or just a 'xx.xx%' for other browsers. 
+     * If unit is '%' , returns a 'calc(xx.xx%)' for IE9+, or just a 'xx.xx%'
+     * for other browsers.
      * 
-     * @param value Number
-     * @param unit unit
-     * @return Combined number value + unit string that can be passed for example to a element's css width/heigh.
+     * @param value
+     *            Number
+     * @param unit
+     *            unit
+     * @return Combined number value + unit string that can be passed for
+     *         example to a element's css width/height.
      */
     public String toCssCalcOrNumberString(double value, String unit) {
         if (ie) {
@@ -1143,7 +1146,7 @@ public class TimelineWidget extends Widget {
         }
         return value + unit;
     }
-    
+
     private void setWidth(int daysInRange, double dayWidthPercentage,
             double dayWidthPx, Element element, int position) {
         if (isTimelineOverflowingHorizontally()) {

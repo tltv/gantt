@@ -186,7 +186,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
 
     /**
      * Set new timeline resolution. Allowed resolutions are
-     * {@link Resolution#Day} and {@link Resolution#Week}.
+     * {@link Resolution#Hour}, {@link Resolution#Day} and
+     * {@link Resolution#Week}.
      * 
      * @param resolution
      */
@@ -585,12 +586,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
             return;
         }
         endDate = resetTimeToMax(date);
-        
+
         Calendar cal = getCalendar();
         cal.setTime(new Date());
         Long dst_offset = Long.valueOf(cal.get(Calendar.DST_OFFSET));
         endDate = new Date(endDate.getTime() - dst_offset);
-        
+
         getState().endDate = endDate.getTime();
     }
 
@@ -640,8 +641,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         }
         Calendar cal = getCalendar();
         cal.setTime(new Date());
-        getState().timeZoneOffset = Long.valueOf(cal.get(
-                Calendar.ZONE_OFFSET)
+        getState().timeZoneOffset = Long.valueOf(cal.get(Calendar.ZONE_OFFSET)
                 + cal.get(Calendar.DST_OFFSET));
     }
 
