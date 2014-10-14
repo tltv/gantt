@@ -58,4 +58,9 @@ public class TreeTableGanttLayout extends HorizontalLayout implements
             ganttTable.refreshRowCache();
         }
     }
+
+    @Override
+    public void stepDeleted(Step step) {
+        container.removeItem(step);
+    }
 }

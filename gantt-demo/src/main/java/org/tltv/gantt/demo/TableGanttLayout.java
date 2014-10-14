@@ -61,4 +61,9 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
             ganttTable.refreshRowCache();
         }
     }
+
+    @Override
+    public void stepDeleted(Step step) {
+        ganttTable.removeItem(step);
+    }
 }

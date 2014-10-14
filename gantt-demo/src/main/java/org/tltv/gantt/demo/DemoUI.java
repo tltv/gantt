@@ -665,8 +665,22 @@ public class DemoUI extends UI {
                 win.close();
             }
         });
+        Button delete = new Button("Delete", new ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+                Step step = ((BeanItem<Step>) group.getItemDataSource())
+                        .getBean();
+                gantt.removeStep(step);
+                if (ganttListener != null) {
+                    ganttListener.stepDeleted(step);
+                }
+                win.close();
+            }
+        });
         buttons.addComponent(ok);
         buttons.addComponent(cancel);
+        buttons.addComponent(delete);
         win.setClosable(true);
 
         getUI().addWindow(win);
