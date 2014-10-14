@@ -1243,14 +1243,12 @@ public class GanttWidget extends Widget implements HasEnabled {
         if (firstResolutionBlock == null) {
             return;
         }
-        String firstResolutionBlockWidth = firstResolutionBlock.getStyle()
-                .getWidth();
-        String secondResolutionBlockWidth = null;
+        Double firstResolutionBlockWidth = getBoundingClientRectWidth(firstResolutionBlock);
+        Double secondResolutionBlockWidth = null;
         if (resDivElementCount > 2) {
             secondResolutionBlock = Element.as(timeline.getResolutionDiv()
                     .getChild(1));
-            secondResolutionBlockWidth = secondResolutionBlock.getStyle()
-                    .getWidth();
+            secondResolutionBlockWidth = getBoundingClientRectWidth(secondResolutionBlock);
         }
 
         boolean contentOverflowingHorizontally = isContentOverflowingHorizontally();
@@ -1260,9 +1258,9 @@ public class GanttWidget extends Widget implements HasEnabled {
                         .equals(secondResolutionBlockWidth);
         double gridBlockWidthPx = 0.0;
         if (!adjustBgPosition) {
-            gridBlockWidthPx = getBoundingClientRectWidth(firstResolutionBlock);
+            gridBlockWidthPx = firstResolutionBlockWidth;
         } else {
-            gridBlockWidthPx = getBoundingClientRectWidth(secondResolutionBlock);
+            gridBlockWidthPx = secondResolutionBlockWidth;
         }
 
         updateContainerBackgroundSize(contentOverflowingHorizontally,

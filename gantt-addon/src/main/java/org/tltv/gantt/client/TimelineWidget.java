@@ -34,6 +34,8 @@ import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.StyleElement;
+import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.i18n.client.TimeZone;
 import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.DOM;
@@ -81,6 +83,9 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_EVEN = "even";
     public static final String STYLE_WEEKEND = "weekend";
     public static final String STYLE_SPACER = "spacer";
+    public static final String STYLE_FIRST = "f-col";
+    public static final String STYLE_CENTER = "c-col";
+    public static final String STYLE_LAST = "l-col";
 
     public static final int DAYS_IN_WEEK = 7;
     public static final int HOURS_IN_DAY = 24;
@@ -147,6 +152,9 @@ public class TimelineWidget extends Widget {
     private int minResolutionWidth = -1;
     private int minWidth = -1;
     private boolean calcPixels = false;
+    private double positionLeft;
+
+    private StyleElement styleElement;
 
     enum Weekday {
         First,
@@ -162,6 +170,15 @@ public class TimelineWidget extends Widget {
     public TimelineWidget() {
         setElement(DivElement.as(DOM.createDiv()));
         setStyleName(STYLE_TIMELINE);
+    }
+
+    @Override
+    protected void onUnload() {
+        super.onDetach();
+
+        if (styleElement != null) {
+            styleElement.removeFromParent();
+        }
     }
 
     /**
@@ -209,6 +226,8 @@ public class TimelineWidget extends Widget {
         }
 
         GWT.log(getClass().getSimpleName() + " Updating content.");
+
+        injectStyle();
 
         locale = localeDataProvider.getLocale();
         this.resolution = resolution;
@@ -258,6 +277,24 @@ public class TimelineWidget extends Widget {
 
         GWT.log(getClass().getSimpleName() + " is updated for resolution "
                 + resolution.name() + ".");
+    }
+
+    /**
+     * Injects custom stylesheet just for this widget. It helps to update styles
+     * for a big group of elements in the DOM, like resolution blocks.
+     * <p>
+     * Warning, this feature is not working with Internet Explorer reliably
+     * enough. Read more at {@link StyleInjector#injectStylesheetAtEnd(String)}.
+     * This method has no effect when {@link #ie} is set to true.
+     */
+    private void injectStyle() {
+        if (ie || styleElement != null) {
+            return;
+        }
+
+        styleElement = StyleInjector.injectStylesheetAtEnd("." + STYLE_FIRST
+                + " { } ." + STYLE_CENTER + " { } ." + STYLE_LAST + " { } ");
+        StyleInjector.flush();
     }
 
     /**
@@ -415,6 +452,10 @@ public class TimelineWidget extends Widget {
      *            Scroll position in pixels.
      */
     public void setScrollLeft(double left) {
+        if (positionLeft == left) {
+            return;
+        }
+        positionLeft = left;
         getElement().getStyle().setLeft(-left, Unit.PX);
     }
 
@@ -819,24 +860,47 @@ public class TimelineWidget extends Widget {
         boolean lastResBlockIsShort = lastResBlockCount > 0
                 && ((resolution == Resolution.Week && lastResBlockCount < DAYS_IN_WEEK));
 
-        int lastIndex = resolutionBlockCount - 1;
-        int i;
-        Element resBlock;
-        for (i = 0; i < resolutionBlockCount; i++) {
-            resBlock = Element.as(resolutionDiv.getChild(i));
+        if (styleElement == null) {
+            // styleElement is not set, set width for each block explicitly.
+            int lastIndex = resolutionBlockCount - 1;
+            int i;
+            Element resBlock;
+            for (i = 0; i < resolutionBlockCount; i++) {
+                resBlock = Element.as(resolutionDiv.getChild(i));
 
-            // first and last week blocks may be thinner than other
-            // resolution blocks.
-            if (firstResBlockIsShort && i == 0) {
-                setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
-                        resBlock, firstResBlockCount);
-            } else if (lastResBlockIsShort && i == lastIndex) {
-                setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
-                        resBlock, lastResBlockCount);
-            } else {
-                setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
-                        resBlockWidthPx, pct, resBlock);
+                // first and last week blocks may be thinner than other
+                // resolution blocks.
+                if (firstResBlockIsShort && i == 0) {
+                    setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                            resBlock, firstResBlockCount);
+                } else if (lastResBlockIsShort && i == lastIndex) {
+                    setWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                            resBlock, lastResBlockCount);
+                } else {
+                    setWidth(resBlockMinWidthPx, resBlockWidthPercentage,
+                            resBlockWidthPx, pct, resBlock);
+                }
             }
+
+        } else {
+            // set widths by updating injected styles in one place. Faster than
+            // setting widths explicitly for each element.
+            String center = getWidthStyleValue(resBlockMinWidthPx,
+                    resBlockWidthPercentage, resBlockWidthPx, pct);
+            String first = center;
+            String last = center;
+            if (firstResBlockIsShort) {
+                first = getWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                        firstResBlockCount);
+            }
+            if (lastResBlockIsShort) {
+                last = getWidth(blocksInRange, dayWidthPercentage, dayWidthPx,
+                        lastResBlockCount);
+            }
+            StyleInjector.setContents(styleElement, "." + STYLE_CENTER
+                    + " { width: " + center + "; } ." + STYLE_FIRST
+                    + " { width: " + first + "; } ." + STYLE_LAST
+                    + " { width: " + last + "; } ");
         }
     }
 
@@ -1161,6 +1225,20 @@ public class TimelineWidget extends Widget {
         }
     }
 
+    private String getWidth(int daysInRange, double dayWidthPercentage,
+            double dayWidthPx, int position) {
+        if (isTimelineOverflowingHorizontally()) {
+            return (position * minResolutionWidth) + Unit.PX.getType();
+        } else {
+            if (isAlwaysCalculatePixelWidths()) {
+                return position * dayWidthPx + Unit.PX.getType();
+            } else {
+                return getCssPercentageWidth(daysInRange, dayWidthPercentage,
+                        position);
+            }
+        }
+    }
+
     private void setWidth(double minPxValue, double pctValue, double pxValue,
             String pct, Element element) {
         if (isTimelineOverflowingHorizontally()) {
@@ -1174,10 +1252,29 @@ public class TimelineWidget extends Widget {
         }
     }
 
+    private String getWidthStyleValue(double minPxValue, double pctValue,
+            double pxValue, String pct) {
+        if (isTimelineOverflowingHorizontally()) {
+            return minPxValue + Unit.PX.getType();
+        } else {
+            if (isAlwaysCalculatePixelWidths()) {
+                return pxValue + Unit.PX.getType();
+            } else {
+                return getCssPercentageWidth(pctValue, pct);
+            }
+        }
+    }
+
     private void setCssPercentageWidth(Element element, int daysInRange,
             double width, int position) {
         String pct = createCalcCssValue(daysInRange, position);
         setCssPercentageWidth(element, position * width, pct);
+    }
+
+    private String getCssPercentageWidth(int daysInRange, double width,
+            int position) {
+        String pct = createCalcCssValue(daysInRange, position);
+        return getCssPercentageWidth(position * width, pct);
     }
 
     private void setCssPercentageWidth(Element element, double nValue,
@@ -1190,8 +1287,17 @@ public class TimelineWidget extends Widget {
         }
     }
 
+    private String getCssPercentageWidth(double nValue, String pct) {
+        if (pct != null) {
+            return pct;
+        } else {
+            return nValue + Unit.PCT.getType();
+        }
+    }
+
     private void addDayResolutionBlock(Date date, int index, boolean weekend) {
         DivElement resBlock = createResolutionBLock();
+        resBlock.addClassName(STYLE_CENTER);
         resBlock.setInnerText(getDayDateTimeFormat().format(date, gmt));
         if (weekend) {
             resBlock.addClassName(STYLE_WEEKEND);
@@ -1202,11 +1308,12 @@ public class TimelineWidget extends Widget {
 
     private void addWeekResolutionBlock(Date date, int index, Weekday weekDay,
             boolean weekend, boolean lastBlock) {
-        DivElement resBlock;
+        DivElement resBlock = null;
 
         if (index == 0 || weekDay == Weekday.First) {
             resBlock = createResolutionBLock();
             resBlock.addClassName("w");
+            resBlock.addClassName(STYLE_CENTER);
             resBlock.setInnerText(formatWeekCaption(date));
 
             if (index > 0) {
@@ -1223,8 +1330,16 @@ public class TimelineWidget extends Widget {
         if (firstWeek && (weekDay == Weekday.Last || lastBlock)) {
             firstWeek = false;
             firstResBlockCount = index + 1;
+            Element firstEl = resolutionDiv.getFirstChildElement();
+            if (!firstEl.hasClassName(STYLE_FIRST)) {
+                firstEl.addClassName(STYLE_FIRST);
+            }
         } else if (lastBlock) {
             lastResBlockCount = (index + 1 - firstResBlockCount) % 7;
+            Element lastEl = Element.as(resolutionDiv.getLastChild());
+            if (!lastEl.hasClassName(STYLE_LAST)) {
+                lastEl.addClassName(STYLE_LAST);
+            }
         }
 
         blocksInRange++;
@@ -1236,6 +1351,7 @@ public class TimelineWidget extends Widget {
 
         resBlock = createResolutionBLock();
         resBlock.addClassName("h");
+        resBlock.addClassName(STYLE_CENTER);
         if (getLocaleDataProvider().isTwelveHourClock()) {
             resBlock.setInnerText(getHour12DateTimeFormat().format(date, gmt));
         } else {
