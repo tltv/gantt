@@ -23,9 +23,9 @@ import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import org.tltv.gantt.client.shared.Resolution;
-import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.shared.GWT;
@@ -118,11 +118,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     private static final String STYLE_GANTT = "gantt";
     private static final String STYLE_GANTT_CONTAINER = "gantt-container";
     private static final String STYLE_GANTT_CONTENT = "gantt-content";
-    private static final String STYLE_BAR = "bar";
-    private static final String STYLE_BAR_LABEL = "bar-label";
     private static final String STYLE_MOVING = "moving";
     private static final String STYLE_RESIZING = "resizing";
-    private static final String STYLE_INVALID = "invalid";
     private static final String STYLE_MOVE_ELEMENT = "mv-el";
 
     private boolean enabled = true;
@@ -382,6 +379,8 @@ public class GanttWidget extends Widget implements HasEnabled {
         content.setClassName(STYLE_GANTT_CONTENT);
         container.appendChild(content);
 
+        content.appendChild(moveElement);
+
         scrollbarSpacer = DivElement.as(DOM.createDiv());
         scrollbarSpacer.getStyle().setHeight(
                 AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
@@ -400,22 +399,65 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
-     * Update Gantt chart's timeline and content with the given steps.
+     * Add new StepWidget into content area.
+     * 
+     * @param widget
+     */
+    public void addStep(Widget widget) {
+        DivElement bar = DivElement.as(widget.getElement());
+        content.appendChild(bar);
+
+        if (widget instanceof StepWidget) {
+            ((StepWidget) widget).setGantt(this, getLocaleDataProvider());
+        }
+
+        // bar height should be defined in css
+        int height = getElementHeightWithMargin(bar);
+        bar.getStyle().setTop(contentHeight, Unit.PX);
+        contentHeight += height;
+
+        registerBarEventListener(bar);
+    }
+
+    /**
+     * Remove Widget from the content area.
+     * 
+     * @param widget
+     */
+    public void removeStep(Widget widget) {
+        DivElement bar = DivElement.as(widget.getElement());
+        if (bar.getParentElement() == content) {
+            int startIndex = DOM.getChildIndex(content, bar);
+            int height = getElementHeightWithMargin(bar);
+            contentHeight -= height;
+            content.removeChild(bar);
+
+            // update top for all elements below
+            Element barBelow;
+            for (int i = startIndex; i < content.getChildCount(); i++) {
+                barBelow = Element.as(content.getChild(i));
+                double top = parseSize(barBelow.getStyle().getTop(), "px");
+                barBelow.getStyle().setTop(top - height, Unit.PX);
+            }
+
+            // update content height
+            content.getStyle().setHeight(contentHeight, Unit.PX);
+        }
+    }
+
+    /**
+     * Update Gantt chart's timeline and content for the given steps. This won't
+     * add any steps, but will update the content widths and heights.
      * 
      * @param steps
      */
-    public void update(Collection<Step> steps) {
-        clearContent();
-
+    public void update(List<Widget> steps) {
         if (startDate < 0 || endDate < 0 || startDate >= endDate) {
             GWT.log("Invalid start and end dates. Gantt chart can't be rendered. Start: "
                     + startDate + ", End: " + endDate);
             return;
         }
-        contentHeight = 0; // reset content height
-        for (Step step : steps) {
-            contentHeight = addStep(contentHeight, step);
-        }
+
         content.getStyle().setHeight(contentHeight, Unit.PX);
 
         long offset = getLocaleDataProvider().getTimeZoneOffset();
@@ -889,6 +931,17 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     }
 
+    public void updateBarPercentagePosition(long startDate, long endDate,
+            Element bar) {
+        String sLeft = timeline.getLeftPositionPercentageStringForDate(
+                startDate, getContentWidth());
+        bar.getStyle().setProperty("left", sLeft);
+
+        String sWidth = timeline
+                .getWidthPercentageStringForDateInterval(endDate - startDate);
+        bar.getStyle().setProperty("width", sWidth);
+    }
+
     public native boolean isMsTouchSupported()
     /*-{
        return !!navigator.msMaxTouchPoints;
@@ -915,66 +968,16 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
-     * Add new Step. Returns new height of the content.
-     * 
-     * @param currentHeight
-     * @param step
-     * @return New height of the content.
-     */
-    protected double addStep(double currentHeight, Step step) {
-        DivElement bar = DivElement.as(DOM.createDiv());
-        bar.setClassName(STYLE_BAR);
-        bar.getStyle().setBackgroundColor(step.getBackgroundColor());
-
-        if (step.getStyleName() != null
-                && !step.getStyleName().trim().isEmpty()) {
-            bar.addClassName(step.getStyleName());
-        }
-
-        DivElement caption = DivElement.as(DOM.createDiv());
-        caption.setClassName(STYLE_BAR_LABEL);
-
-        if (step.getCaptionMode() == Step.CaptionMode.HTML) {
-            caption.setInnerHTML(step.getCaption());
-        } else {
-            caption.setInnerText(step.getCaption());
-        }
-
-        bar.appendChild(caption);
-
-        content.appendChild(bar);
-
-        // bar height should be defined in css
-        int height = getElementHeightWithMargin(bar);
-        bar.getStyle().setTop(currentHeight, Unit.PX);
-        currentHeight += height;
-
-        registerBarEventListener(bar);
-        return currentHeight;
-    }
-
-    /**
      * Update step widths based on the timeline. Timeline's width have to be
      * final at this point.
      * 
      * @param steps
      */
-    protected void updateStepWidths(Collection<Step> steps) {
-        int index = getAdditonalContentElementCount();
-        Element bar;
-        for (Step step : steps) {
-            bar = Element.as(content.getChild(index));
-
-            // sanity check
-            if (step.getStartDate() < 0 || step.getEndDate() < 0
-                    || step.getEndDate() <= step.getStartDate()) {
-                bar.addClassName(STYLE_INVALID);
-            } else {
-                long offset = getLocaleDataProvider().getTimeZoneOffset();
-                updateBarPercentagePosition(step.getStartDate() + offset,
-                        step.getEndDate() + offset, bar);
+    protected void updateStepWidths(Collection<Widget> steps) {
+        for (Widget step : steps) {
+            if (step instanceof StepWidget) {
+                ((StepWidget) step).updateWidth();
             }
-            index++;
         }
     }
 
@@ -1395,17 +1398,6 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
     }
 
-    private void updateBarPercentagePosition(long startDate, long endDate,
-            Element bar) {
-        String sLeft = timeline.getLeftPositionPercentageStringForDate(
-                startDate, getContentWidth());
-        bar.getStyle().setProperty("left", sLeft);
-
-        String sWidth = timeline
-                .getWidthPercentageStringForDateInterval(endDate - startDate);
-        bar.getStyle().setProperty("width", sWidth);
-    }
-
     private void registerBarEventListener(final DivElement bar) {
         Event.sinkEvents(bar, Event.ONSCROLL | Event.MOUSEEVENTS
                 | Event.TOUCHEVENTS);
@@ -1431,6 +1423,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private int getAdditonalContentElementCount() {
+        // moveElement inside the content is noticed
         return 1;
     }
 
@@ -1545,4 +1538,5 @@ public class GanttWidget extends Widget implements HasEnabled {
         }
         return content.getClientWidth();
     }
+
 }

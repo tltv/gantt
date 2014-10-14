@@ -15,7 +15,9 @@
  */
 package org.tltv.gantt.client;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.GanttClientRpc;
@@ -34,13 +36,14 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.ComponentConnector;
+import com.vaadin.client.ConnectorHierarchyChangeEvent;
 import com.vaadin.client.LocaleNotLoadedException;
 import com.vaadin.client.LocaleService;
 import com.vaadin.client.Util;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.communication.StateChangeEvent.StateChangeHandler;
-import com.vaadin.client.ui.AbstractComponentConnector;
+import com.vaadin.client.ui.AbstractHasComponentsConnector;
 import com.vaadin.client.ui.FocusableScrollPanel;
 import com.vaadin.client.ui.VScrollTable;
 import com.vaadin.client.ui.layout.ElementResizeEvent;
@@ -57,7 +60,7 @@ import com.vaadin.shared.ui.Connect;
  * 
  */
 @Connect(Gantt.class)
-public class GanttConnector extends AbstractComponentConnector {
+public class GanttConnector extends AbstractHasComponentsConnector {
 
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
@@ -387,11 +390,12 @@ public class GanttConnector extends AbstractComponentConnector {
         if (stateChangeEvent.hasPropertyChanged("verticalScrollDelegateTarget")) {
             handleVerticalScrollDelegateTargetChange();
         }
+
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 
             @Override
             public void execute() {
-                getWidget().update(getState().steps);
+                getWidget().update(getSteps());
                 if (notifyHeight) {
                     getWidget().notifyHeightChanged(previousHeight);
                 }
@@ -400,6 +404,14 @@ public class GanttConnector extends AbstractComponentConnector {
                 adjustDelegateTargetHeightLazily();
             }
         });
+    }
+
+    protected List<Widget> getSteps() {
+        List<Widget> steps = new ArrayList<Widget>();
+        for (Connector sc : getState().steps) {
+            steps.add(((StepConnector) sc).getWidget());
+        }
+        return steps;
     }
 
     void handleVerticalScrollDelegateTargetChange() {
@@ -521,4 +533,21 @@ public class GanttConnector extends AbstractComponentConnector {
         // delay must be more than VScrollTable widget's lazy column adjusting.
         lazyAdjustDelegateTargetHeight.schedule(350);
     }
+
+    @Override
+    public void updateCaption(ComponentConnector connector) {
+    }
+
+    @Override
+    public void onConnectorHierarchyChange(
+            ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+
+        for (ComponentConnector c : connectorHierarchyChangeEvent
+                .getOldChildren()) {
+            if (!getChildComponents().contains(c)) {
+                getWidget().removeStep(((StepConnector) c).getWidget());
+            }
+        }
+    }
+
 }

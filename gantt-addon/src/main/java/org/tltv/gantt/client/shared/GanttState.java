@@ -41,7 +41,7 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
 
     @DelegateToWidget
     public boolean backgroundGridEnabled = true;
-    
+
     @DelegateToWidget
     public String weekFormat;
 
@@ -54,7 +54,7 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     @DelegateToWidget
     public String yearFormat;
 
-    public List<Step> steps = new LinkedList<Step>();
+    public List<Connector> steps = new LinkedList<Connector>();
 
     public Connector verticalScrollDelegateTarget;
 

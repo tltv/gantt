@@ -19,12 +19,16 @@ package org.tltv.gantt;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.DateFormatSymbols;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import org.tltv.gantt.client.shared.GanttClientRpc;
@@ -33,7 +37,9 @@ import org.tltv.gantt.client.shared.GanttState;
 import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 
+import com.vaadin.shared.Connector;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.Table.ColumnResizeEvent;
 import com.vaadin.ui.Table.ColumnResizeListener;
@@ -62,12 +68,15 @@ import com.vaadin.util.ReflectTools;
  * @author Tltv
  * 
  */
-public class Gantt extends com.vaadin.ui.AbstractComponent {
+public class Gantt extends com.vaadin.ui.AbstractComponent implements
+        HasComponents {
 
     private Date startDate;
     private Date endDate;
     private TimeZone timezone;
     private Calendar calendar;
+
+    protected final Map<Step, StepComponent> stepComponents = new HashMap<Step, StepComponent>();
 
     private GanttServerRpc rpc = new GanttServerRpc() {
 
@@ -127,6 +136,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     @Override
     public GanttState getState() {
         return (GanttState) super.getState();
+    }
+
+    @Override
+    protected GanttState getState(boolean markAsDirty) {
+        return (GanttState) super.getState(markAsDirty);
     }
 
     /**
@@ -221,7 +235,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      *            New Step object
      */
     public void addStep(Step step) {
-        getState().steps.add(step);
+        StepComponent sc = createStepComponent(step);
+        stepComponents.put(step, sc);
+        getState().steps.add(sc);
     }
 
     /**
@@ -232,7 +248,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      *            New Step object
      */
     public void addStep(int index, Step step) {
-        getState().steps.add(index, step);
+        StepComponent sc = createStepComponent(step);
+        stepComponents.put(step, sc);
+        getState().steps.add(index, sc);
     }
 
     /**
@@ -243,7 +261,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      * @return true when removed successfully.
      */
     public boolean removeStep(Step step) {
-        return getState().steps.remove(step);
+        StepComponent sc = stepComponents.remove(step);
+        sc.setParent(null);
+        return getState().steps.remove(sc);
     }
 
     /**
@@ -255,7 +275,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      */
     public Step getStep(int index) {
         if (index >= 0 && index < getState().steps.size()) {
-            return getState().steps.get(index);
+            return ((StepComponent) getState().steps.get(index)).getState().step;
         }
         return null;
     }
@@ -266,13 +286,18 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
      * @return List of steps
      */
     public List<Step> getSteps() {
-        return Collections.unmodifiableList(getState().steps);
+        List<Step> steps = new ArrayList<Step>();
+        for (Connector sc : getState().steps) {
+            steps.add(((StepComponent) sc).getState().step);
+        }
+        return Collections.unmodifiableList(steps);
     }
 
     /**
      * Removes all the steps in this Gantt chart.
      */
     public void removeSteps() {
+        stepComponents.clear();
         getState().steps.clear();
     }
 
@@ -532,6 +557,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
         }
     }
 
+    protected StepComponent createStepComponent(Step step) {
+        return new StepComponent(this, step);
+    }
+
     protected void addScrollDelegateTargetListeners(Table table) {
         table.addColumnResizeListener(scrollDelegateTargetColumnResizeListener);
         if (table instanceof TreeTable) {
@@ -697,19 +726,19 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
     }
 
     protected void fireClickEvent(int stepIndex) {
-        fireEvent(new ClickEvent(this, getState().steps.get(stepIndex)));
+        fireEvent(new ClickEvent(this, getStep(stepIndex)));
     }
 
     protected void fireMoveEvent(int stepIndex, int newRowIndex,
             long startDate, long endDate) {
-        Step step = getState().steps.get(stepIndex);
+        Step step = getStep(stepIndex);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
         fireEvent(new MoveEvent(this, step, startDate, endDate));
     }
 
     protected void fireResizeEvent(int stepIndex, long startDate, long endDate) {
-        Step step = getState().steps.get(stepIndex);
+        Step step = getStep(stepIndex);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
         fireEvent(new ResizeEvent(this, step, startDate, endDate));
@@ -918,5 +947,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent {
                         ResizeEvent.class);
 
         public void onGanttResize(ResizeEvent event);
+    }
+
+    @Override
+    public Iterator<Component> iterator() {
+        List<Component> l = new ArrayList<Component>();
+        for (Connector c : getState(false).steps) {
+            l.add((Component) c);
+        }
+        return l.iterator();
     }
 }
