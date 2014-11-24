@@ -24,13 +24,36 @@ public class GanttTest {
     }
 
     @Test
-    public void setDateRangeForDayResolutionAndDefaultTimezoneTest() {
+    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_DST_OFFSET_OVER_0() {
+        Gantt gantt = new Gantt();
+        gantt.setResolution(Resolution.Day);
+
+        DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000);
+        DateTime expectedEnd = new DateTime(2014, 9, 1, 23, 59, 59, 999);
+        Long dst_offset = Long.valueOf(Calendar.getInstance().get(
+                Calendar.DST_OFFSET));
+        expectedEnd = expectedEnd.minusMillis(dst_offset.intValue());
+
+        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
+        DateTime end = new DateTime(2014, 9, 1, 10, 30, 30, 123);
+
+        gantt.setStartDate(start.toDate());
+        gantt.setEndDate(end.toDate());
+
+        Assert.assertEquals(expectedStart.toDate(), gantt.getStartDate());
+        Assert.assertEquals(expectedEnd.toDate(), gantt.getEndDate());
+    }
+
+    @Test
+    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_DST_OFFSET_0() {
         Gantt gantt = new Gantt();
         gantt.setResolution(Resolution.Day);
 
         DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000);
         DateTime expectedEnd = new DateTime(2015, 1, 1, 23, 59, 59, 999);
-        expectedEnd = expectedEnd.minusMillis(expectedEnd.getZone().toTimeZone().getDSTSavings());
+        Long dst_offset = Long.valueOf(Calendar.getInstance().get(
+                Calendar.DST_OFFSET));
+        expectedEnd = expectedEnd.minusMillis(dst_offset.intValue());
 
         DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
         DateTime end = new DateTime(2015, 1, 1, 10, 30, 30, 123);
