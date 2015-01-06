@@ -16,8 +16,6 @@
 
 package org.tltv.gantt.client;
 
-import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectLeft;
-import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectRight;
 import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
 import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
 
@@ -619,8 +617,6 @@ public class GanttWidget extends Widget implements HasEnabled {
     public void notifyWidthChanged(int width) {
         if (timeline != null) {
 
-            boolean bgUpdated = false;
-
             boolean overflow = timeline.checkTimelineOverflowingHorizontally();
             if (timeline.isAlwaysCalculatePixelWidths()
                     || wasTimelineOverflowingHorizontally != overflow) {
@@ -629,13 +625,8 @@ public class GanttWidget extends Widget implements HasEnabled {
                 if (!wasTimelineOverflowingHorizontally) {
                     timeline.setScrollLeft(0);
                 }
-                internalHandleWidthChange();
-                bgUpdated = true;
             }
-
-            if (useAlwaysPxSizeInBackground() && !bgUpdated && !overflow) {
-                updateContainerStyle();
-            }
+            internalHandleWidthChange();
         }
     }
 
@@ -1213,12 +1204,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private double calculateBackgroundGridWidth() {
-        double r = getBoundingClientRectRight(timeline
-                .getLastResolutionElement());
-        double l = getBoundingClientRectLeft(timeline
-                .getFirstResolutionElement());
-        double timelineRealWidth = r - l;
-        return timelineRealWidth;
+        return timeline.calculateTimelineWidth();
     }
 
     private void updateContainerStyle() {
@@ -1239,11 +1225,11 @@ public class GanttWidget extends Widget implements HasEnabled {
             return;
         }
         Element secondResolutionBlock = null;
-        Element firstResolutionBlock = timeline.getFirstResolutionElement();
-        if (firstResolutionBlock == null) {
+        Double firstResolutionBlockWidth = timeline
+                .getFirstResolutionElementWidth();
+        if (firstResolutionBlockWidth == null) {
             return;
         }
-        Double firstResolutionBlockWidth = getBoundingClientRectWidth(firstResolutionBlock);
         Double secondResolutionBlockWidth = null;
         if (resDivElementCount > 2) {
             secondResolutionBlock = Element.as(timeline.getResolutionDiv()
@@ -1266,7 +1252,7 @@ public class GanttWidget extends Widget implements HasEnabled {
         updateContainerBackgroundSize(contentOverflowingHorizontally,
                 gridBlockWidthPx);
 
-        updateContainerBackgroundPosition(firstResolutionBlock,
+        updateContainerBackgroundPosition(firstResolutionBlockWidth,
                 contentOverflowingHorizontally, gridBlockWidthPx,
                 adjustBgPosition);
     }
@@ -1289,12 +1275,11 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private void updateContainerBackgroundPosition(
-            Element firstResolutionBlock,
+            double firstResolutionBlockWidth,
             boolean contentOverflowingHorizontally, double gridBlockWidthPx,
             boolean adjustBgPosition) {
         if (adjustBgPosition) {
-            double firstResolutionBlockRealWidth = getBoundingClientRectWidth(firstResolutionBlock);
-            double realBgPosXPx = firstResolutionBlockRealWidth - 1.0;
+            double realBgPosXPx = firstResolutionBlockWidth - 1.0;
 
             if (useAlwaysPxSizeInBackground() || contentOverflowingHorizontally) {
                 container.getStyle().setProperty(
