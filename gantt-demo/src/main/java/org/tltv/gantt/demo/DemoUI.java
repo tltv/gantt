@@ -408,7 +408,7 @@ public class DemoUI extends UI {
 
     private boolean validateResolutionChange(
             final org.tltv.gantt.client.shared.Resolution res) {
-        long max = 4 * 7 * 24 * 60 * 60000L;
+        long max = 5 * 12 * 4 * 7 * 24 * 3600000L;
         if (res == org.tltv.gantt.client.shared.Resolution.Hour
                 && (gantt.getEndDate().getTime() - gantt.getStartDate()
                         .getTime()) > max) {
