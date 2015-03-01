@@ -19,6 +19,8 @@ import org.tltv.gantt.StepComponent;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractComponentConnector;
@@ -60,8 +62,24 @@ public class StepConnector extends AbstractComponentConnector {
             gantt = ((GanttConnector) getParent()).getWidget();
         }
 
+        if (stateChangeEvent.hasPropertyChanged("step")) {
+            getWidget().setStep(getState().step);
+        }
+        getWidget().updateWidth();
         if (!getWidget().getElement().hasParentElement()) {
             gantt.addStep(getWidget());
         }
+
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+            @Override
+            public void execute() {
+                getWidget().updatePredecessor();
+                GanttConnector ganttConnector = (GanttConnector) getParent();
+                for (StepWidget stepWidget : ganttConnector.findRelatedSteps(
+                        getState().step, ganttConnector.getChildComponents())) {
+                    stepWidget.updatePredecessor();
+                }
+            }
+        });
     }
 }

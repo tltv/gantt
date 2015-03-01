@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
@@ -558,6 +559,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     protected StepComponent createStepComponent(Step step) {
+        if (step.getUid() == null) {
+            step.setUid(UUID.randomUUID().toString());
+        }
         return new StepComponent(this, step);
     }
 

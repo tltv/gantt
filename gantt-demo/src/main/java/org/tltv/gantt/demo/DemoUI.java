@@ -146,15 +146,6 @@ public class DemoUI extends UI {
         public void valueChange(ValueChangeEvent event) {
             gantt.setLocale((Locale) event.getProperty().getValue());
 
-            // workaround for Vaadin bug #13722. Re-create date fields to avoid
-            // NPE. TODO remove this, when fixed to core.
-            DateField newStartField = createStartDateField();
-            DateField newEndField = createEndDateField();
-            controls.replaceComponent(start, newStartField);
-            controls.replaceComponent(end, newEndField);
-            start = newStartField;
-            end = newEndField;
-
             syncLocaleAndTimezone();
         }
     };
@@ -225,12 +216,14 @@ public class DemoUI extends UI {
         step2.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 4);
         step2.setEndDate(cal.getTime().getTime());
+        step2.setPredecessor(step1);
 
         Step step3 = new Step("Third step");
         cal.add(Calendar.DATE, 1);
         step3.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 12);
         step3.setEndDate(cal.getTime().getTime());
+        step3.setPredecessor(step2);
 
         gantt.addStep(step1);
         gantt.addStep(step2);

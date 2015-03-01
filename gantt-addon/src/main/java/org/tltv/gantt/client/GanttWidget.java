@@ -21,7 +21,10 @@ import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.tltv.gantt.client.shared.Resolution;
 
@@ -144,6 +147,9 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected DivElement container;
     protected DivElement content;
     protected DivElement scrollbarSpacer;
+
+    /* Extra elements inside the content. */
+    protected Set<Element> extraContentElements = new HashSet<Element>();
 
     protected boolean clickOnNextMouseUp = true;
     protected Point movePoint;
@@ -405,12 +411,13 @@ public class GanttWidget extends Widget implements HasEnabled {
         DivElement bar = DivElement.as(widget.getElement());
         content.appendChild(bar);
 
-        if (widget instanceof StepWidget) {
-            ((StepWidget) widget).setGantt(this, getLocaleDataProvider());
-        }
-
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
+        // if (widget instanceof StepWidget) {
+        // StepWidget w = (StepWidget) widget;
+        // steps.put(w.getStep(), w);
+        // w.setGantt(this, getLocaleDataProvider());
+        // }
         bar.getStyle().setTop(contentHeight, Unit.PX);
         contentHeight += height;
 
@@ -431,11 +438,11 @@ public class GanttWidget extends Widget implements HasEnabled {
             content.removeChild(bar);
 
             // update top for all elements below
-            Element barBelow;
+            Element elementBelow;
             for (int i = startIndex; i < content.getChildCount(); i++) {
-                barBelow = Element.as(content.getChild(i));
-                double top = parseSize(barBelow.getStyle().getTop(), "px");
-                barBelow.getStyle().setTop(top - height, Unit.PX);
+                elementBelow = Element.as(content.getChild(i));
+                double top = parseSize(elementBelow.getStyle().getTop(), "px");
+                elementBelow.getStyle().setTop(top - height, Unit.PX);
             }
 
             // update content height
@@ -933,6 +940,24 @@ public class GanttWidget extends Widget implements HasEnabled {
         bar.getStyle().setProperty("width", sWidth);
     }
 
+    /**
+     * Register and add Element inside the content.
+     */
+    public void registerContentElement(Element element) {
+        if (extraContentElements.add(element)) {
+            content.insertFirst(element);
+        }
+    }
+
+    /**
+     * Unregister and remove element from the content.
+     */
+    public void unregisterContentElement(Element element) {
+        if (extraContentElements.remove(element)) {
+            element.removeFromParent();
+        }
+    }
+
     public native boolean isMsTouchSupported()
     /*-{
        return !!navigator.msMaxTouchPoints;
@@ -1406,8 +1431,10 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     private int getAdditonalContentElementCount() {
-        // moveElement inside the content is noticed
-        return 1;
+        // moveElement inside the content is noticed.
+        // extraContentElements are also noticed.
+        return (moveElement.hasParentElement() ? 1 : 0)
+                + extraContentElements.size();
     }
 
     private int getChildIndex(Element parent, Element child) {
@@ -1492,6 +1519,10 @@ public class GanttWidget extends Widget implements HasEnabled {
     private void clearContent() {
         while (content.hasChildNodes()) {
             content.getLastChild().removeFromParent();
+        }
+        Iterator<Element> iterator = extraContentElements.iterator();
+        while (iterator.hasNext()) {
+            content.appendChild(iterator.next());
         }
         content.appendChild(moveElement);
     }

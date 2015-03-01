@@ -36,7 +36,7 @@ public class GanttUtil {
                 .ceil((((d.getTime() - yearStart.getTime()) / 86400000.0) + 1.0) / 7.0);
         return (int) weekNo;
     }
-    
+
     /**
      * Parse computed styles to get precise margin height for the given element.
      * Returns zero if computed styles is not defined.
@@ -70,7 +70,7 @@ public class GanttUtil {
           return element.offsetLeft + element.offsetWidth;
         }
     }-*/;
-    
+
     public static native double getBoundingClientRectLeft(
             com.google.gwt.dom.client.Element element)
     /*-{
@@ -84,7 +84,7 @@ public class GanttUtil {
           return element.offsetLeft;
         }
     }-*/;
-    
+
     public static native double getBoundingClientRectWidth(
             com.google.gwt.dom.client.Element element)
     /*-{
@@ -96,6 +96,48 @@ public class GanttUtil {
           return rect.right - rect.left;
         } else {
           return element.offsetWidth;
+        }
+    }-*/;
+
+    public static native double getBoundingClientRectHeight(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.bottom - rect.top;
+        } else {
+          return element.offsetHeight;
+        }
+    }-*/;
+
+    public static native double getBoundingClientRectTop(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.top;
+        } else {
+          return element.offsetTop;
+        }
+    }-*/;
+
+    public static native double getBoundingClientRectBottom(
+            com.google.gwt.dom.client.Element element)
+    /*-{
+        if(!element) {
+          return 0.0;
+        }
+        if (element.getBoundingClientRect) {
+          var rect = element.getBoundingClientRect();
+          return rect.bottom;
+        } else {
+          return element.offsetTop + element.offsetHeight;
         }
     }-*/;
 }

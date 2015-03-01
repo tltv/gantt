@@ -17,12 +17,17 @@ package org.tltv.gantt.client;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
+import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -414,6 +419,16 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         return steps;
     }
 
+    protected Map<Step, StepWidget> getStepsMap() {
+        Map<Step, StepWidget> steps = new HashMap<Step, StepWidget>();
+        StepWidget stepWidget;
+        for (Connector sc : getState().steps) {
+            stepWidget = ((StepConnector) sc).getWidget();
+            steps.put(((StepConnector) sc).getState().step, stepWidget);
+        }
+        return steps;
+    }
+
     void handleVerticalScrollDelegateTargetChange() {
         Connector c = getState().verticalScrollDelegateTarget;
         unRegisterScrollDelegateHandlers();
@@ -542,12 +557,67 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     public void onConnectorHierarchyChange(
             ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
 
+        Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
+        // remove old steps
         for (ComponentConnector c : connectorHierarchyChangeEvent
                 .getOldChildren()) {
             if (!getChildComponents().contains(c)) {
-                getWidget().removeStep(((StepConnector) c).getWidget());
+                StepWidget stepWidget = ((StepConnector) c).getWidget();
+                getWidget().removeStep(stepWidget);
+
+                // update predecessors. If removed step is predecessor for other
+                // steps, other steps need to be updated.
+                for (StepWidget w : findRelatedSteps(stepWidget.getStep(),
+                        getChildComponents())) {
+                    predecessorRemoved.add(w);
+                }
+            }
+        }
+
+        Map<Step, StepWidget> steps = getStepsMap();
+
+        // update new steps with references to gantt widget and locale data
+        // provider.
+        for (ComponentConnector c : getChildComponents()) {
+            StepWidget stepWidget = ((StepConnector) c).getWidget();
+            if (!connectorHierarchyChangeEvent.getOldChildren().contains(c)) {
+                stepWidget.setGantt(getWidget(), localeDataProvider);
+            }
+
+            Step predecessor = ((StepConnector) c).getState().step
+                    .getPredecessor();
+            if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
+                stepWidget.setPredecessorStepWidget(steps.get(predecessor));
+            } else {
+                stepWidget.setPredecessorStepWidget(null);
+            }
+        }
+
+        for (ComponentConnector c : getChildComponents()) {
+            StepWidget stepWidget = ((StepConnector) c).getWidget();
+
+            // Update predecessor for widgets that are not new but are affected
+            // due hierarchy change (otherwise step's state change will do
+            // the same update method).
+            if (predecessorRemoved.contains(c)) {
+                stepWidget.updatePredecessor();
             }
         }
     }
 
+    /**
+     * Return {@link StepWidget} objects that are related to the given
+     * StepWidget. Via {@link Step#getPredecessor()} for example.
+     */
+    public Set<StepWidget> findRelatedSteps(Step targetStep,
+            List<ComponentConnector> stepConnectors) {
+        Set<StepWidget> widgets = new HashSet<StepWidget>();
+        for (ComponentConnector con : stepConnectors) {
+            StepWidget stepWidget = ((StepConnector) con).getWidget();
+            if (targetStep.equals(stepWidget.getStep().getPredecessor())) {
+                widgets.add(stepWidget);
+            }
+        }
+        return widgets;
+    }
 }

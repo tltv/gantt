@@ -16,8 +16,12 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
@@ -29,6 +33,8 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  */
 public class StepWidget extends Widget {
+
+    public static final String SVG_NS = "http://www.w3.org/2000/svg";
 
     private static final String STYLE_BAR = "bar";
     private static final String STYLE_BAR_LABEL = "bar-label";
@@ -42,8 +48,17 @@ public class StepWidget extends Widget {
 
     private Step step;
 
+    private StepWidget predecessorStepWidget;
+
     private GanttWidget gantt;
     private LocaleDataProvider localeDataProvider;
+
+    /*
+     * predecessorArrowSvg element is always the first child of this widget, if
+     * it exist.
+     */
+    private Element predecessorArrowSvg;
+    private Element line;
 
     public StepWidget() {
         DivElement bar = DivElement.as(DOM.createDiv());
@@ -73,7 +88,8 @@ public class StepWidget extends Widget {
     }
 
     /**
-     * Set data source for this widget.
+     * Set data source for this widget. Called when {@linkplain StepState#state}
+     * is changed.
      * 
      * @param step
      */
@@ -82,7 +98,77 @@ public class StepWidget extends Widget {
         updateBackground();
         updateStyle();
         updateCaption();
-        updateWidth();
+    }
+
+    /**
+     * Get state object. read-only. Changes to the Step object on client side
+     * are not registered to the server side.
+     */
+    public Step getStep() {
+        return step;
+    }
+
+    public StepWidget getPredecessorStepWidget() {
+        return predecessorStepWidget;
+    }
+
+    public void setPredecessorStepWidget(StepWidget predecessorStepWidget) {
+        this.predecessorStepWidget = predecessorStepWidget;
+    }
+
+    public void updatePredecessor() {
+        createPredecessorElements();
+
+        if (predecessorStepWidget == null) {
+            return;
+        }
+
+        double top = Math.min(
+                predecessorStepWidget.getElement().getOffsetTop(), getElement()
+                        .getOffsetTop());
+        double bottom = Math.max(predecessorStepWidget.getElement()
+                .getOffsetTop()
+                + predecessorStepWidget.getElement().getOffsetHeight(),
+                getElement().getOffsetTop() + getElement().getOffsetHeight());
+        double height = bottom - top;
+
+        double left = Math.min(predecessorStepWidget.getElement()
+                .getOffsetLeft()
+                + predecessorStepWidget.getElement().getOffsetWidth(),
+                getElement().getOffsetLeft());
+        double right = Math.max(predecessorStepWidget.getElement()
+                .getOffsetLeft(), getElement().getOffsetLeft());
+        double width = right - left;
+
+        setAttributeNS(predecessorArrowSvg, "width", (int) width);
+        setAttributeNS(predecessorArrowSvg, "height", (int) height);
+        predecessorArrowSvg.getStyle().setTop((int) top, Unit.PX);
+        predecessorArrowSvg.getStyle().setLeft((int) left, Unit.PX);
+
+        setAttributeNS(line, "x1", "" + 0);
+        setAttributeNS(line, "x2", "" + width);
+        setAttributeNS(line, "y1", "" + 0);
+        setAttributeNS(line, "y2", "" + height);
+    }
+
+    protected void createPredecessorElements() {
+        if (predecessorStepWidget == null) {
+            if (predecessorArrowSvg != null) {
+                gantt.unregisterContentElement(predecessorArrowSvg);
+            }
+        } else {
+            if (predecessorArrowSvg == null) {
+                predecessorArrowSvg = createSVGElementNS("svg");
+                predecessorArrowSvg.getStyle().setPosition(Position.ABSOLUTE);
+                Element g = createSVGElementNS("g");
+                setAttributeNS(g, "stroke", "black");
+                setAttributeNS(g, "stroke-width", "1");
+                line = createSVGElementNS("line");
+                DOM.appendChild(g, line);
+                DOM.appendChild(predecessorArrowSvg, g);
+            }
+            gantt.registerContentElement(predecessorArrowSvg);
+        }
     }
 
     protected void updateCaption() {
@@ -119,7 +205,7 @@ public class StepWidget extends Widget {
      * Updates width of this widget to match the Gantt chart's timeline.
      */
     public void updateWidth() {
-        if (gantt == null) {
+        if (gantt == null || !getElement().hasParentElement()) {
             return;
         }
 
@@ -142,4 +228,27 @@ public class StepWidget extends Widget {
 
         }
     }
+
+    public static Element createSVGElementNS(String tag) {
+        return createElementNS(SVG_NS, tag);
+    }
+
+    public static native Element createElementNS(String ns, String tag)
+    /*-{
+        return $doc.createElementNS(ns, tag);
+    }-*/;
+
+    public static void setAttributeNS(Element elem, String attr, int value) {
+        setAttributeNS(null, elem, attr, "" + value);
+    }
+
+    public static void setAttributeNS(Element elem, String attr, String value) {
+        setAttributeNS(null, elem, attr, value);
+    }
+
+    public static native void setAttributeNS(String uri, Element elem,
+            String attr, String value)
+    /*-{
+        elem.setAttributeNS(uri, attr, value);
+    }-*/;
 }
