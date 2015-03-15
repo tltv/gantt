@@ -225,9 +225,15 @@ public class DemoUI extends UI {
         step3.setEndDate(cal.getTime().getTime());
         step3.setPredecessor(step2);
 
+        Step step4 = new Step("Fourth step");
+        step4.setStartDate(step2.getStartDate());
+        step4.setEndDate(step2.getEndDate());
+        step4.setPredecessor(step1);
+
         gantt.addStep(step1);
         gantt.addStep(step2);
         gantt.addStep(step3);
+        gantt.addStep(step4);
 
         String[] colors = new String[] { "11FF11", "33FF33", "55FF55",
                 "77FF77", "99FF99", "BBFFBB", "DDFFDD" };

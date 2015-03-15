@@ -721,6 +721,15 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
+     * Are touch events supported.
+     * 
+     * @return True if touch events are supported.
+     */
+    public boolean isTouchSupported() {
+        return touchSupported;
+    }
+
+    /**
      * Enable or disable resizable steps.
      * 
      * @param resizableSteps
@@ -1008,6 +1017,9 @@ public class GanttWidget extends Widget implements HasEnabled {
             parent = parent.getParentElement();
         }
         if (parent.getParentElement() == content) {
+            if ("svg".equalsIgnoreCase(parent.getTagName())) {
+                return null;
+            }
             return parent;
         }
         return null;
