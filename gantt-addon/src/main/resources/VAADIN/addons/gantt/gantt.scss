@@ -143,7 +143,19 @@
 		}
 		
 		.arrow {
+			.start-p,
+			.end-p {
+				fill: #0019ff;
+    			stroke: #0019ff;
+			}
+			.start-p:hover,
+			.end-p:hover {
+				fill: orange;
+    			stroke: orange;
+			}
+			.curve-line {
 			
+			}
 		}
 	}
 }

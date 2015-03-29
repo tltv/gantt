@@ -49,11 +49,15 @@ public class StepWidget extends Widget {
     private GanttWidget gantt;
     private LocaleDataProvider localeDataProvider;
 
-    /*
-     * predecessorArrow element is always the first child of this widget, if it
-     * exist.
-     */
     private ArrowElement predecessorArrow;
+
+    @Override
+    protected void onDetach() {
+        if (gantt != null && predecessorArrow != null) {
+            gantt.unregisterContentElement((Widget) predecessorArrow);
+        }
+        super.onDetach();
+    }
 
     public StepWidget() {
         DivElement bar = DivElement.as(DOM.createDiv());
@@ -138,7 +142,7 @@ public class StepWidget extends Widget {
     protected void createPredecessorElements() {
         if (predecessorStepWidget == null) {
             if (predecessorArrow != null) {
-                gantt.unregisterContentElement(predecessorArrow.getElement());
+                gantt.unregisterContentElement((Widget) predecessorArrow);
             }
         } else {
             if (predecessorArrow == null) {
@@ -146,7 +150,7 @@ public class StepWidget extends Widget {
                 predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(),
                         gantt.isMsTouchSupported());
             }
-            gantt.registerContentElement(predecessorArrow.getElement());
+            gantt.registerContentElement((Widget) predecessorArrow);
         }
     }
 
@@ -207,4 +211,9 @@ public class StepWidget extends Widget {
 
         }
     }
+
+    public Widget getPredecessorArrowWidget() {
+        return (Widget) predecessorArrow;
+    }
+
 }

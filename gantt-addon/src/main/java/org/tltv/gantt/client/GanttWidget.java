@@ -22,7 +22,6 @@ import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -57,8 +56,11 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AbstractNativeScrollbar;
+import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.HasEnabled;
+import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.WidgetCollection;
 import com.vaadin.client.event.PointerCancelEvent;
 import com.vaadin.client.event.PointerCancelHandler;
 import com.vaadin.client.event.PointerDownEvent;
@@ -109,7 +111,7 @@ import com.vaadin.client.event.PointerUpHandler;
  * @author Tltv
  * 
  */
-public class GanttWidget extends Widget implements HasEnabled {
+public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets {
 
     private static final int RESIZE_WIDTH = 10;
     private static final int BAR_MIN_WIDTH = RESIZE_WIDTH;
@@ -122,6 +124,8 @@ public class GanttWidget extends Widget implements HasEnabled {
     private static final String STYLE_MOVING = "moving";
     private static final String STYLE_RESIZING = "resizing";
     private static final String STYLE_MOVE_ELEMENT = "mv-el";
+
+    private WidgetCollection children = new WidgetCollection(this);
 
     private boolean enabled = true;
     private boolean touchSupported = false;
@@ -149,7 +153,7 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected DivElement scrollbarSpacer;
 
     /* Extra elements inside the content. */
-    protected Set<Element> extraContentElements = new HashSet<Element>();
+    protected Set<Widget> extraContentElements = new HashSet<Widget>();
 
     protected boolean clickOnNextMouseUp = true;
     protected Point movePoint;
@@ -215,6 +219,7 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onMouseDown(MouseDownEvent event) {
+            GWT.log("onMouseDown(MouseDownEvent)");
             if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
                 GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
             }
@@ -244,6 +249,8 @@ public class GanttWidget extends Widget implements HasEnabled {
 
         @Override
         public void onPointerDown(PointerDownEvent event) {
+            GWT.log("onPointerDown(PointerDownEvent)");
+
             if (currentPointerEventId == -1) {
                 currentPointerEventId = event.getPointerId();
             } else {
@@ -409,15 +416,10 @@ public class GanttWidget extends Widget implements HasEnabled {
      */
     public void addStep(Widget widget) {
         DivElement bar = DivElement.as(widget.getElement());
-        content.appendChild(bar);
+        add(widget);
 
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
-        // if (widget instanceof StepWidget) {
-        // StepWidget w = (StepWidget) widget;
-        // steps.put(w.getStep(), w);
-        // w.setGantt(this, getLocaleDataProvider());
-        // }
         bar.getStyle().setTop(contentHeight, Unit.PX);
         contentHeight += height;
 
@@ -430,24 +432,7 @@ public class GanttWidget extends Widget implements HasEnabled {
      * @param widget
      */
     public void removeStep(Widget widget) {
-        DivElement bar = DivElement.as(widget.getElement());
-        if (bar.getParentElement() == content) {
-            int startIndex = DOM.getChildIndex(content, bar);
-            int height = getElementHeightWithMargin(bar);
-            contentHeight -= height;
-            content.removeChild(bar);
-
-            // update top for all elements below
-            Element elementBelow;
-            for (int i = startIndex; i < content.getChildCount(); i++) {
-                elementBelow = Element.as(content.getChild(i));
-                double top = parseSize(elementBelow.getStyle().getTop(), "px");
-                elementBelow.getStyle().setTop(top - height, Unit.PX);
-            }
-
-            // update content height
-            content.getStyle().setHeight(contentHeight, Unit.PX);
-        }
+        remove(widget);
     }
 
     /**
@@ -668,21 +653,19 @@ public class GanttWidget extends Widget implements HasEnabled {
     protected void initListeners() {
         Event.sinkEvents(container, Event.ONSCROLL);
 
-        addDomHandler(scrollHandler, ScrollEvent.getType());
+        addHandler(scrollHandler, ScrollEvent.getType());
         if (isMsTouchSupported()) {
             // IE10 pointer events (ms-prefixed events)
             addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
             addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
             addDomHandler(msPointerMoveHandler, PointerMoveEvent.getType());
-            addDomHandler(msPointerCancelHandler, PointerCancelEvent.getType());
-
+            addHandler(msPointerCancelHandler, PointerCancelEvent.getType());
         } else if (touchSupported) {
             // touch events replaces mouse events
             addDomHandler(touchStartHandler, TouchStartEvent.getType());
             addDomHandler(touchEndHandler, TouchEndEvent.getType());
             addDomHandler(touchMoveHandler, TouchMoveEvent.getType());
-            addDomHandler(touchCancelHandler, TouchCancelEvent.getType());
-
+            addHandler(touchCancelHandler, TouchCancelEvent.getType());
         } else {
             addDomHandler(mouseDownHandler, MouseDownEvent.getType());
             addDomHandler(mouseUpHandler, MouseUpEvent.getType());
@@ -950,20 +933,20 @@ public class GanttWidget extends Widget implements HasEnabled {
     }
 
     /**
-     * Register and add Element inside the content.
+     * Register and add Widget inside the content.
      */
-    public void registerContentElement(Element element) {
-        if (extraContentElements.add(element)) {
-            content.insertFirst(element);
+    public void registerContentElement(Widget widget) {
+        if (extraContentElements.add(widget)) {
+            insertFirst(widget);
         }
     }
 
     /**
      * Unregister and remove element from the content.
      */
-    public void unregisterContentElement(Element element) {
-        if (extraContentElements.remove(element)) {
-            element.removeFromParent();
+    public void unregisterContentElement(Widget widget) {
+        if (widget != null && extraContentElements.remove(widget)) {
+            widget.removeFromParent();
         }
     }
 
@@ -990,6 +973,73 @@ public class GanttWidget extends Widget implements HasEnabled {
         } else {
             return event.getClientY();
         }
+    }
+
+    @Override
+    public void add(Widget w) {
+        super.add(w, content);
+    }
+
+    public void insertFirst(Widget child) {
+        // Detach new child.
+        child.removeFromParent();
+
+        // Logical attach.
+        getChildren().add(child);
+
+        // Physical attach.
+        content.insertFirst(child.getElement());
+
+        // Adopt.
+        adopt(child);
+    }
+
+    @Override
+    public boolean remove(Widget w) {
+        if (!(w instanceof StepWidget)) {
+            return super.remove(w);
+        }
+
+        int startIndex = DOM.getChildIndex(content, w.getElement());
+        int height = getElementHeightWithMargin(w.getElement());
+        contentHeight -= height;
+
+        if ((startIndex = removeAndReturnIndex(w)) >= 0) {
+            // update top for all elements below
+            Element elementBelow;
+            for (int i = startIndex; i < content.getChildCount(); i++) {
+                elementBelow = Element.as(content.getChild(i));
+                double top = parseSize(elementBelow.getStyle().getTop(), "px");
+                elementBelow.getStyle().setTop(top - height, Unit.PX);
+            }
+
+            // update content height
+            content.getStyle().setHeight(contentHeight, Unit.PX);
+            return true;
+        }
+        return false;
+    }
+
+    public int removeAndReturnIndex(Widget w) {
+        int index = -1;
+        // Validate.
+        if (w.getParent() != this) {
+            return index;
+        }
+        // Orphan.
+        try {
+            orphan(w);
+        } finally {
+            index = DOM.getChildIndex(content, w.getElement());
+
+            // Physical detach.
+            Element elem = w.getElement();
+            content.removeChild(elem);
+
+            // Logical detach.
+            getChildren().remove(w);
+        }
+        return index;
     }
 
     /**
@@ -1058,7 +1108,6 @@ public class GanttWidget extends Widget implements HasEnabled {
             return;
         }
 
-        Event.setCapture(bar); // can't trust this one, unfortunately
         targetBarElement = bar;
         capturePoint = new Point(getTouchOrMouseClientX(event),
                 getTouchOrMouseClientY(event));
@@ -1090,7 +1139,6 @@ public class GanttWidget extends Widget implements HasEnabled {
         Element bar = getBar(event);
 
         disallowClickTimer.cancel();
-        Event.releaseCapture(bar);
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
             if (isEnabled()) {
@@ -1526,17 +1574,6 @@ public class GanttWidget extends Widget implements HasEnabled {
     private void resetBarPosition(Element bar) {
         bar.getStyle().setProperty("left", capturePointLeftPercentage);
         bar.getStyle().setProperty("width", capturePointWidthPercentage);
-    }
-
-    private void clearContent() {
-        while (content.hasChildNodes()) {
-            content.getLastChild().removeFromParent();
-        }
-        Iterator<Element> iterator = extraContentElements.iterator();
-        while (iterator.hasNext()) {
-            content.appendChild(iterator.next());
-        }
-        content.appendChild(moveElement);
     }
 
     private void disableClickOnNextMouseUp() {

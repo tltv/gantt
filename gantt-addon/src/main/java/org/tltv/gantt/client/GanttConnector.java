@@ -372,6 +372,10 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             dateTimeService = null;
         }
 
+        final boolean changeHasInpactToSteps = stateChangeEvent
+                .hasPropertyChanged("resolution")
+                || stateChangeEvent.hasPropertyChanged("startDate");
+
         if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
                 || stateChangeEvent.hasPropertyChanged("yearRowVisible")
                 || stateChangeEvent.hasPropertyChanged("monthFormat")
@@ -404,7 +408,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 if (notifyHeight) {
                     getWidget().notifyHeightChanged(previousHeight);
                 }
-
+                if (changeHasInpactToSteps) {
+                    updateAllStepsPredecessors();
+                }
                 updateVerticalScrollDelegation();
                 adjustDelegateTargetHeightLazily();
             }
@@ -564,13 +570,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             if (!getChildComponents().contains(c)) {
                 StepWidget stepWidget = ((StepConnector) c).getWidget();
                 getWidget().removeStep(stepWidget);
-
-                // update predecessors. If removed step is predecessor for other
-                // steps, other steps need to be updated.
-                for (StepWidget w : findRelatedSteps(stepWidget.getStep(),
-                        getChildComponents())) {
-                    predecessorRemoved.add(w);
-                }
+                predecessorRemoved.add(stepWidget);
             }
         }
 
@@ -593,15 +593,14 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
+        updateAllStepsPredecessors();
+    }
+
+    /** Updates all steps predecessor visualizations. */
+    public void updateAllStepsPredecessors() {
         for (ComponentConnector c : getChildComponents()) {
             StepWidget stepWidget = ((StepConnector) c).getWidget();
-
-            // Update predecessor for widgets that are not new but are affected
-            // due hierarchy change (otherwise step's state change will do
-            // the same update method).
-            if (predecessorRemoved.contains(c)) {
-                stepWidget.updatePredecessor();
-            }
+            stepWidget.updatePredecessor();
         }
     }
 
