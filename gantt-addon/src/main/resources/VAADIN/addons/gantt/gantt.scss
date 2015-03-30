@@ -157,6 +157,15 @@
 			
 			}
 		}
+		
+		/* Bar elements on selection mode.
+		 Highlight hovered bar elements */
+		.select-target-step {
+			.bar:hover {
+				background: orange !important;
+			}
+		}
+		
 	}
 }
 

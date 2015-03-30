@@ -2,6 +2,9 @@ package org.tltv.gantt.client.shared;
 
 import java.util.Date;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
+
 public class GanttUtil {
 
     /**
@@ -139,5 +142,36 @@ public class GanttUtil {
         } else {
           return element.offsetTop + element.offsetHeight;
         }
+    }-*/;
+
+    public static boolean isTouchEvent(NativeEvent event) {
+        return event.getType().contains("touch");
+    }
+
+    public static int getTouchOrMouseClientX(NativeEvent event) {
+        if (isTouchEvent(event)) {
+            return event.getChangedTouches().get(0).getClientX();
+        } else {
+            return event.getClientX();
+        }
+    }
+
+    public static int getTouchOrMouseClientY(NativeEvent event) {
+        if (isTouchEvent(event)) {
+            return event.getChangedTouches().get(0).getClientY();
+        } else {
+            return event.getClientY();
+        }
+    }
+
+    public static native Element getElementFromPoint(int clientX, int clientY)
+    /*-{
+        var el = $wnd.document.elementFromPoint(clientX, clientY);
+        // Call elementFromPoint two times to make sure IE8 also returns something sensible if the application is running in an iframe
+        el = $wnd.document.elementFromPoint(clientX, clientY);
+        if(el != null && el.nodeType == 3) {
+            el = el.parentNode;
+        }
+        return el;
     }-*/;
 }

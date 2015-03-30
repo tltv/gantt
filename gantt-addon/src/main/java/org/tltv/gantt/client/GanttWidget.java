@@ -18,6 +18,8 @@ package org.tltv.gantt.client;
 
 import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
 import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
 
 import java.util.Collection;
 import java.util.Date;
@@ -955,26 +957,6 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
        return !!navigator.msMaxTouchPoints;
     }-*/;
 
-    public static boolean isTouchEvent(NativeEvent event) {
-        return event.getType().contains("touch");
-    }
-
-    public static int getTouchOrMouseClientX(NativeEvent event) {
-        if (isTouchEvent(event)) {
-            return event.getChangedTouches().get(0).getClientX();
-        } else {
-            return event.getClientX();
-        }
-    }
-
-    public static int getTouchOrMouseClientY(NativeEvent event) {
-        if (isTouchEvent(event)) {
-            return event.getChangedTouches().get(0).getClientY();
-        } else {
-            return event.getClientY();
-        }
-    }
-
     @Override
     public void add(Widget w) {
         super.add(w, content);
@@ -1236,7 +1218,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             bar.getStyle().clearBackgroundColor();
         }
 
-        event.stopPropagation();
+        // event.stopPropagation();
         return true;
     }
 

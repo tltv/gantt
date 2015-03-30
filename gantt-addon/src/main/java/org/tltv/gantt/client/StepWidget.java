@@ -15,12 +15,16 @@
  */
 package org.tltv.gantt.client;
 
+import org.tltv.gantt.client.ArrowElement.ArrowChangeHandler;
+import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.Visibility;
+import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -50,6 +54,21 @@ public class StepWidget extends Widget {
     private LocaleDataProvider localeDataProvider;
 
     private ArrowElement predecessorArrow;
+
+    private ArrowChangeHandler arrowChangeHandler = new ArrowChangeHandler() {
+
+        @Override
+        public void onArrowChanged(boolean startingPointChanged,
+                MouseDownEvent event) {
+            Element target = GanttUtil.getElementFromPoint(
+                    GanttUtil.getTouchOrMouseClientX(event.getNativeEvent()),
+                    GanttUtil.getTouchOrMouseClientY(event.getNativeEvent()));
+            if (target != null && !getElement().isOrHasChild(target)) {
+                gantt.getRpc().onStepRelationSelected(StepWidget.this,
+                        startingPointChanged, target);
+            }
+        }
+    };
 
     @Override
     protected void onDetach() {
@@ -149,6 +168,7 @@ public class StepWidget extends Widget {
                 predecessorArrow = createArrowWidget();
                 predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(),
                         gantt.isMsTouchSupported());
+                predecessorArrow.setArrowChangeHandler(arrowChangeHandler);
             }
             gantt.registerContentElement((Widget) predecessorArrow);
         }

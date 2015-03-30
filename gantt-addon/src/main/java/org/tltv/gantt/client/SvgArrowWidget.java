@@ -15,14 +15,23 @@
  */
 package org.tltv.gantt.client;
 
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
+
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Position;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
+import com.google.gwt.event.dom.client.MouseMoveEvent;
+import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.touch.client.Point;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.Widget;
@@ -34,12 +43,26 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
 
     public static final String SVG_NS = "http://www.w3.org/2000/svg";
 
+    public static final String SELECTION_STYLE_NAME = "select-target-step";
+
     private Element curve;
     private Element startingPoint;
     private Element endingPoint;
 
+    private Element movePointElement = DOM.createDiv();
+
     private int width = 0;
     private int height = 0;
+
+    private ArrowPositionData originalData;
+    private int originalWidth;
+    private int originalHeight;
+
+    private HandlerRegistration moveRegisteration;
+    private ArrowPositionData movingData;
+    private Point capturePoint;
+
+    private ArrowChangeHandler handler;
 
     public SvgArrowWidget() {
         Element predecessorArrow = createSVGElementNS("svg");
@@ -99,6 +122,23 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
 
     @Override
     public void draw(ArrowPositionData d) {
+        originalData = d;
+        internalDraw(d);
+    }
+
+    private void internalDraw(ArrowPositionData d) {
+        internalDrawCurve(d);
+
+        setAttributeNS(startingPoint, "cx", d.calcStartPointX());
+        setAttributeNS(startingPoint, "cy", d.calcStartPointY());
+
+        int endPointX = d.calcEndPointX();
+        int endPointY = d.calcEndPointY();
+        setAttributeNS(endingPoint, "cx", endPointX);
+        setAttributeNS(endingPoint, "cy", endPointY);
+    }
+
+    private void internalDrawCurve(ArrowPositionData d) {
         int y1 = ((d.isFromTop()) ? d.getFromHeightCenter() : height
                 - d.getFromHeightCenter());
         int y2 = ((d.isFromTop()) ? height - d.getToHeightCenter() : d
@@ -116,19 +156,6 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         s.append(", " + y2); // y2
 
         setAttributeNS(curve, "d", s.toString());
-
-        setAttributeNS(startingPoint, "cx", (d.isFromLeft()) ? 0 : (int) width);
-        setAttributeNS(
-                startingPoint,
-                "cy",
-                ((d.isFromTop()) ? d.getFromHeightCenter() : height
-                        - d.getFromHeightCenter()));
-
-        int endPointX = (!d.isFromLeft()) ? 0 : (int) width;
-        int endPointY = ((!d.isFromTop()) ? d.getFromHeightCenter() : height
-                - d.getFromHeightCenter());
-        setAttributeNS(endingPoint, "cx", endPointX);
-        setAttributeNS(endingPoint, "cy", endPointY);
     }
 
     private PointerDownHandler msPointerDownHandler = new PointerDownHandler() {
@@ -145,7 +172,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         @Override
         public void onTouchStart(TouchStartEvent event) {
             GWT.log("Starting point touched (touchDown)!");
-            // TODO
+
             event.stopPropagation();
         }
     };
@@ -165,10 +192,30 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
                     GWT.log("Relasing captured point.");
                     Event.releaseCapture(captureElement);
                     // TODO: handle selection of new predecessor/following step.
+
+                    // cancel
+                    setWidth(originalData.getWidth());
+                    setHeight(originalData.getHeight());
+                    getElement().getStyle().setTop((int) originalData.getTop(),
+                            Unit.PX);
+                    getElement().getStyle().setLeft(
+                            (int) originalData.getLeft(), Unit.PX);
+                    draw(originalData);
+                    startingPoint.getStyle().setVisibility(Visibility.VISIBLE);
+                    endingPoint.getStyle().setVisibility(Visibility.VISIBLE);
+                    movePointElement.removeFromParent();
+                    getElement().getParentElement().removeClassName(
+                            SELECTION_STYLE_NAME);
+
+                    event.stopPropagation();
+                    moveRegisteration.removeHandler();
                     captureElement = null;
+                    if (handler != null) {
+                        handler.onArrowChanged(selectPredecessorMode, event);
+                    }
                     selectPredecessorMode = false;
                     selectFollowerMode = false;
-                    event.stopPropagation();
+
                     return;
                 }
 
@@ -179,20 +226,96 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
                                 .equals(endingPoint))) {
                     if (element.equals(startingPoint)) {
                         selectPredecessorMode = true;
+                        startingPoint.getStyle().setVisibility(
+                                Visibility.HIDDEN);
                     } else if (element.equals(endingPoint)) {
                         selectFollowerMode = true;
+                        endingPoint.getStyle().setVisibility(Visibility.HIDDEN);
                     }
+                    getParent().getElement().appendChild(movePointElement);
+                    getElement().getParentElement().addClassName(
+                            SELECTION_STYLE_NAME);
                     GWT.log("Capturing clicked point.");
-                    captureElement = element;
-                    Event.setCapture(captureElement);
+                    captureElement = getElement();
+                    Event.setCapture(getElement());
                     event.stopPropagation();
 
-                    // TODO: enable MODE for new predecessor/following step
+                    // enable MODE for new predecessor/following step
                     // selection.
+                    moveRegisteration = addDomHandler(mouseMoveHandler,
+                            MouseMoveEvent.getType());
+
+                    capturePoint = new Point(
+                            getTouchOrMouseClientX(event.getNativeEvent()),
+                            getTouchOrMouseClientY(event.getNativeEvent()));
+                    originalWidth = width;
+                    originalHeight = height;
+
                 }
             }
         }
+
     };
+
+    private MouseMoveHandler mouseMoveHandler = new MouseMoveHandler() {
+
+        @Override
+        public void onMouseMove(MouseMoveEvent event) {
+            GWT.log("SvgArrowWidget.onMouseMove(MouseMoveEvent)");
+
+            Point movePoint = new Point(
+                    getTouchOrMouseClientX(event.getNativeEvent()),
+                    getTouchOrMouseClientY(event.getNativeEvent()));
+
+            updateMovingData(movePoint);
+
+            setWidth(movingData.getWidth());
+            setHeight(movingData.getHeight());
+            getElement().getStyle().setTop((int) movingData.getTop(), Unit.PX);
+            getElement().getStyle()
+                    .setLeft((int) movingData.getLeft(), Unit.PX);
+
+            startingPoint.getStyle().setVisibility(Visibility.HIDDEN);
+            endingPoint.getStyle().setVisibility(Visibility.HIDDEN);
+
+            internalDrawCurve(movingData);
+            event.stopPropagation();
+        }
+    };
+
+    private void updateMovingData(Point forPoint) {
+        if (selectPredecessorMode) {
+            movingData = new ArrowPositionData(createSnapshotElement(forPoint),
+                    originalData.getTo());
+        } else {
+            movingData = new ArrowPositionData(originalData.getFrom(),
+                    createSnapshotElement(forPoint));
+        }
+    }
+
+    private Element createSnapshotElement(Point point) {
+        int deltaX = (int) (point.getX() - capturePoint.getX());
+        int deltaY = (int) (point.getY() - capturePoint.getY());
+
+        int originalTopPoint = selectPredecessorMode ? originalData
+                .calcStartPointY() : originalData.calcEndPointY();
+        int originalLeftPoint = selectPredecessorMode ? originalData
+                .calcStartPointX() : originalData.calcEndPointX();
+
+        movePointElement.getStyle().setVisibility(Visibility.HIDDEN);
+        movePointElement.getStyle().setPosition(Position.ABSOLUTE);
+        movePointElement.getStyle().setTop(
+                Math.max(0, originalData.getTop() + originalTopPoint + deltaY),
+                Unit.PX);
+        movePointElement.getStyle()
+                .setLeft(
+                        Math.max(0, originalData.getLeft() + originalLeftPoint
+                                + deltaX), Unit.PX);
+        movePointElement.getStyle().setWidth(2, Unit.PX);
+        movePointElement.getStyle().setHeight(2, Unit.PX);
+
+        return movePointElement;
+    }
 
     public static Element createSVGElementNS(String tag) {
         return createElementNS(SVG_NS, tag);
@@ -240,14 +363,25 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
             // addHandler(mouseDownHandler, MouseDownEvent.getType());
             // registerEventListener(getElement());
             // addDomHandler(mouseUpHandler, MouseUpEvent.getType());
-            // addDomHandler(mouseMoveHandler, MouseMoveEvent.getType());
+            // addHandler(mouseMoveHandler, MouseMoveEvent.getType());
         }
-        registerEventListener(startingPoint);
-        registerEventListener(endingPoint);
+        registerMouseDownAndTouchDownEventListener(startingPoint);
+        registerMouseDownAndTouchDownEventListener(endingPoint);
     }
 
-    private void registerEventListener(final Element element) {
-        Event.sinkEvents(element, Event.MOUSEEVENTS | Event.TOUCHEVENTS);
+    private void registerMouseDownAndTouchDownEventListener(
+            final Element element) {
+        Event.sinkEvents(element, Event.ONMOUSEDOWN | Event.ONTOUCHSTART);
+    }
+
+    private void registerMouseMoveAndTouchMoveEventListener(
+            final Element element) {
+        Event.sinkEvents(element, Event.ONMOUSEMOVE | Event.ONTOUCHMOVE);
+    }
+
+    @Override
+    public void setArrowChangeHandler(ArrowChangeHandler handler) {
+        this.handler = handler;
     }
 
 }

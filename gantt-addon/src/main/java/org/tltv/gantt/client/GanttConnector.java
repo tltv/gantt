@@ -32,6 +32,7 @@ import org.tltv.gantt.client.shared.Step;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
@@ -273,6 +274,24 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         public void onResize(int rowIndex, long startDate, long endDate) {
             rpc.onResize(rowIndex, startDate, endDate);
         }
+
+        @Override
+        public void onStepRelationSelected(StepWidget source,
+                boolean startingPointChanged, Element newRelationStepElement) {
+            StepWidget sw = findStepWidgetByElement(newRelationStepElement);
+
+            if (startingPointChanged) {
+                rpc.onPredecessorChanged(((sw != null) ? sw.getStep().getUid()
+                        : null), source.getStep().getUid(), null);
+            } else {
+                if (sw == null) {
+                    return;
+                }
+                rpc.onPredecessorChanged(source.getStep().getPredecessor()
+                        .getUid(), sw.getStep().getUid(), source.getStep()
+                        .getUid());
+            }
+        }
     };
 
     GanttClientRpc ganttClientRpc = new GanttClientRpc() {
@@ -423,6 +442,17 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             steps.add(((StepConnector) sc).getWidget());
         }
         return steps;
+    }
+
+    protected StepWidget findStepWidgetByElement(Element target) {
+        for (Widget w : getSteps()) {
+            if (w.getElement().isOrHasChild(target)) {
+                if (w instanceof StepWidget) {
+                    return (StepWidget) w;
+                }
+            }
+        }
+        return null;
     }
 
     protected Map<Step, StepWidget> getStepsMap() {
@@ -618,5 +648,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
         return widgets;
+    }
+
+    public StepWidget getStepWidget(Step target) {
+        return getStepsMap().get(target);
     }
 }

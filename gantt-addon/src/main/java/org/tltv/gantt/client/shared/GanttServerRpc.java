@@ -10,4 +10,7 @@ public interface GanttServerRpc extends ServerRpc {
             long endDate);
 
     public void onResize(int rowIndex, long startDate, long endDate);
+
+    public void onPredecessorChanged(String newPredecessorStepUid,
+            String forTargetStepUid, String clearPredecessorForStepUid);
 }

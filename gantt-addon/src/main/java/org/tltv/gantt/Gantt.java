@@ -96,6 +96,25 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         public void onResize(int stepIndex, long startDate, long endDate) {
             fireResizeEvent(stepIndex, startDate, endDate);
         }
+
+        @Override
+        public void onPredecessorChanged(String newPredecessorStepUid,
+                String forTargetStepUid, String clearPredecessorForStepUid) {
+            if (newPredecessorStepUid == forTargetStepUid) {
+                return;
+            }
+            Step newPredecessorStep = getStep(newPredecessorStepUid);
+            Step forTargetStep = getStep(forTargetStepUid);
+            Step clearPredecessorForStep = getStep(clearPredecessorForStepUid);
+            if (forTargetStep != null) {
+                forTargetStep.setPredecessor(newPredecessorStep);
+                stepComponents.get(forTargetStep).getState(true);
+            }
+            if (clearPredecessorForStep != null) {
+                clearPredecessorForStep.setPredecessor(null);
+                stepComponents.get(clearPredecessorForStep).getState(true);
+            }
+        }
     };
 
     protected ExpandListener scrollDelegateTargetExpandListener = new ExpandListener() {
@@ -593,6 +612,20 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             ((Component) getState().verticalScrollDelegateTarget).setHeight(
                     getHeight(), getHeightUnits());
         }
+    }
+
+    private Step getStep(String uid) {
+        if (uid == null) {
+            return null;
+        }
+        Step key = new Step();
+        key.setUid(uid);
+
+        StepComponent sc = stepComponents.get(key);
+        if (sc != null) {
+            return sc.getState().step;
+        }
+        return null;
     }
 
     private Calendar getCalendar() {

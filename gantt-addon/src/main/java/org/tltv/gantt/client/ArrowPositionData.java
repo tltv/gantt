@@ -188,4 +188,22 @@ public class ArrowPositionData {
         this.halfWidth = halfWidth;
     }
 
+    public int calcStartPointX() {
+        return (isFromLeft()) ? 0 : (int) width;
+    }
+
+    public int calcStartPointY() {
+        return (isFromTop()) ? getFromHeightCenter() : (int) height
+                - getFromHeightCenter();
+    }
+
+    public int calcEndPointX() {
+        return (!isFromLeft()) ? 0 : (int) width;
+    }
+
+    public int calcEndPointY() {
+        return ((!isFromTop()) ? getFromHeightCenter() : (int) height
+                - getFromHeightCenter());
+    }
+
 }

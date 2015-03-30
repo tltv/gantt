@@ -16,6 +16,7 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.StepComponent;
+import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
@@ -63,6 +64,8 @@ public class StepConnector extends AbstractComponentConnector {
         }
 
         if (stateChangeEvent.hasPropertyChanged("step")) {
+            updatePredecessorWidgetReference();// need to be called before
+                                               // setStep
             getWidget().setStep(getState().step);
         }
         getWidget().updateWidth();
@@ -81,5 +84,22 @@ public class StepConnector extends AbstractComponentConnector {
                 }
             }
         });
+    }
+
+    private void updatePredecessorWidgetReference() {
+
+        // check predecessor change and update widget reference if
+        // needed.
+        Step predecessor = getState().step.getPredecessor();
+        Step oldPredecessor = null;
+        if (getWidget().getPredecessorStepWidget() != null) {
+            oldPredecessor = getWidget().getPredecessorStepWidget().getStep();
+        }
+
+        if ((predecessor == null && oldPredecessor != null)
+                || (predecessor != null && !predecessor.equals(oldPredecessor))) {
+            getWidget().setPredecessorStepWidget(
+                    ((GanttConnector) getParent()).getStepWidget(predecessor));
+        }
     }
 }
