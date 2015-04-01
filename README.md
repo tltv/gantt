@@ -18,6 +18,7 @@ List of features that are supported:
 * scales the small timeline and content width up to fit in the space available
 * Vaadin Table can be used as a row header, vertical scrolling is mirrored to the table and vice versa
 * background grid (except for IE8)
+* predecessor relations between steps (SVG required)
 * touch support (experimental)
 * supports Valo theme
 
@@ -25,8 +26,10 @@ Technical details:
 * server side class name is Gantt, it extends AbstractComponent
 * client side connector class name is GanttConnector
 * client side widgets (pure GWT) are 
-	* GanttWidget, which is the main widget that connector uses 
-	* TimelineWidget, which is a standalone widget.
+	* GanttWidget: main widget that connector uses, extends ComplexPanel
+	* TimelineWidget: standalone widget representing timeline.
+	* StepWidget
+	* SvgArrowWidget
 
 Tested to work with following browsers: 
 * IE 8, 9, 10, 11

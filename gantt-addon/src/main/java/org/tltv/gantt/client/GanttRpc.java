@@ -10,6 +10,6 @@ public interface GanttRpc {
 
     void onResize(int rowIndex, long startDate, long endDate);
 
-    void onStepRelationSelected(StepWidget source,
+    boolean onStepRelationSelected(StepWidget source,
             boolean startingPointChanged, Element newRelationStepElement);
 }

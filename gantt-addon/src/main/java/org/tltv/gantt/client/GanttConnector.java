@@ -276,21 +276,44 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         @Override
-        public void onStepRelationSelected(StepWidget source,
+        public boolean onStepRelationSelected(StepWidget source,
                 boolean startingPointChanged, Element newRelationStepElement) {
             StepWidget sw = findStepWidgetByElement(newRelationStepElement);
+            if (sw == null) {
+                return false;
+            }
 
             if (startingPointChanged) {
-                rpc.onPredecessorChanged(((sw != null) ? sw.getStep().getUid()
-                        : null), source.getStep().getUid(), null);
+                // source is target (sw is related to source).
+                // sw is new predecessor.
+
+                if (sw.getStep().equals(source.getStep().getPredecessor())) {
+                    return false;
+                } else if (sw.getStep().equals(source.getStep())) {
+                    // remove predecessor
+                    rpc.onPredecessorChanged(null, source.getStep().getUid(),
+                            source.getStep().getUid());
+                    return true;
+                }
+                rpc.onPredecessorChanged(sw.getStep().getUid(), source
+                        .getStep().getUid(), null);
             } else {
-                if (sw == null) {
-                    return;
+                // source is original target (sw is new target)
+
+                if (sw.getStep().equals(source.getStep())) {
+                    return false;
+                } else if (sw.getStep().equals(
+                        source.getStep().getPredecessor())) {
+                    // remove predecessor
+                    rpc.onPredecessorChanged(null, source.getStep().getUid(),
+                            source.getStep().getUid());
+                    return true;
                 }
                 rpc.onPredecessorChanged(source.getStep().getPredecessor()
                         .getUid(), sw.getStep().getUid(), source.getStep()
                         .getUid());
             }
+            return true;
         }
     };
 

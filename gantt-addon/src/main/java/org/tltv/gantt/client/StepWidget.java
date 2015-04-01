@@ -22,9 +22,8 @@ import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Visibility;
-import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -58,15 +57,16 @@ public class StepWidget extends Widget {
     private ArrowChangeHandler arrowChangeHandler = new ArrowChangeHandler() {
 
         @Override
-        public void onArrowChanged(boolean startingPointChanged,
-                MouseDownEvent event) {
+        public boolean onArrowChanged(boolean startingPointChanged,
+                NativeEvent event) {
             Element target = GanttUtil.getElementFromPoint(
-                    GanttUtil.getTouchOrMouseClientX(event.getNativeEvent()),
-                    GanttUtil.getTouchOrMouseClientY(event.getNativeEvent()));
-            if (target != null && !getElement().isOrHasChild(target)) {
-                gantt.getRpc().onStepRelationSelected(StepWidget.this,
+                    GanttUtil.getTouchOrMouseClientX(event),
+                    GanttUtil.getTouchOrMouseClientY(event));
+            if (target != null) {
+                return gantt.getRpc().onStepRelationSelected(StepWidget.this,
                         startingPointChanged, target);
             }
+            return false;
         }
     };
 
@@ -146,10 +146,8 @@ public class StepWidget extends Widget {
 
         predecessorArrow.setWidth(data.getWidth());
         predecessorArrow.setHeight(data.getHeight());
-        predecessorArrow.getElement().getStyle()
-                .setTop((int) data.getTop(), Unit.PX);
-        predecessorArrow.getElement().getStyle()
-                .setLeft((int) data.getLeft(), Unit.PX);
+        predecessorArrow.setTop((int) data.getTop());
+        predecessorArrow.setLeft((int) data.getLeft());
 
         predecessorArrow.draw(data);
     }

@@ -161,6 +161,9 @@
 		/* Bar elements on selection mode.
 		 Highlight hovered bar elements */
 		.select-target-step {
+			touch-action: none;
+			-ms-touch-action: none;
+			
 			.bar:hover {
 				background: orange !important;
 			}

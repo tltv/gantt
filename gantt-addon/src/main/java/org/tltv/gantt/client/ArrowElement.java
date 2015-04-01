@@ -1,7 +1,7 @@
 package org.tltv.gantt.client;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.dom.client.NativeEvent;
 
 /** Element representing an arrow between two elements. SVG implementation. */
 public interface ArrowElement {
@@ -9,6 +9,10 @@ public interface ArrowElement {
     void setWidth(double width);
 
     void setHeight(double height);
+
+    void setTop(int top);
+
+    void setLeft(int left);
 
     void draw(ArrowPositionData arrowData);
 
@@ -27,7 +31,8 @@ public interface ArrowElement {
          *            ending point has changed.
          * @param event
          *            Original Event which triggered this method call.
+         * @return true if change is valid
          */
-        void onArrowChanged(boolean startingPointChanged, MouseDownEvent event);
+        boolean onArrowChanged(boolean startingPointChanged, NativeEvent event);
     }
 }
