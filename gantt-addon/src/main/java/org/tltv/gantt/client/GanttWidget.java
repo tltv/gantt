@@ -947,7 +947,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * Unregister and remove element from the content.
      */
     public void unregisterContentElement(Widget widget) {
-        if (widget != null && extraContentElements.remove(widget)) {
+        if (widget != null) {
+            extraContentElements.remove(widget);
             widget.removeFromParent();
         }
     }
@@ -967,7 +968,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         child.removeFromParent();
 
         // Logical attach.
-        getChildren().add(child);
+        getChildren().insert(child, 0);
 
         // Physical attach.
         content.insertFirst(child.getElement());
@@ -982,15 +983,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return super.remove(w);
         }
 
-        int startIndex = DOM.getChildIndex(content, w.getElement());
+        int startIndex = getWidgetIndex(w);
         int height = getElementHeightWithMargin(w.getElement());
         contentHeight -= height;
 
         if ((startIndex = removeAndReturnIndex(w)) >= 0) {
             // update top for all elements below
             Element elementBelow;
-            for (int i = startIndex; i < content.getChildCount(); i++) {
-                elementBelow = Element.as(content.getChild(i));
+            for (int i = startIndex; i < getChildren().size(); i++) {
+                elementBelow = getWidget(i).getElement();
                 double top = parseSize(elementBelow.getStyle().getTop(), "px");
                 elementBelow.getStyle().setTop(top - height, Unit.PX);
             }
@@ -1012,7 +1013,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         try {
             orphan(w);
         } finally {
-            index = DOM.getChildIndex(content, w.getElement());
+            index = getWidgetIndex(w);
 
             // Physical detach.
             Element elem = w.getElement();
@@ -1124,7 +1125,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
             if (isEnabled()) {
-                getRpc().stepClicked(getStepIndex(content, bar));
+                getRpc().stepClicked(getStepUid(bar));
             }
 
         } else {
@@ -1268,6 +1269,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             }
         }
         return startFromBar;
+    }
+
+    /**
+     * Get UID for the given Step element. Or null if StepWidget for the element
+     * doesn't exist in container.
+     */
+    protected String getStepUid(Element stepElement) {
+        Widget widget = getWidget(getChildIndex(content, stepElement)
+                - isMoveElementAttached());
+        if (widget instanceof StepWidget) {
+            return ((StepWidget) widget).getStep().getUid();
+        }
+        return null;
     }
 
     private double calculateBackgroundGridWidth() {
@@ -1475,8 +1489,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private int getAdditonalContentElementCount() {
         // moveElement inside the content is noticed.
         // extraContentElements are also noticed.
-        return (moveElement.hasParentElement() ? 1 : 0)
-                + extraContentElements.size();
+        return (isMoveElementAttached()) + extraContentElements.size();
+    }
+
+    private int isMoveElementAttached() {
+        return moveElement.hasParentElement() ? 1 : 0;
     }
 
     private int getChildIndex(Element parent, Element child) {

@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.UUID;
 
 import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
@@ -82,8 +81,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     private GanttServerRpc rpc = new GanttServerRpc() {
 
         @Override
-        public void stepClicked(int index) {
-            fireClickEvent(index);
+        public void stepClicked(String stepUid) {
+            fireClickEvent(stepUid);
         }
 
         @Override
@@ -291,11 +290,33 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * is out of bounds.
      * 
      * @param index
-     * @return
+     *            Index of Step.
+     * @return Step
      */
     public Step getStep(int index) {
         if (index >= 0 && index < getState().steps.size()) {
             return ((StepComponent) getState().steps.get(index)).getState().step;
+        }
+        return null;
+    }
+
+    /**
+     * Get Step by UID.
+     * 
+     * @param uid
+     *            Unique Identifier of Step
+     * @return Step with given UID or null if step doesn't exist.
+     */
+    public Step getStep(String uid) {
+        if (uid == null) {
+            return null;
+        }
+        Step key = new Step();
+        key.setUid(uid);
+
+        StepComponent sc = stepComponents.get(key);
+        if (sc != null) {
+            return sc.getState().step;
         }
         return null;
     }
@@ -578,9 +599,6 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     protected StepComponent createStepComponent(Step step) {
-        if (step.getUid() == null) {
-            step.setUid(UUID.randomUUID().toString());
-        }
         return new StepComponent(this, step);
     }
 
@@ -612,20 +630,6 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             ((Component) getState().verticalScrollDelegateTarget).setHeight(
                     getHeight(), getHeightUnits());
         }
-    }
-
-    private Step getStep(String uid) {
-        if (uid == null) {
-            return null;
-        }
-        Step key = new Step();
-        key.setUid(uid);
-
-        StepComponent sc = stepComponents.get(key);
-        if (sc != null) {
-            return sc.getState().step;
-        }
-        return null;
     }
 
     private Calendar getCalendar() {
@@ -762,8 +766,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return Arrays.copyOf(s.getMonths(), 12);
     }
 
-    protected void fireClickEvent(int stepIndex) {
-        fireEvent(new ClickEvent(this, getStep(stepIndex)));
+    protected void fireClickEvent(String stepUid) {
+        fireEvent(new ClickEvent(this, getStep(stepUid)));
     }
 
     protected void fireMoveEvent(int stepIndex, int newRowIndex,

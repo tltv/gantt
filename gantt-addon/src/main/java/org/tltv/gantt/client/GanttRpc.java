@@ -4,7 +4,7 @@ import com.google.gwt.dom.client.Element;
 
 public interface GanttRpc {
 
-    void stepClicked(int index);
+    void stepClicked(String stepUid);
 
     void onMove(int rowIndex, int newRowIndex, long startDate, long endDate);
 

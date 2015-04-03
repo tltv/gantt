@@ -1,111 +1,29 @@
 package org.tltv.gantt.client.shared;
 
-import java.io.Serializable;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
-public class Step implements Serializable {
+public class Step extends AbstractStep {
 
-    private String uid;
-    private CaptionMode captionMode = CaptionMode.TEXT;
-    private String styleName;
-    private String caption;
-    private String backgroundColor = "#A8D9FF";
     private Step predecessor;
-
-    private long startDate = -1;
-    private long endDate = -1;
+    private List<SubStep> subSteps = new LinkedList<SubStep>();
 
     public Step() {
     }
 
     public Step(String caption) {
-        this.caption = caption;
+        super(caption);
     }
 
     public Step(String caption, CaptionMode captionMode) {
-        this.caption = caption;
-        this.captionMode = captionMode;
+        super(caption, captionMode);
     }
 
-    public String getUid() {
-        return uid;
-    }
-
-    public void setUid(String uid) {
-        this.uid = uid;
-    }
-
-    public String getCaption() {
-        return caption;
-    }
-
-    public void setCaption(String caption) {
-        this.caption = caption;
-    }
-
-    public void setCaptionMode(CaptionMode captionMode) {
-        this.captionMode = captionMode;
-    }
-
-    public CaptionMode getCaptionMode() {
-        return captionMode;
-    }
-
-    public void setCaption(String caption, CaptionMode captionMode) {
-        this.caption = caption;
-        this.captionMode = captionMode;
-    }
-
-    public String getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public void setBackgroundColor(String backgroundColor) {
-        if (backgroundColor != null && !backgroundColor.trim().isEmpty()
-                && !backgroundColor.trim().startsWith("#")) {
-            backgroundColor = "#" + backgroundColor;
-        }
-        this.backgroundColor = backgroundColor;
-    }
-
-    public long getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(long startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setStartDate(Date startDate) {
-        if (startDate != null) {
-            this.startDate = startDate.getTime();
-        } else {
-            this.startDate = -1;
-        }
-    }
-
-    public long getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(long endDate) {
-        this.endDate = endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        if (endDate != null) {
-            this.endDate = endDate.getTime();
-        } else {
-            this.endDate = -1;
-        }
-    }
-
-    public String getStyleName() {
-        return styleName;
-    }
-
-    public void setStyleName(String styleName) {
-        this.styleName = styleName;
+    public Step(String caption, CaptionMode captionMode, SubStep... subSteps) {
+        super(caption, captionMode);
+        addSubSteps(subSteps);
     }
 
     public Step getPredecessor() {
@@ -116,39 +34,33 @@ public class Step implements Serializable {
         this.predecessor = predecessor;
     }
 
-    public enum CaptionMode {
-        TEXT,
-        HTML
+    public List<SubStep> getSubSteps() {
+        return Collections.unmodifiableList(subSteps);
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((uid == null) ? 0 : uid.hashCode());
-        return result;
+    public void addSubStep(SubStep subStep) {
+        if (subStep != null) {
+            subStep.setOwner(this);
+            subSteps.add(subStep);
+        }
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    public void addSubSteps(SubStep... subSteps) {
+        if (subSteps != null) {
+            addSubSteps(Arrays.asList(subSteps));
         }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Step other = (Step) obj;
-        if (uid == null) {
-            if (other.uid != null) {
-                return false;
+    }
+
+    public void addSubSteps(List<SubStep> subSteps) {
+        if (subSteps != null) {
+            for (SubStep s : subSteps) {
+                addSubStep(s);
             }
-        } else if (!uid.equals(other.uid)) {
-            return false;
         }
-        return true;
+    }
+
+    public void removeSubStep(SubStep subStep) {
+        subSteps.remove(subStep);
     }
 
 }

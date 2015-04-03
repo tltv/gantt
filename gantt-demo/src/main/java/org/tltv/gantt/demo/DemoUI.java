@@ -29,6 +29,7 @@ import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
 import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.demo.util.UriFragmentWrapperFactory;
 import org.tltv.gantt.demo.util.Util;
 
@@ -230,10 +231,36 @@ public class DemoUI extends UI {
         step4.setEndDate(step2.getEndDate());
         step4.setPredecessor(step1);
 
+        Step stepWithSubSteps = new Step("Step with sub-steps");
+        stepWithSubSteps.setStartDate(step1.getStartDate());
+        stepWithSubSteps.setEndDate(step1.getEndDate());
+        cal.setTime(new Date(step1.getStartDate()));
+        cal.add(Calendar.DATE, 7);
+
+        SubStep subStep1 = new SubStep("Sub-step A");
+        subStep1.setStartDate(step1.getStartDate());
+        subStep1.setEndDate(cal.getTime());
+
+        SubStep subStep2 = new SubStep("Sub-step B");
+        subStep2.setStartDate(cal.getTime());
+        cal.add(Calendar.MONTH, 1);
+        subStep2.setEndDate(cal.getTime());
+
+        SubStep subStep3 = new SubStep("Sub-step C");
+        subStep3.setStartDate(cal.getTime());
+        cal.add(Calendar.MONTH, 1);
+        subStep3.setEndDate(step1.getEndDate());
+
+        stepWithSubSteps.addSubStep(subStep1);
+        stepWithSubSteps.addSubStep(subStep2);
+        stepWithSubSteps.addSubStep(subStep3);
+        // step4.setPredecessor(step1);
+
         gantt.addStep(step1);
         gantt.addStep(step2);
         gantt.addStep(step3);
         gantt.addStep(step4);
+        gantt.addStep(stepWithSubSteps);
 
         String[] colors = new String[] { "11FF11", "33FF33", "55FF55",
                 "77FF77", "99FF99", "BBFFBB", "DDFFDD" };

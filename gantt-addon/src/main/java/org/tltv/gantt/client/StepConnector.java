@@ -15,6 +15,9 @@
  */
 package org.tltv.gantt.client;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.tltv.gantt.StepComponent;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
@@ -23,8 +26,10 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.client.ComponentConnector;
+import com.vaadin.client.ConnectorHierarchyChangeEvent;
 import com.vaadin.client.communication.StateChangeEvent;
-import com.vaadin.client.ui.AbstractComponentConnector;
+import com.vaadin.client.ui.AbstractHasComponentsConnector;
 import com.vaadin.shared.ui.Connect;
 
 /**
@@ -34,7 +39,7 @@ import com.vaadin.shared.ui.Connect;
  * 
  */
 @Connect(StepComponent.class)
-public class StepConnector extends AbstractComponentConnector {
+public class StepConnector extends AbstractHasComponentsConnector {
 
     private GanttWidget gantt;
 
@@ -100,6 +105,35 @@ public class StepConnector extends AbstractComponentConnector {
                 || (predecessor != null && !predecessor.equals(oldPredecessor))) {
             getWidget().setPredecessorStepWidget(
                     ((GanttConnector) getParent()).getStepWidget(predecessor));
+        }
+    }
+
+    @Override
+    public void updateCaption(ComponentConnector connector) {
+        // nop
+    }
+
+    @Override
+    public void onConnectorHierarchyChange(
+            ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+        Set<SubStepWidget> removed = new HashSet<SubStepWidget>();
+        // remove old sub-steps
+        for (ComponentConnector c : connectorHierarchyChangeEvent
+                .getOldChildren()) {
+            if (!getChildComponents().contains(c)) {
+                SubStepWidget stepWidget = ((SubStepConnector) c).getWidget();
+                getWidget().remove(stepWidget);
+                removed.add(stepWidget);
+            }
+        }
+
+        // update new steps with references to gantt widget and locale data
+        // provider.
+        for (ComponentConnector c : getChildComponents()) {
+            SubStepWidget stepWidget = ((SubStepConnector) c).getWidget();
+            if (!connectorHierarchyChangeEvent.getOldChildren().contains(c)) {
+                stepWidget.setGantt(gantt, gantt.getLocaleDataProvider());
+            }
         }
     }
 }

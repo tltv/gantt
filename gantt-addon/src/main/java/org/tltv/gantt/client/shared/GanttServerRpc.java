@@ -4,7 +4,7 @@ import com.vaadin.shared.communication.ServerRpc;
 
 public interface GanttServerRpc extends ServerRpc {
 
-    public void stepClicked(int index);
+    public void stepClicked(String stepUid);
 
     public void onMove(int rowIndex, int newRowIndex, long startDate,
             long endDate);

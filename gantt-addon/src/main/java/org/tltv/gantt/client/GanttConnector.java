@@ -260,18 +260,20 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     GanttRpc ganttRpc = new GanttRpc() {
 
         @Override
-        public void stepClicked(int index) {
-            rpc.stepClicked(index);
+        public void stepClicked(String stepUid) {
+            rpc.stepClicked(stepUid);
         }
 
         @Override
         public void onMove(int rowIndex, int newRowIndex, long startDate,
                 long endDate) {
+            // TODO: change rowIndex to UID
             rpc.onMove(rowIndex, newRowIndex, startDate, endDate);
         }
 
         @Override
         public void onResize(int rowIndex, long startDate, long endDate) {
+            // TODO: change rowIndex to UID
             rpc.onResize(rowIndex, startDate, endDate);
         }
 
