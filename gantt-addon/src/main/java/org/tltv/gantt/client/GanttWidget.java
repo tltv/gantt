@@ -443,7 +443,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * 
      * @param steps
      */
-    public void update(List<Widget> steps) {
+    public void update(List<StepWidget> steps) {
         if (startDate < 0 || endDate < 0 || startDate >= endDate) {
             GWT.log("Invalid start and end dates. Gantt chart can't be rendered. Start: "
                     + startDate + ", End: " + endDate);
@@ -1031,11 +1031,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * 
      * @param steps
      */
-    protected void updateStepWidths(Collection<Widget> steps) {
-        for (Widget step : steps) {
-            if (step instanceof StepWidget) {
-                ((StepWidget) step).updateWidth();
-            }
+    protected void updateStepWidths(Collection<StepWidget> steps) {
+        for (StepWidget step : steps) {
+            step.updateWidth();
         }
     }
 
@@ -1434,10 +1432,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private void internalMoveOrResizeCompleted(Element bar,
             Element newPosition, boolean move) {
-        int barIndex = getStepIndex(content, bar);
-        int newBarIndex = barIndex;
+        String stepUid = getStepUid(bar);
+        String newStepUid = stepUid;
         if (newPosition != null && bar != newPosition) {
-            newBarIndex = getStepIndex(content, newPosition);
+            newStepUid = getStepUid(newPosition);
         }
 
         double left = parseSize(bar.getStyle().getLeft(), "px");
@@ -1447,18 +1445,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         // update left-position to percentage (so that it scales again)
         updateBarPercentagePosition(startDate, endDate, bar);
 
-        if (barIndex < 0) {
-            GWT.log("RPC call cancelled. Invalid child element index: "
-                    + barIndex);
-            return;
-        }
-
         long offset = getLocaleDataProvider().getTimeZoneOffset();
         if (move) {
-            getRpc().onMove(barIndex, newBarIndex, startDate - offset,
+            getRpc().onMove(stepUid, newStepUid, startDate - offset,
                     endDate - offset);
         } else {
-            getRpc().onResize(barIndex, startDate - offset, endDate - offset);
+            getRpc().onResize(stepUid, startDate - offset, endDate - offset);
         }
     }
 

@@ -6,9 +6,9 @@ public interface GanttRpc {
 
     void stepClicked(String stepUid);
 
-    void onMove(int rowIndex, int newRowIndex, long startDate, long endDate);
+    void onMove(String stepUid, String newStepUid, long startDate, long endDate);
 
-    void onResize(int rowIndex, long startDate, long endDate);
+    void onResize(String stepUid, long startDate, long endDate);
 
     boolean onStepRelationSelected(StepWidget source,
             boolean startingPointChanged, Element newRelationStepElement);

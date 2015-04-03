@@ -14,6 +14,8 @@ public interface ArrowElement {
 
     void setLeft(int left);
 
+    void setReadOnly(boolean readOnly);
+
     void draw(ArrowPositionData arrowData);
 
     Element getElement();

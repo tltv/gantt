@@ -23,7 +23,20 @@ package org.tltv.gantt.client;
  */
 public class SubStepWidget extends AbstractStepWidget {
 
+    private StepWidget owner;
+
     public SubStepWidget() {
         super();
+    }
+
+    public void setOwner(StepWidget stepWidget) {
+        owner = stepWidget;
+        if (owner != null && owner.getGanttWidget() != null) {
+            setGantt(owner.getGanttWidget(), owner.getLocaleDataProvider());
+        }
+    }
+
+    public StepWidget getOwner() {
+        return owner;
     }
 }

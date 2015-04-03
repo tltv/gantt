@@ -86,14 +86,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
 
         @Override
-        public void onMove(int stepIndex, int newRowIndex, long startDate,
+        public void onMove(String stepUid, String newStepUid, long startDate,
                 long endDate) {
-            fireMoveEvent(stepIndex, newRowIndex, startDate, endDate);
+            fireMoveEvent(stepUid, newStepUid, startDate, endDate);
         }
 
         @Override
-        public void onResize(int stepIndex, long startDate, long endDate) {
-            fireResizeEvent(stepIndex, startDate, endDate);
+        public void onResize(String stepUid, long startDate, long endDate) {
+            fireResizeEvent(stepUid, startDate, endDate);
         }
 
         @Override
@@ -770,16 +770,16 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         fireEvent(new ClickEvent(this, getStep(stepUid)));
     }
 
-    protected void fireMoveEvent(int stepIndex, int newRowIndex,
+    protected void fireMoveEvent(String stepUid, String newStepUid,
             long startDate, long endDate) {
-        Step step = getStep(stepIndex);
+        Step step = getStep(stepUid);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
         fireEvent(new MoveEvent(this, step, startDate, endDate));
     }
 
-    protected void fireResizeEvent(int stepIndex, long startDate, long endDate) {
-        Step step = getStep(stepIndex);
+    protected void fireResizeEvent(String stepUid, long startDate, long endDate) {
+        Step step = getStep(stepUid);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
         fireEvent(new ResizeEvent(this, step, startDate, endDate));

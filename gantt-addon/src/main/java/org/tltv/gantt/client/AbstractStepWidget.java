@@ -5,9 +5,11 @@ import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 public class AbstractStepWidget extends ComplexPanel {
 
@@ -15,6 +17,7 @@ public class AbstractStepWidget extends ComplexPanel {
     public static final String STYLE_BAR_LABEL = "bar-label";
     public static final String STYLE_INVALID = "invalid";
 
+    protected boolean readOnly;
     protected DivElement caption;
 
     protected String extraStyle;
@@ -137,4 +140,16 @@ public class AbstractStepWidget extends ComplexPanel {
         }
     }
 
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    @Override
+    public void add(Widget w) {
+        super.add(w, (Element) getElement());
+    }
 }

@@ -45,7 +45,7 @@ import com.vaadin.client.ComponentConnector;
 import com.vaadin.client.ConnectorHierarchyChangeEvent;
 import com.vaadin.client.LocaleNotLoadedException;
 import com.vaadin.client.LocaleService;
-import com.vaadin.client.Util;
+import com.vaadin.client.WidgetUtil;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.communication.StateChangeEvent.StateChangeHandler;
@@ -265,16 +265,14 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         @Override
-        public void onMove(int rowIndex, int newRowIndex, long startDate,
+        public void onMove(String stepUid, String newStepUid, long startDate,
                 long endDate) {
-            // TODO: change rowIndex to UID
-            rpc.onMove(rowIndex, newRowIndex, startDate, endDate);
+            rpc.onMove(stepUid, newStepUid, startDate, endDate);
         }
 
         @Override
-        public void onResize(int rowIndex, long startDate, long endDate) {
-            // TODO: change rowIndex to UID
-            rpc.onResize(rowIndex, startDate, endDate);
+        public void onResize(String stepUid, long startDate, long endDate) {
+            rpc.onResize(stepUid, startDate, endDate);
         }
 
         @Override
@@ -355,6 +353,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     @Override
                     public void execute() {
                         getWidget().notifyWidthChanged(width);
+                        updateAllStepsPredecessors();
                         updateDelegateTargetHeight();
                     }
                 });
@@ -418,7 +417,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         final boolean changeHasInpactToSteps = stateChangeEvent
                 .hasPropertyChanged("resolution")
-                || stateChangeEvent.hasPropertyChanged("startDate");
+                || stateChangeEvent.hasPropertyChanged("startDate")
+                || stateChangeEvent.hasPropertyChanged("endDate");
 
         if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
                 || stateChangeEvent.hasPropertyChanged("yearRowVisible")
@@ -438,6 +438,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     !getState().readOnly && getState().movableSteps);
             getWidget().setResizableSteps(
                     !getState().readOnly && getState().resizableSteps);
+            for (StepWidget s : getSteps()) {
+                s.setReadOnly(getState().readOnly);
+            }
         }
 
         if (stateChangeEvent.hasPropertyChanged("verticalScrollDelegateTarget")) {
@@ -461,8 +464,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         });
     }
 
-    protected List<Widget> getSteps() {
-        List<Widget> steps = new ArrayList<Widget>();
+    protected List<StepWidget> getSteps() {
+        List<StepWidget> steps = new ArrayList<StepWidget>();
         for (Connector sc : getState().steps) {
             steps.add(((StepConnector) sc).getWidget());
         }
@@ -566,7 +569,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         if (delegateScrollTableTarget.tHead != null) {
             // update table header height to match the Gantt widget's header
             // height
-            int border = Util
+            int border = WidgetUtil
                     .measureVerticalBorder(delegateScrollTableTarget.tHead
                             .getElement());
             headerHeight = getWidget().getTimelineHeight();
@@ -576,18 +579,19 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     + "px");
         }
 
-        int border = Util.measureVerticalBorder(delegateScrollPanelTarget
+        int border = WidgetUtil.measureVerticalBorder(delegateScrollPanelTarget
                 .getElement());
         // Adjust table's scroll container height to match the Gantt widget's
         // scroll container height.
         int newTableScrollContainerHeight = getWidget()
                 .getScrollContainerHeight();
-        boolean tableHorScrollbarVisible = border >= Util
+        boolean tableHorScrollbarVisible = border >= WidgetUtil
                 .getNativeScrollbarSize();
         if (getWidget().isContentOverflowingHorizontally()) {
             getWidget().hideHorizontalScrollbarSpacer();
             if (tableHorScrollbarVisible) {
-                newTableScrollContainerHeight += Util.getNativeScrollbarSize();
+                newTableScrollContainerHeight += WidgetUtil
+                        .getNativeScrollbarSize();
             }
         } else {
             if (tableHorScrollbarVisible) {

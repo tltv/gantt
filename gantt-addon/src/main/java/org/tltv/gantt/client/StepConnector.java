@@ -127,6 +127,9 @@ public class StepConnector extends AbstractHasComponentsConnector {
             }
         }
 
+        if (gantt == null) {
+            return;
+        }
         // update new steps with references to gantt widget and locale data
         // provider.
         for (ComponentConnector c : getChildComponents()) {

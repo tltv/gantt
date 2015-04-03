@@ -52,6 +52,7 @@ public class SubStepConnector extends AbstractComponentConnector {
 
         if (step == null) {
             step = ((StepConnector) getParent()).getWidget();
+            getWidget().setOwner(step);
         }
 
         if (stateChangeEvent.hasPropertyChanged("step")) {

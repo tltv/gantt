@@ -95,7 +95,9 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public ArrowElement createArrowWidget() {
-        return new SvgArrowWidget();
+        SvgArrowWidget a = new SvgArrowWidget();
+        a.setReadOnly(isReadOnly());
+        return a;
     }
 
     protected void createPredecessorElements() {
@@ -118,4 +120,16 @@ public class StepWidget extends AbstractStepWidget {
         return (Widget) predecessorArrow;
     }
 
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+        if (predecessorArrow != null) {
+            predecessorArrow.setReadOnly(readOnly);
+        }
+    }
+
+    public GanttWidget getGanttWidget() {
+        return gantt;
+
+    }
 }

@@ -57,6 +57,8 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
     public static final String SELECTION_STYLE_NAME = "select-target-step";
     private static final int POINTER_TOUCH_DETECTION_INTERVAL = 100;
 
+    protected boolean readOnly;
+
     protected Element curve;
     protected Element startingPoint;
     protected Element endingPoint;
@@ -207,6 +209,23 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         }
     };
 
+    @Override
+    public void setUpEventHandlers(boolean touchSupported,
+            boolean msTouchSupported) {
+        this.touchSupported = touchSupported;
+        this.msTouchSupported = msTouchSupported;
+        if (msTouchSupported) {
+            addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
+            addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
+        } else if (touchSupported) {
+            addDomHandler(touchStartHandler, TouchStartEvent.getType());
+        } else {
+            addHandler(mouseDownHandler, MouseDownEvent.getType());
+        }
+        registerMouseDownAndTouchDownEventListener(startingPoint);
+        registerMouseDownAndTouchDownEventListener(endingPoint);
+    }
+
     public SvgArrowWidget() {
         Element predecessorArrow = createSVGElementNS("svg");
         addStyleName(predecessorArrow, "arrow");
@@ -262,29 +281,20 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         getElement().getStyle().setLeft(left - getMargin(), Unit.PX);
     }
 
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
     @Override
     public void draw(ArrowPositionData d) {
         originalData = d;
         startingPoint.getStyle().setVisibility(Visibility.VISIBLE);
         endingPoint.getStyle().setVisibility(Visibility.VISIBLE);
         internalDraw(d);
-    }
-
-    @Override
-    public void setUpEventHandlers(boolean touchSupported,
-            boolean msTouchSupported) {
-        this.touchSupported = touchSupported;
-        this.msTouchSupported = msTouchSupported;
-        if (msTouchSupported) {
-            addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
-            addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
-        } else if (touchSupported) {
-            addDomHandler(touchStartHandler, TouchStartEvent.getType());
-        } else {
-            addHandler(mouseDownHandler, MouseDownEvent.getType());
-        }
-        registerMouseDownAndTouchDownEventListener(startingPoint);
-        registerMouseDownAndTouchDownEventListener(endingPoint);
     }
 
     public int getMargin() {
@@ -469,6 +479,9 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
 
     /** MouseTtouch down event handler. */
     protected void handleDownEvent(NativeEvent event) {
+        if (isReadOnly()) {
+            return;
+        }
         if (captureElement != null) {
             stopMoving(event);
 
