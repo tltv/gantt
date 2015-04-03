@@ -76,6 +76,8 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
     protected HandlerRegistration touchCancelRegisteration;
     protected ArrowPositionData movingData;
     protected Point capturePoint;
+    protected int capturePointScrollTop = 0;
+    protected int capturePointScrollLeft = 0;
 
     protected ArrowChangeHandler handler;
 
@@ -364,6 +366,12 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
     protected Element createSnapshotElement(Point point) {
         int deltaX = (int) (point.getX() - capturePoint.getX());
         int deltaY = (int) (point.getY() - capturePoint.getY());
+        int scrollDeltaY = getElement().getParentElement().getParentElement()
+                .getScrollTop()
+                - capturePointScrollTop;
+        int scrollDeltaX = getElement().getParentElement().getParentElement()
+                .getScrollLeft()
+                - capturePointScrollLeft;
 
         int originalTopPoint = selectPredecessorMode ? originalData
                 .calcStartPointY() : originalData.calcEndPointY();
@@ -373,12 +381,11 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         movePointElement.getStyle().setVisibility(Visibility.HIDDEN);
         movePointElement.getStyle().setPosition(Position.ABSOLUTE);
         movePointElement.getStyle().setTop(
-                Math.max(0, originalData.getTop() + originalTopPoint + deltaY),
-                Unit.PX);
-        movePointElement.getStyle()
-                .setLeft(
-                        Math.max(0, originalData.getLeft() + originalLeftPoint
-                                + deltaX), Unit.PX);
+                Math.max(0, originalData.getTop() + originalTopPoint + deltaY
+                        + scrollDeltaY), Unit.PX);
+        movePointElement.getStyle().setLeft(
+                Math.max(0, originalData.getLeft() + originalLeftPoint + deltaX
+                        + scrollDeltaX), Unit.PX);
         movePointElement.getStyle().setWidth(2, Unit.PX);
         movePointElement.getStyle().setHeight(2, Unit.PX);
 
@@ -393,6 +400,10 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
             selectFollowerMode = true;
             endingPoint.getStyle().setVisibility(Visibility.HIDDEN);
         }
+        capturePointScrollTop = getElement().getParentElement()
+                .getParentElement().getScrollTop();
+        capturePointScrollLeft = getElement().getParentElement()
+                .getParentElement().getScrollLeft();
         getParent().getElement().appendChild(movePointElement);
         getElement().getParentElement().addClassName(SELECTION_STYLE_NAME);
         GWT.log("Capturing clicked point.");
