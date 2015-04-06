@@ -23,10 +23,13 @@ package org.tltv.gantt.client;
  */
 public class SubStepWidget extends AbstractStepWidget {
 
+    public static final String STYLE_SUB_BAR = "sub-bar";
+
     private StepWidget owner;
 
     public SubStepWidget() {
         super();
+        getElement().addClassName(STYLE_SUB_BAR);
     }
 
     public void setOwner(StepWidget stepWidget) {
@@ -38,5 +41,17 @@ public class SubStepWidget extends AbstractStepWidget {
 
     public StepWidget getOwner() {
         return owner;
+    }
+
+    @Override
+    protected void updatePositionAndWidth() {
+        long offset = 0;
+        if (getLocaleDataProvider() != null) {
+            offset = getLocaleDataProvider().getTimeZoneOffset();
+        }
+        gantt.updateBarPercentagePosition(step.getStartDate() + offset,
+                step.getEndDate() + offset, getOwner().getStep().getStartDate()
+                        + offset, getOwner().getStep().getEndDate() + offset,
+                getElement());
     }
 }

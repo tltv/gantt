@@ -421,6 +421,19 @@ public class TimelineWidget extends Widget {
         return (100.0 / width) * relativeLeft + "" + Unit.PCT.getType();
     }
 
+    public String getLeftPositionPercentageStringForDate(long date,
+            double rangeWidth, long rangeStartDate, long rangeEndDate) {
+        double rangeLeft = getLeftPositionForDate(date, rangeWidth,
+                rangeStartDate, rangeEndDate);
+        double width = rangeWidth;
+        String calc = createCalcCssValue(width, rangeLeft);
+
+        if (calc != null) {
+            return calc;
+        }
+        return (100.0 / width) * rangeLeft + "" + Unit.PCT.getType();
+    }
+
     /**
      * Calculate CSS value for 'width' property matching date interval inside
      * the time-line. Returns percentage value. Interval is in milliseconds.
@@ -433,6 +446,12 @@ public class TimelineWidget extends Widget {
      */
     public String getWidthPercentageStringForDateInterval(long interval) {
         double range = endDate - startDate;
+        return getWidthPercentageStringForDateInterval(interval, range);
+    }
+
+    /** @see {@link #getWidthPercentageStringForDateInterval(long)} */
+    public String getWidthPercentageStringForDateInterval(long interval,
+            double range) {
         String calc = createCalcCssValue(range, interval);
         if (calc != null) {
             return calc;
@@ -449,13 +468,19 @@ public class TimelineWidget extends Widget {
      * @return Left offset in pixels.
      */
     public double getLeftPositionForDate(long date) {
-        double width = getResolutionWidth();
-        double range = endDate - startDate;
+        return getLeftPositionForDate(date, getResolutionWidth(), startDate,
+                endDate);
+    }
+
+    public double getLeftPositionForDate(long date, double rangeWidth,
+            long rangeStartDate, long rangeEndDate) {
+        double width = rangeWidth;
+        double range = rangeEndDate - rangeStartDate;
         if (range <= 0) {
             return 0;
         }
         double p = width / range;
-        double offset = date - startDate;
+        double offset = date - rangeStartDate;
         double left = p * offset;
         return left;
     }

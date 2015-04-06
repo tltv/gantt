@@ -28,6 +28,7 @@ import javax.servlet.annotation.WebServlet;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
+import org.tltv.gantt.client.shared.AbstractStep;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.demo.util.UriFragmentWrapperFactory;
@@ -592,14 +593,14 @@ public class DemoUI extends UI {
         return menu;
     }
 
-    private void openStepEditor(Step step) {
+    private void openStepEditor(AbstractStep step) {
         final Window win = new Window("Step Editor");
         win.setResizable(false);
         win.center();
 
         final Collection<Component> hidden = new ArrayList<Component>();
 
-        BeanItem<Step> item = new BeanItem<Step>(step);
+        BeanItem<AbstractStep> item = new BeanItem<AbstractStep>(step);
 
         final FieldGroup group = new FieldGroup(item);
         group.setBuffered(true);
@@ -695,11 +696,16 @@ public class DemoUI extends UI {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                Step step = ((BeanItem<Step>) group.getItemDataSource())
-                        .getBean();
-                gantt.removeStep(step);
-                if (ganttListener != null) {
-                    ganttListener.stepDeleted(step);
+                AbstractStep step = ((BeanItem<AbstractStep>) group
+                        .getItemDataSource()).getBean();
+                if (step instanceof SubStep) {
+                    SubStep substep = (SubStep) step;
+                    substep.getOwner().removeSubStep(substep);
+                } else {
+                    gantt.removeStep((Step) step);
+                    if (ganttListener != null) {
+                        ganttListener.stepDeleted((Step) step);
+                    }
                 }
                 win.close();
             }
@@ -711,5 +717,4 @@ public class DemoUI extends UI {
 
         getUI().addWindow(win);
     }
-
 }

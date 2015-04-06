@@ -31,11 +31,13 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.tltv.gantt.client.shared.AbstractStep;
 import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
 import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.client.shared.SubStep;
 
 import com.vaadin.shared.Connector;
 import com.vaadin.ui.Component;
@@ -77,6 +79,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     private Calendar calendar;
 
     protected final Map<Step, StepComponent> stepComponents = new HashMap<Step, StepComponent>();
+    protected final Map<SubStep, SubStepComponent> subStepMap = new HashMap<SubStep, SubStepComponent>();
 
     private GanttServerRpc rpc = new GanttServerRpc() {
 
@@ -102,9 +105,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             if (newPredecessorStepUid == forTargetStepUid) {
                 return;
             }
-            Step newPredecessorStep = getStep(newPredecessorStepUid);
-            Step forTargetStep = getStep(forTargetStepUid);
-            Step clearPredecessorForStep = getStep(clearPredecessorForStepUid);
+            Step newPredecessorStep = (Step) getStep(newPredecessorStepUid);
+            Step forTargetStep = (Step) getStep(forTargetStepUid);
+            Step clearPredecessorForStep = (Step) getStep(clearPredecessorForStepUid);
             if (forTargetStep != null) {
                 forTargetStep.setPredecessor(newPredecessorStep);
                 stepComponents.get(forTargetStep).getState(true);
@@ -307,16 +310,22 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      *            Unique Identifier of Step
      * @return Step with given UID or null if step doesn't exist.
      */
-    public Step getStep(String uid) {
+    public AbstractStep getStep(String uid) {
         if (uid == null) {
             return null;
         }
-        Step key = new Step();
+        AbstractStep key = new Step();
         key.setUid(uid);
 
         StepComponent sc = stepComponents.get(key);
         if (sc != null) {
             return sc.getState().step;
+        }
+        key = new SubStep();
+        key.setUid(uid);
+        SubStepComponent sub = subStepMap.get(key);
+        if (sub != null) {
+            return sub.getState().step;
         }
         return null;
     }
@@ -772,17 +781,33 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     protected void fireMoveEvent(String stepUid, String newStepUid,
             long startDate, long endDate) {
-        Step step = getStep(stepUid);
+        AbstractStep step = getStep(stepUid);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        fireEvent(new MoveEvent(this, step, startDate, endDate));
+        adjustDatesBySubStep(step);
+        fireEvent(new MoveEvent(this, step, step.getStartDate(),
+                step.getEndDate()));
     }
 
     protected void fireResizeEvent(String stepUid, long startDate, long endDate) {
-        Step step = getStep(stepUid);
+        AbstractStep step = getStep(stepUid);
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        fireEvent(new ResizeEvent(this, step, startDate, endDate));
+        adjustDatesBySubStep(step);
+        fireEvent(new ResizeEvent(this, step, step.getStartDate(),
+                step.getEndDate()));
+    }
+
+    protected void adjustDatesBySubStep(AbstractStep step) {
+        if (step instanceof SubStep) {
+            // adjust parent step start/end date
+            SubStep subStep = ((SubStep) step);
+            if (subStep.getStartDate() < subStep.getOwner().getStartDate()) {
+                subStep.getOwner().setStartDate(subStep.getStartDate());
+            } else if (subStep.getEndDate() > subStep.getOwner().getEndDate()) {
+                subStep.getOwner().setEndDate(subStep.getEndDate());
+            }
+        }
     }
 
     /**
@@ -831,9 +856,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     public class ClickEvent extends Component.Event {
 
-        private Step step;
+        private AbstractStep step;
 
-        public ClickEvent(Gantt source, Step step) {
+        public ClickEvent(Gantt source, AbstractStep step) {
             super(source);
             this.step = step;
         }
@@ -843,11 +868,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
          * 
          * @return
          */
-        public Step getStep() {
+        public AbstractStep getStep() {
             return step;
         }
 
-        public void setStep(Step step) {
+        public void setStep(AbstractStep step) {
             this.step = step;
         }
 
@@ -855,12 +880,13 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     public class MoveEvent extends Component.Event {
 
-        private Step step;
+        private AbstractStep step;
         private long startDate;
 
         private long endDate;
 
-        public MoveEvent(Gantt source, Step step, long startDate, long endDate) {
+        public MoveEvent(Gantt source, AbstractStep step, long startDate,
+                long endDate) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -872,11 +898,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
          * 
          * @return
          */
-        public Step getStep() {
+        public AbstractStep getStep() {
             return step;
         }
 
-        public void setStep(Step step) {
+        public void setStep(AbstractStep step) {
             this.step = step;
         }
 
@@ -911,11 +937,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     public class ResizeEvent extends Component.Event {
 
-        private Step step;
+        private AbstractStep step;
         private long startDate;
         private long endDate;
 
-        public ResizeEvent(Gantt source, Step step, long startDate, long endDate) {
+        public ResizeEvent(Gantt source, AbstractStep step, long startDate,
+                long endDate) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -927,11 +954,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
          * 
          * @return
          */
-        public Step getStep() {
+        public AbstractStep getStep() {
             return step;
         }
 
-        public void setStep(Step step) {
+        public void setStep(AbstractStep step) {
             this.step = step;
         }
 

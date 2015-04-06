@@ -112,6 +112,15 @@ public class AbstractStepWidget extends ComplexPanel {
         return string == null || string.trim().isEmpty();
     }
 
+    protected void updatePositionAndWidth() {
+        long offset = 0;
+        if (getLocaleDataProvider() != null) {
+            offset = getLocaleDataProvider().getTimeZoneOffset();
+        }
+        gantt.updateBarPercentagePosition(step.getStartDate() + offset,
+                step.getEndDate() + offset, getElement());
+    }
+
     /**
      * Updates width of this widget to match the Gantt chart's timeline.
      */
@@ -129,14 +138,8 @@ public class AbstractStepWidget extends ComplexPanel {
                     || step.getEndDate() <= step.getStartDate()) {
                 getElement().addClassName(STYLE_INVALID);
             } else {
-                long offset = 0;
-                if (getLocaleDataProvider() != null) {
-                    offset = getLocaleDataProvider().getTimeZoneOffset();
-                }
-                gantt.updateBarPercentagePosition(step.getStartDate() + offset,
-                        step.getEndDate() + offset, getElement());
+                updatePositionAndWidth();
             }
-
         }
     }
 
@@ -151,5 +154,9 @@ public class AbstractStepWidget extends ComplexPanel {
     @Override
     public void add(Widget w) {
         super.add(w, (Element) getElement());
+    }
+
+    protected int countNonSubStepChilds() {
+        return (caption != null && caption.hasParentElement()) ? 1 : 0;
     }
 }

@@ -1,10 +1,8 @@
 package org.tltv.gantt;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.tltv.gantt.client.shared.Step;
@@ -14,7 +12,6 @@ import org.tltv.gantt.client.shared.SubStepObserver;
 import org.tltv.gantt.client.shared.SubStepObserverProxy;
 
 import com.vaadin.shared.Connector;
-import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 
@@ -24,12 +21,13 @@ import com.vaadin.ui.HasComponents;
  * @author Tltv
  * 
  */
-public class StepComponent extends AbstractComponent implements HasComponents,
-        SubStepObserver {
+public class StepComponent extends AbstractStepComponent implements
+        HasComponents, SubStepObserver {
 
-    protected final Map<SubStep, SubStepComponent> subStepMap = new HashMap<SubStep, SubStepComponent>();
+    protected Gantt gantt;
 
     public StepComponent(Gantt gantt, Step data) {
+        this.gantt = gantt;
         if (data.getUid() == null) {
             data.setUid(UUID.randomUUID().toString());
         }
@@ -76,13 +74,17 @@ public class StepComponent extends AbstractComponent implements HasComponents,
     public void onAddSubStep(SubStep subStep) {
         SubStepComponent component = createSubStepComponent(this, subStep);
         getState(true).subSteps.add(component);
-        subStepMap.put(subStep, component);
+        gantt.subStepMap.put(subStep, component);
     }
 
     @Override
     public void onRemoveSubStep(SubStep subStep) {
-        getState(true).subSteps.add(subStepMap.get(subStep));
-        subStepMap.remove(subStep);
+        SubStepComponent component = gantt.subStepMap.get(subStep);
+        if (component != null) {
+            component.setParent(null);
+            getState(true).subSteps.remove(component);
+        }
+        gantt.subStepMap.remove(subStep);
     }
 
 }

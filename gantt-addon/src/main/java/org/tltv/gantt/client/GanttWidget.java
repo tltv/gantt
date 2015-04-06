@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -924,6 +925,20 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     public void updateBarPercentagePosition(long startDate, long endDate,
+            long ownerStartDate, long ownerEndDate, Element bar) {
+        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(bar
+                .getParentElement());
+        String sLeft = timeline.getLeftPositionPercentageStringForDate(
+                startDate, ownerStepWidth, ownerStartDate, ownerEndDate);
+        bar.getStyle().setProperty("left", sLeft);
+
+        double range = ownerEndDate - ownerStartDate;
+        String sWidth = timeline.getWidthPercentageStringForDateInterval(
+                endDate - startDate, range);
+        bar.getStyle().setProperty("width", sWidth);
+    }
+
+    public void updateBarPercentagePosition(long startDate, long endDate,
             Element bar) {
         String sLeft = timeline.getLeftPositionPercentageStringForDate(
                 startDate, getContentWidth());
@@ -1044,16 +1059,24 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
         Element parent = element;
         while (parent.getParentElement() != null
-                && parent.getParentElement() != content) {
+                && parent.getParentElement() != content && !isBar(parent)) {
             parent = parent.getParentElement();
         }
-        if (parent.getParentElement() == content) {
+        if (isBar(parent)) {
             if ("svg".equalsIgnoreCase(parent.getTagName())) {
                 return null;
             }
             return parent;
         }
         return null;
+    }
+
+    protected boolean isBar(Element element) {
+        return element.hasClassName(AbstractStepWidget.STYLE_BAR);
+    }
+
+    protected boolean isSubBar(Element element) {
+        return element.hasClassName(SubStepWidget.STYLE_SUB_BAR);
     }
 
     /**
@@ -1120,6 +1143,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         Element bar = getBar(event);
 
         disallowClickTimer.cancel();
+
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
             if (isEnabled()) {
@@ -1240,6 +1264,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      *         startFromBar element.
      */
     protected Element findStepElement(Element startFromBar, int y, double deltay) {
+        if (isSubBar(startFromBar)) {
+            startFromBar = startFromBar.getParentElement();
+        }
+
         if (isBetween(y, startFromBar.getAbsoluteTop(),
                 startFromBar.getAbsoluteBottom())) {
             return startFromBar;
@@ -1274,10 +1302,25 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * doesn't exist in container.
      */
     protected String getStepUid(Element stepElement) {
+        if (isSubBar(stepElement)) {
+            return getSubStepUid(stepElement);
+        }
+
         Widget widget = getWidget(getChildIndex(content, stepElement)
                 - isMoveElementAttached());
         if (widget instanceof StepWidget) {
             return ((StepWidget) widget).getStep().getUid();
+        }
+        return null;
+    }
+
+    protected String getSubStepUid(Element subStepElement) {
+        Element stepElement = subStepElement.getParentElement();
+        Widget widget = getWidget(getChildIndex(content, stepElement)
+                - isMoveElementAttached());
+        if (widget instanceof StepWidget) {
+            return ((StepWidget) widget)
+                    .getStepUidBySubStepElement(subStepElement);
         }
         return null;
     }
@@ -1421,9 +1464,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
         moveElement.getStyle().clearDisplay();
 
-        moveElement.getStyle().setProperty("left", target.getStyle().getLeft());
+        double left = parseSize(target.getStyle().getLeft(), "px");
+        if (isSubBar(target)) {
+            left += target.getParentElement().getOffsetLeft();
+        }
+        moveElement.getStyle().setProperty("left", left + "px");
         moveElement.getStyle().setProperty("width",
-                target.getStyle().getWidth());
+                target.getClientWidth() + "px");
     }
 
     private void hideMoveElement() {
@@ -1439,6 +1486,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         double left = parseSize(bar.getStyle().getLeft(), "px");
+        if (isSubBar(bar)) {
+            left += bar.getParentElement().getOffsetLeft();
+        }
         long startDate = timeline.getDateForLeftPosition(left);
         left += bar.getClientWidth();
         long endDate = timeline.getDateForLeftPosition(left);

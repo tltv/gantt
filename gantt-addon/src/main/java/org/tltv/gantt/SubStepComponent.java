@@ -5,15 +5,13 @@ import java.util.UUID;
 import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.client.shared.SubStepState;
 
-import com.vaadin.ui.AbstractComponent;
-
 /**
  * Component representing a Sub-Step in the Gantt chart.
  * 
  * @author Tltv
  * 
  */
-public class SubStepComponent extends AbstractComponent {
+public class SubStepComponent extends AbstractStepComponent {
 
     public SubStepComponent(StepComponent stepComponent, SubStep data) {
         if (data.getUid() == null) {

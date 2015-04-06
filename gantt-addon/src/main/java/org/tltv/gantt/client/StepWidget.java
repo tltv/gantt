@@ -15,12 +15,17 @@
  */
 package org.tltv.gantt.client;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.tltv.gantt.client.ArrowElement.ArrowChangeHandler;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -30,6 +35,8 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  */
 public class StepWidget extends AbstractStepWidget {
+
+    public static final String STYLE_HAS_SUB_STEPS = "has-sub-steps";
 
     private StepWidget predecessorStepWidget;
 
@@ -130,6 +137,42 @@ public class StepWidget extends AbstractStepWidget {
 
     public GanttWidget getGanttWidget() {
         return gantt;
-
     }
+
+    public List<SubStepWidget> getSubSteps() {
+        List<SubStepWidget> list = new ArrayList<SubStepWidget>();
+        Widget widget;
+        Iterator<Widget> iterator = iterator();
+        while (iterator.hasNext()) {
+            widget = iterator.next();
+            if (widget instanceof SubStepWidget) {
+                list.add((SubStepWidget) widget);
+            }
+        }
+        return list;
+    }
+
+    public String getStepUidBySubStepElement(Element element) {
+        Widget w = getWidget(DOM.getChildIndex(getElement(), element)
+                - countNonSubStepChilds());
+        if (w instanceof SubStepWidget) {
+            return ((SubStepWidget) w).getStep().getUid();
+        }
+        return null;
+    }
+
+    @Override
+    public void updateWidth() {
+        super.updateWidth();
+        List<SubStepWidget> subSteps = getSubSteps();
+        if (subSteps.isEmpty()) {
+            getElement().removeClassName(STYLE_HAS_SUB_STEPS);
+        } else {
+            getElement().addClassName(STYLE_HAS_SUB_STEPS);
+        }
+        for (SubStepWidget subStep : subSteps) {
+            subStep.updateWidth();
+        }
+    }
+
 }
