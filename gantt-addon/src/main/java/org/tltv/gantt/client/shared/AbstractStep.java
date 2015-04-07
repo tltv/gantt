@@ -114,6 +114,14 @@ public abstract class AbstractStep implements Serializable {
         }
     }
 
+    public boolean isStartDateUndefined() {
+        return startDate < 0;
+    }
+
+    public boolean isEndDateUndefined() {
+        return endDate < 0;
+    }
+
     public String getStyleName() {
         return styleName;
     }

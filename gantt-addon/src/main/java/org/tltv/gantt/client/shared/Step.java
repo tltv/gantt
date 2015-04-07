@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 public class Step extends AbstractStep {
@@ -104,4 +103,27 @@ public class Step extends AbstractStep {
         this.subStepObserver = subStepObserver;
     }
 
+    public long getMinStartDateBySubSteps() {
+        Long min = null;
+        for (SubStep subStep : getSubSteps()) {
+            if (min == null) {
+                min = subStep.getStartDate();
+            } else {
+                min = Math.min(min, subStep.getStartDate());
+            }
+        }
+        return min;
+    }
+
+    public long getMaxEndDateBySubSteps() {
+        Long max = null;
+        for (SubStep subStep : getSubSteps()) {
+            if (max == null) {
+                max = subStep.getEndDate();
+            } else {
+                max = Math.max(max, subStep.getEndDate());
+            }
+        }
+        return max;
+    }
 }

@@ -106,12 +106,32 @@
 		  	box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 		  	
 		  	&.sub-bar {
-		  	
+		  		
+			}
+			&.has-sub-steps:hover {
+		  		> .bar-label {
+    				width: 100%;
+    				padding-left: 3px;
+		  			background-color: rgba(246, 255, 99, 0.3);
+		  			-webkit-border-radius: 6px;
+		  			-moz-border-radius: 6px;
+		  			border-radius: 6px;
+					transform: translate(0,-27px);
+    				-webkit-transform: translate(0,-27px);
+    				-o-transform: translate(0,-27px);
+    				-moz-transform: translate(0,-27px);
+				}
+				> .bar-label:hover {
+					cursor: move;
+				}
 			}
 			
 			&.has-sub-steps {
+				background-color: rgba(246, 255, 99, 0.3) !important;
+				
 				> .bar-label {
-					display: none;
+					position: absolute;
+					max-width: 100%;
 				}
 			}
 		}

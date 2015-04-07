@@ -782,32 +782,90 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     protected void fireMoveEvent(String stepUid, String newStepUid,
             long startDate, long endDate) {
         AbstractStep step = getStep(stepUid);
+        long previousStartDate = step.getStartDate();
+        long previousEndDate = step.getEndDate();
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        adjustDatesBySubStep(step);
+        adjustDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        adjustDatesByAbstractStep(step);
         fireEvent(new MoveEvent(this, step, step.getStartDate(),
                 step.getEndDate()));
     }
 
     protected void fireResizeEvent(String stepUid, long startDate, long endDate) {
         AbstractStep step = getStep(stepUid);
+        long previousStartDate = step.getStartDate();
+        long previousEndDate = step.getEndDate();
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        adjustDatesBySubStep(step);
+        adjustDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        adjustDatesByAbstractStep(step);
         fireEvent(new ResizeEvent(this, step, step.getStartDate(),
                 step.getEndDate()));
     }
 
-    protected void adjustDatesBySubStep(AbstractStep step) {
-        if (step instanceof SubStep) {
-            // adjust parent step start/end date
-            SubStep subStep = ((SubStep) step);
-            if (subStep.getStartDate() < subStep.getOwner().getStartDate()) {
-                subStep.getOwner().setStartDate(subStep.getStartDate());
-            } else if (subStep.getEndDate() > subStep.getOwner().getEndDate()) {
-                subStep.getOwner().setEndDate(subStep.getEndDate());
+    protected void adjustDatesByOwnerStep(AbstractStep step,
+            long previousStartDate, long previousEndDate) {
+        if (step instanceof Step) {
+            Step s = (Step) step;
+
+            long startDelta = step.getStartDate() - previousStartDate;
+            long endDelta = step.getEndDate() - previousEndDate;
+            if (!s.getSubSteps().isEmpty()) {
+                for (SubStep sub : s.getSubSteps()) {
+                    if (startDelta != 0) {
+                        sub.setStartDate(sub.getStartDate() + startDelta);
+                    }
+                    if (endDelta != 0) {
+                        sub.setEndDate(sub.getEndDate() + endDelta);
+                    }
+                    subStepMap.get(sub).getState(true);
+                }
             }
         }
+    }
+
+    protected void adjustDatesByAbstractStep(AbstractStep step) {
+        Step owner = null;
+        if (step instanceof SubStep) {
+            owner = ajustDatesBySubStep(step);
+
+        } else if (step instanceof Step) {
+            owner = (Step) step;
+        }
+
+        if (owner != null) {
+            if (!owner.getSubSteps().isEmpty()) {
+                if (owner.isStartDateUndefined()
+                        || owner.getMinStartDateBySubSteps() > owner
+                                .getStartDate()) {
+                    owner.setStartDate(owner.getMinStartDateBySubSteps());
+                }
+                if (owner.isEndDateUndefined()
+                        || owner.getMaxEndDateBySubSteps() < owner.getEndDate()) {
+                    owner.setEndDate(owner.getMaxEndDateBySubSteps());
+                }
+            }
+            if (stepComponents.containsKey(owner)) {
+                stepComponents.get(owner).getState(true);
+            }
+        }
+    }
+
+    protected Step ajustDatesBySubStep(AbstractStep step) {
+        // adjust parent step start/end date:
+        SubStep subStep = ((SubStep) step);
+        Step owner = subStep.getOwner();
+        // Cut owner step's start/end date to fit sub-steps in.
+        if (owner.isStartDateUndefined()
+                || subStep.getStartDate() < owner.getStartDate()) {
+            owner.setStartDate(subStep.getStartDate());
+        }
+        if (owner.isEndDateUndefined()
+                || subStep.getEndDate() > owner.getEndDate()) {
+            owner.setEndDate(subStep.getEndDate());
+        }
+        return owner;
     }
 
     /**

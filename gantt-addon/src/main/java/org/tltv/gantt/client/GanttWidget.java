@@ -1485,15 +1485,28 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             newStepUid = getStepUid(newPosition);
         }
 
+        boolean subBar = isSubBar(bar);
+        long ownerStartDate = 0;
+        long ownerEndDate = 0;
         double left = parseSize(bar.getStyle().getLeft(), "px");
-        if (isSubBar(bar)) {
-            left += bar.getParentElement().getOffsetLeft();
+        if (subBar) {
+            double ownerLeft = bar.getParentElement().getOffsetLeft();
+            left += ownerLeft;
+            ownerStartDate = timeline.getDateForLeftPosition(ownerLeft);
+            ownerLeft += GanttUtil.getBoundingClientRectWidth(bar
+                    .getParentElement());
+            ownerEndDate = timeline.getDateForLeftPosition(ownerLeft);
         }
         long startDate = timeline.getDateForLeftPosition(left);
-        left += bar.getClientWidth();
+        left += GanttUtil.getBoundingClientRectWidth(bar);
         long endDate = timeline.getDateForLeftPosition(left);
         // update left-position to percentage (so that it scales again)
-        updateBarPercentagePosition(startDate, endDate, bar);
+        if (subBar) {
+            updateBarPercentagePosition(startDate, endDate, ownerStartDate,
+                    ownerEndDate, bar);
+        } else {
+            updateBarPercentagePosition(startDate, endDate, bar);
+        }
 
         long offset = getLocaleDataProvider().getTimeZoneOffset();
         if (move) {

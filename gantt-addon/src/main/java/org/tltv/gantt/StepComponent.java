@@ -75,6 +75,7 @@ public class StepComponent extends AbstractStepComponent implements
         SubStepComponent component = createSubStepComponent(this, subStep);
         getState(true).subSteps.add(component);
         gantt.subStepMap.put(subStep, component);
+        gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
     @Override
@@ -85,6 +86,7 @@ public class StepComponent extends AbstractStepComponent implements
             getState(true).subSteps.remove(component);
         }
         gantt.subStepMap.remove(subStep);
+        gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
 }
