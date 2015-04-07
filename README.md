@@ -19,6 +19,7 @@ List of features that are supported:
 * Vaadin Table can be used as a row header, vertical scrolling is mirrored to the table and vice versa
 * background grid (except for IE8)
 * predecessor relations between steps (SVG required)
+* sub-steps
 * touch support (experimental)
 * supports Valo theme
 
@@ -29,6 +30,7 @@ Technical details:
 	* GanttWidget: main widget that connector uses, extends ComplexPanel
 	* TimelineWidget: standalone widget representing timeline.
 	* StepWidget
+	* SubStepWidget
 	* SvgArrowWidget
 
 Tested to work with following browsers: 
