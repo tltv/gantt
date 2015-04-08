@@ -176,8 +176,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected String capturePointBgColor;
     protected Element targetBarElement;
 
-    // this variable is used to memorize the Y origin to scroll the container
+    // these variables are used to memorize the Y and Y origin to scroll the
+    // container (with touchStart/touchEnd/touchMove events).
     protected int containerScrollStartPosY = -1;
+    protected int containerScrollStartPosX = -1;
 
     // additional element that appears when moving or resizing
     protected DivElement moveElement = DivElement.as(DOM.createDiv());
@@ -318,13 +320,23 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 JavaScriptObject target = event.getNativeEvent()
                         .getEventTarget().cast();
                 containerScrollStartPosY = -1;
+                containerScrollStartPosX = -1;
 
                 if (target == container || target == content
                         || (!isMovableSteps())) {
+                    boolean preventDefaultAndReturn = false;
+                    // store x,y position for 'manual' vertical scrolling
                     if (isContentOverflowingVertically()) {
-                        // store position for 'manual' vertical scrolling
                         containerScrollStartPosY = container.getScrollTop()
                                 + event.getTouches().get(0).getPageY();
+                        preventDefaultAndReturn = true;
+                    }
+                    if (isContentOverflowingHorizontally()) {
+                        containerScrollStartPosX = container.getScrollLeft()
+                                + event.getTouches().get(0).getPageX();
+                        preventDefaultAndReturn = true;
+                    }
+                    if (preventDefaultAndReturn) {
                         event.preventDefault();
                         return;
                     }
@@ -340,6 +352,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         @Override
         public void onTouchEnd(TouchEndEvent event) {
             containerScrollStartPosY = -1;
+            containerScrollStartPosX = -1;
             GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
             event.preventDefault();
         }
@@ -349,14 +362,24 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         @Override
         public void onTouchMove(TouchMoveEvent event) {
             if (event.getChangedTouches().length() == 1) {
+                boolean preventDefaultAndReturn = false;
                 // did we intend to scroll the container?
+                // apply 'manual' vertical scrolling
                 if (containerScrollStartPosY != -1) {
-                    // apply 'manual' vertical scrolling
                     container.setScrollTop(containerScrollStartPosY
                             - event.getChangedTouches().get(0).getPageY());
+                    preventDefaultAndReturn = true;
+                }
+                if (containerScrollStartPosX != -1) {
+                    container.setScrollLeft(containerScrollStartPosX
+                            - event.getChangedTouches().get(0).getPageX());
+                    preventDefaultAndReturn = true;
+                }
+                if (preventDefaultAndReturn) {
                     event.preventDefault();
                     return;
                 }
+
                 if (GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent())) {
                     event.preventDefault();
                 }
@@ -369,6 +392,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         @Override
         public void onTouchCancel(TouchCancelEvent event) {
             containerScrollStartPosY = -1;
+            containerScrollStartPosX = -1;
             onCancelTouch(event.getNativeEvent());
         }
     };
