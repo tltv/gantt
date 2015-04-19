@@ -19,7 +19,9 @@ import org.tltv.gantt.SubStepComponent;
 import org.tltv.gantt.client.shared.SubStepState;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
@@ -45,7 +47,14 @@ public class SubStepConnector extends AbstractComponentConnector {
     }
 
     @Override
+    protected void updateComponentSize() {
+        // nop. Component size is handled independently without LayouManager.
+    }
+
+    @Override
     public void onStateChanged(StateChangeEvent stateChangeEvent) {
+        super.onStateChanged(stateChangeEvent);
+
         if (!(getParent() instanceof StepConnector)) {
             return;
         }
@@ -58,10 +67,30 @@ public class SubStepConnector extends AbstractComponentConnector {
         if (stateChangeEvent.hasPropertyChanged("step")) {
             getWidget().setStep(getState().step);
         }
-        getWidget().updateWidth();
         if (!getWidget().getElement().hasParentElement()) {
             step.add(getWidget());
+            getWidget().getOwner().updateStylesForSubSteps();
         }
+        getWidget().updateWidth();
     }
 
+    @Override
+    public TooltipInfo getTooltipInfo(Element element) {
+        return new TooltipInfo(getState().step.getDescription(),
+                getState().errorMessage);
+    }
+
+    @Override
+    public boolean hasTooltip() {
+        // Normally, there is a tooltip if description or errorMessage is set
+        SubStepState state = getState();
+        if (state.description != null
+                && !state.step.getDescription().equals("")) {
+            return true;
+        } else if (state.errorMessage != null && !state.errorMessage.equals("")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

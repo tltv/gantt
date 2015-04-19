@@ -24,6 +24,7 @@ public abstract class AbstractStep implements Serializable {
     private CaptionMode captionMode = CaptionMode.TEXT;
     private String styleName;
     private String caption;
+    private String description;
     private String backgroundColor = "#A8D9FF";
 
     private long startDate = -1;
@@ -128,6 +129,14 @@ public abstract class AbstractStep implements Serializable {
 
     public void setStyleName(String styleName) {
         this.styleName = styleName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public enum CaptionMode {

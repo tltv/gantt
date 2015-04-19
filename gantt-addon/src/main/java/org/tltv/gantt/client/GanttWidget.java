@@ -1103,6 +1103,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         return element.hasClassName(SubStepWidget.STYLE_SUB_BAR);
     }
 
+    protected boolean hasSubBars(Element element) {
+        return element.hasClassName(StepWidget.STYLE_HAS_SUB_STEPS);
+    }
+
     /**
      * This is called when target bar element is moved successfully. Element's
      * CSS attributes 'left' and 'width' are updated (unit in pixels).
@@ -1581,7 +1585,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private boolean detectResizing(Element bar) {
-        return isResizableSteps()
+        return isResizableSteps() && !hasSubBars(bar)
                 && (isResizingLeft(bar) || isResizingRight(bar));
     }
 

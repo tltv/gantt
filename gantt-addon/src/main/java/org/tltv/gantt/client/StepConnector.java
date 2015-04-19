@@ -25,9 +25,11 @@ import org.tltv.gantt.client.shared.StepState;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.ComponentConnector;
 import com.vaadin.client.ConnectorHierarchyChangeEvent;
+import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractHasComponentsConnector;
 import com.vaadin.shared.ui.Connect;
@@ -59,7 +61,14 @@ public class StepConnector extends AbstractHasComponentsConnector {
     }
 
     @Override
+    protected void updateComponentSize() {
+        // nop. Component size is handled independently without LayouManager.
+    }
+
+    @Override
     public void onStateChanged(StateChangeEvent stateChangeEvent) {
+        super.onStateChanged(stateChangeEvent);
+
         if (!(getParent() instanceof GanttConnector)) {
             return;
         }
@@ -73,10 +82,10 @@ public class StepConnector extends AbstractHasComponentsConnector {
                                                // setStep
             getWidget().setStep(getState().step);
         }
-        getWidget().updateWidth();
         if (!getWidget().getElement().hasParentElement()) {
             gantt.addStep(getWidget());
         }
+        getWidget().updateWidth();
 
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
@@ -137,6 +146,26 @@ public class StepConnector extends AbstractHasComponentsConnector {
             if (!connectorHierarchyChangeEvent.getOldChildren().contains(c)) {
                 stepWidget.setGantt(gantt, gantt.getLocaleDataProvider());
             }
+        }
+    }
+
+    @Override
+    public TooltipInfo getTooltipInfo(Element element) {
+        return new TooltipInfo(getState().step.getDescription(),
+                getState().errorMessage);
+    }
+
+    @Override
+    public boolean hasTooltip() {
+        // Normally, there is a tooltip if description or errorMessage is set
+        StepState state = getState();
+        if (state.description != null
+                && !state.step.getDescription().equals("")) {
+            return true;
+        } else if (state.errorMessage != null && !state.errorMessage.equals("")) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

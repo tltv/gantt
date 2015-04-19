@@ -165,14 +165,22 @@ public class StepWidget extends AbstractStepWidget {
     public void updateWidth() {
         super.updateWidth();
         List<SubStepWidget> subSteps = getSubSteps();
-        if (subSteps.isEmpty()) {
-            getElement().removeClassName(STYLE_HAS_SUB_STEPS);
-        } else {
-            getElement().addClassName(STYLE_HAS_SUB_STEPS);
-        }
+        updateStylesForSubSteps(!subSteps.isEmpty());
         for (SubStepWidget subStep : subSteps) {
             subStep.updateWidth();
         }
     }
 
+    private void updateStylesForSubSteps(boolean hasSubSteps) {
+        if (!hasSubSteps) {
+            getElement().removeClassName(STYLE_HAS_SUB_STEPS);
+        } else {
+            getElement().addClassName(STYLE_HAS_SUB_STEPS);
+        }
+    }
+
+    public void updateStylesForSubSteps() {
+        List<SubStepWidget> subSteps = getSubSteps();
+        updateStylesForSubSteps(!subSteps.isEmpty());
+    }
 }

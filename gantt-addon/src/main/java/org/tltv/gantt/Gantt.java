@@ -337,8 +337,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      */
     public List<Step> getSteps() {
         List<Step> steps = new ArrayList<Step>();
-        for (Connector sc : getState().steps) {
-            steps.add(((StepComponent) sc).getState().step);
+        for (Connector sc : getState(false).steps) {
+            steps.add(((StepComponent) sc).getState(false).step);
         }
         return Collections.unmodifiableList(steps);
     }
@@ -753,6 +753,15 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return format;
     }
 
+    private AbstractStepComponent getStepComponent(AbstractStep step) {
+        if (stepComponents.containsKey(step)) {
+            return stepComponents.get(step);
+        } else if (subStepMap.containsKey(step)) {
+            return subStepMap.get(step);
+        }
+        return null;
+    }
+
     /**
      * Localized display names for week days starting from sunday. Returned
      * array's length is always 7.
@@ -776,7 +785,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     protected void fireClickEvent(String stepUid) {
-        fireEvent(new ClickEvent(this, getStep(stepUid)));
+        AbstractStep step = getStep(stepUid);
+        fireEvent(new ClickEvent(this, step));
     }
 
     protected void fireMoveEvent(String stepUid, String newStepUid,
@@ -786,7 +796,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         long previousEndDate = step.getEndDate();
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        adjustDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        moveDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
         fireEvent(new MoveEvent(this, step, step.getStartDate(),
                 step.getEndDate()));
@@ -798,31 +808,37 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         long previousEndDate = step.getEndDate();
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        adjustDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        resizeDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
         fireEvent(new ResizeEvent(this, step, step.getStartDate(),
                 step.getEndDate()));
     }
 
-    protected void adjustDatesByOwnerStep(AbstractStep step,
+    protected void moveDatesByOwnerStep(AbstractStep step,
             long previousStartDate, long previousEndDate) {
-        if (step instanceof Step) {
-            Step s = (Step) step;
+        if (!(step instanceof Step)) {
+            return;
+        }
+        Step s = (Step) step;
 
-            long startDelta = step.getStartDate() - previousStartDate;
-            long endDelta = step.getEndDate() - previousEndDate;
-            if (!s.getSubSteps().isEmpty()) {
-                for (SubStep sub : s.getSubSteps()) {
-                    if (startDelta != 0) {
-                        sub.setStartDate(sub.getStartDate() + startDelta);
-                    }
-                    if (endDelta != 0) {
-                        sub.setEndDate(sub.getEndDate() + endDelta);
-                    }
-                    subStepMap.get(sub).getState(true);
+        long startDelta = step.getStartDate() - previousStartDate;
+        long endDelta = step.getEndDate() - previousEndDate;
+        if (!s.getSubSteps().isEmpty()) {
+            for (SubStep sub : s.getSubSteps()) {
+                if (startDelta != 0) {
+                    sub.setStartDate(sub.getStartDate() + startDelta);
                 }
+                if (endDelta != 0) {
+                    sub.setEndDate(sub.getEndDate() + endDelta);
+                }
+                subStepMap.get(sub).getState(true);
             }
         }
+    }
+
+    protected void resizeDatesByOwnerStep(AbstractStep step,
+            long previousStartDate, long previousEndDate) {
+        // may be overridden to handle resizing parent step
     }
 
     protected void adjustDatesByAbstractStep(AbstractStep step) {
@@ -835,14 +851,16 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
 
         if (owner != null) {
+            // adjust owner start/end dates to fit with all sub-steps.
             if (!owner.getSubSteps().isEmpty()) {
                 if (owner.isStartDateUndefined()
-                        || owner.getMinStartDateBySubSteps() > owner
+                        || owner.getMinStartDateBySubSteps() != owner
                                 .getStartDate()) {
                     owner.setStartDate(owner.getMinStartDateBySubSteps());
                 }
                 if (owner.isEndDateUndefined()
-                        || owner.getMaxEndDateBySubSteps() < owner.getEndDate()) {
+                        || owner.getMaxEndDateBySubSteps() != owner
+                                .getEndDate()) {
                     owner.setEndDate(owner.getMaxEndDateBySubSteps());
                 }
             }
@@ -866,6 +884,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             owner.setEndDate(subStep.getEndDate());
         }
         return owner;
+    }
+
+    /** Mark step/substeps dirty. */
+    public void markStepDirty(AbstractStep step) {
+        AbstractStepComponent component = getStepComponent(step);
+        if (component != null) {
+            component.markAsDirtyRecursive();
+        }
     }
 
     /**
