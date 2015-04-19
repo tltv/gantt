@@ -209,11 +209,13 @@ public class DemoUI extends UI {
 
         cal.setTime(new Date());
         Step step1 = new Step("First step");
+        step1.setDescription("Description tooltip");
         step1.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 2);
         step1.setEndDate(cal.getTime().getTime());
 
         Step step2 = new Step("Second step");
+        step2.setDescription("Description tooltip for second step");
         cal.add(Calendar.DATE, 1);
         step2.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 4);
@@ -221,6 +223,7 @@ public class DemoUI extends UI {
         step2.setPredecessor(step1);
 
         Step step3 = new Step("Third step");
+        step3.setDescription("<b>HTML</b> <i>content</i> is <u>supported</u> in tooltips.");
         cal.add(Calendar.DATE, 1);
         step3.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 12);
@@ -228,27 +231,32 @@ public class DemoUI extends UI {
         step3.setPredecessor(step2);
 
         Step step4 = new Step("Fourth step");
+        step4.setDescription("Tooltip is <b>VTooltip</b>. <p>Looks same for all Vaadin components.");
         step4.setStartDate(step2.getStartDate());
         step4.setEndDate(step2.getEndDate());
         step4.setPredecessor(step1);
 
         Step stepWithSubSteps = new Step("Step with sub-steps");
+        stepWithSubSteps.setDescription("Tooltip for Step with sub-steps");
 
         cal.setTime(new Date(step1.getStartDate()));
         cal.add(Calendar.DATE, 7);
 
         SubStep subStep1 = new SubStep("Sub-step A");
+        subStep1.setDescription("Tooltip for Sub-step A");
         subStep1.setBackgroundColor("A8D9DD");
         subStep1.setStartDate(step1.getStartDate());
         subStep1.setEndDate(cal.getTime());
 
         SubStep subStep2 = new SubStep("Sub-step B");
+        subStep2.setDescription("Tooltip for Sub-step B");
         subStep2.setBackgroundColor("A8D9BB");
         subStep2.setStartDate(cal.getTime());
         cal.add(Calendar.MONTH, 1);
         subStep2.setEndDate(cal.getTime());
 
         SubStep subStep3 = new SubStep("Sub-step C");
+        subStep3.setDescription("Tooltip for Sub-step C");
         subStep3.setBackgroundColor("A8D999");
         subStep3.setStartDate(cal.getTime());
         cal.add(Calendar.MONTH, 1);
@@ -612,12 +620,39 @@ public class DemoUI extends UI {
         captionField.setNullRepresentation("");
         group.bind(captionField, "caption");
 
+        TextField descriptionField = new TextField("Description");
+        descriptionField.setNullRepresentation("");
+        group.bind(descriptionField, "description");
+        descriptionField.setVisible(false);
+        hidden.add(descriptionField);
+
         NativeSelect captionMode = new NativeSelect("Caption Mode");
         captionMode.addItem(Step.CaptionMode.TEXT);
         captionMode.addItem(Step.CaptionMode.HTML);
         group.bind(captionMode, "captionMode");
         captionMode.setVisible(false);
         hidden.add(captionMode);
+
+        final NativeSelect parentStepSelect = new NativeSelect("Parent Step");
+        parentStepSelect.setEnabled(false);
+        if (!gantt.getSteps().contains(step)) {
+            // new step
+            parentStepSelect.setEnabled(true);
+            for (Step parentStepCanditate : gantt.getSteps()) {
+                parentStepSelect.addItem(parentStepCanditate);
+                parentStepSelect.setItemCaption(parentStepCanditate,
+                        parentStepCanditate.getCaption());
+                if (step instanceof SubStep) {
+                    if (parentStepCanditate.getSubSteps().contains(step)) {
+                        parentStepSelect.setValue(parentStepCanditate);
+                        parentStepSelect.setEnabled(false);
+                        break;
+                    }
+                }
+            }
+        }
+        parentStepSelect.setVisible(false);
+        hidden.add(parentStepSelect);
 
         TextField bgField = new TextField("Background color");
         bgField.setNullRepresentation("");
@@ -647,6 +682,7 @@ public class DemoUI extends UI {
                 for (Component c : hidden) {
                     c.setVisible((Boolean) event.getProperty().getValue());
                 }
+                win.center();
             }
         });
 
@@ -657,6 +693,8 @@ public class DemoUI extends UI {
 
         content.addComponent(captionField);
         content.addComponent(captionMode);
+        content.addComponent(descriptionField);
+        content.addComponent(parentStepSelect);
         content.addComponent(bgField);
         content.addComponent(startDate);
         content.addComponent(endDate);
@@ -673,6 +711,12 @@ public class DemoUI extends UI {
                     group.commit();
                     AbstractStep step = ((BeanItem<AbstractStep>) group
                             .getItemDataSource()).getBean();
+                    gantt.markStepDirty(step);
+                    if (parentStepSelect.isEnabled()
+                            && parentStepSelect.getValue() != null) {
+                        SubStep subStep = addSubStep(parentStepSelect, step);
+                        step = subStep;
+                    }
                     if (step instanceof Step
                             && !gantt.getSteps().contains(step)) {
                         gantt.addStep((Step) step);
@@ -686,6 +730,20 @@ public class DemoUI extends UI {
                             Type.ERROR_MESSAGE);
                     e.printStackTrace();
                 }
+            }
+
+            private SubStep addSubStep(final NativeSelect parentStepSelect,
+                    AbstractStep dataSource) {
+                SubStep subStep = new SubStep();
+                subStep.setCaption(dataSource.getCaption());
+                subStep.setCaptionMode(dataSource.getCaptionMode());
+                subStep.setStartDate(dataSource.getStartDate());
+                subStep.setEndDate(dataSource.getEndDate());
+                subStep.setBackgroundColor(dataSource.getBackgroundColor());
+                subStep.setDescription(dataSource.getDescription());
+                subStep.setStyleName(dataSource.getStyleName());
+                ((Step) parentStepSelect.getValue()).addSubStep(subStep);
+                return subStep;
             }
         });
         Button cancel = new Button("Cancel", new ClickListener() {
