@@ -36,7 +36,7 @@ public class StepComponent extends AbstractStepComponent implements
         for (SubStep subStep : data.getSubSteps()) {
             onAddSubStep(subStep);
         }
-        data.setSubStepObserver(new SubStepObserverProxy(this));
+        data.addSubStepObserver(new SubStepObserverProxy(this));
     }
 
     @Override

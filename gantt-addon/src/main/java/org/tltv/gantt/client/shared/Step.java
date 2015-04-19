@@ -17,8 +17,12 @@ package org.tltv.gantt.client.shared;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+
+import org.tltv.gantt.client.ArrowElement;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
@@ -28,7 +32,7 @@ public class Step extends AbstractStep {
     private List<SubStep> subSteps = new LinkedList<SubStep>();
 
     @GwtTransient
-    transient private SubStepObserverProxy subStepObserver;
+    transient private Set<SubStepObserverProxy> subStepObserver = new HashSet<SubStepObserverProxy>();
 
     public Step() {
     }
@@ -46,36 +50,56 @@ public class Step extends AbstractStep {
         addSubSteps(subSteps);
     }
 
+    /** Get predecessor step for this step. */
     public Step getPredecessor() {
         return predecessor;
     }
 
+    /**
+     * Set predecessor step for this step. Predecessor is visualized by 'arrow'
+     * between the predecessor step and this step. 'Arrow' will be painted
+     * starting from the end of the predecessor step and ends pointing to start
+     * of this step. This relation is editable by default if Gantt is not in
+     * read-only mode.
+     * <p>
+     * Visual look of the arrow can be customized by implementing GWT widget
+     * which implements {@link ArrowElement} interface.
+     * 
+     * @param predecessor
+     *            Predecesor step
+     */
     public void setPredecessor(Step predecessor) {
         this.predecessor = predecessor;
     }
 
+    /** Get unmodifiable list of sub steps in this step. */
     public List<SubStep> getSubSteps() {
         return Collections.unmodifiableList(subSteps);
     }
 
+    /** Add new sub step. */
     public boolean addSubStep(SubStep subStep) {
         if (subStep != null) {
             subStep.setOwner(this);
             boolean added = subSteps.add(subStep);
             if (added && subStepObserver != null) {
-                subStepObserver.onAddSubStep(subStep);
+                for (SubStepObserverProxy obs : subStepObserver) {
+                    obs.onAddSubStep(subStep);
+                }
             }
             return added;
         }
         return false;
     }
 
+    /** Add new sub steps. */
     public void addSubSteps(SubStep... subSteps) {
         if (subSteps != null) {
             addSubSteps(Arrays.asList(subSteps));
         }
     }
 
+    /** Add new sub steps. */
     public void addSubSteps(List<SubStep> subSteps) {
         if (subSteps != null) {
             for (SubStep s : subSteps) {
@@ -84,25 +108,42 @@ public class Step extends AbstractStep {
         }
     }
 
+    /**
+     * Remove given sub-step. Sub step is actually identified by its UID
+     * {@link AbstractStep#getUid()}.
+     */
     public boolean removeSubStep(SubStep subStep) {
         if (subStep == null) {
             return false;
         }
         boolean removed = subSteps.remove(subStep);
         if (removed && subStepObserver != null) {
-            subStepObserver.onRemoveSubStep(subStep);
+            for (SubStepObserverProxy obs : subStepObserver) {
+                obs.onRemoveSubStep(subStep);
+            }
         }
         return removed;
     }
 
-    public SubStepObserverProxy getSubStepObserver() {
-        return subStepObserver;
+    /** Get unmodifiable list of SubStepObservers. */
+    public Set<SubStepObserverProxy> getSubStepObservers() {
+        return Collections.unmodifiableSet(subStepObserver);
     }
 
-    public void setSubStepObserver(SubStepObserverProxy subStepObserver) {
-        this.subStepObserver = subStepObserver;
+    /**
+     * Add new {@link SubStepObserverProxy} for this step. Observer notifies
+     * about structure changes of sub-steps.
+     */
+    public void addSubStepObserver(SubStepObserverProxy subStepObserver) {
+        this.subStepObserver.add(subStepObserver);
     }
 
+    /** Remove {@link SubStepObserverProxy} from this step. */
+    public void removeSubStepObserver(SubStepObserverProxy subStepObserver) {
+        this.subStepObserver.remove(subStepObserver);
+    }
+
+    /** Get smallest sub-step start date from this step. */
     public long getMinStartDateBySubSteps() {
         Long min = null;
         for (SubStep subStep : getSubSteps()) {
@@ -115,6 +156,9 @@ public class Step extends AbstractStep {
         return min;
     }
 
+    /**
+     * Get largest sub-step end date from this step.
+     */
     public long getMaxEndDateBySubSteps() {
         Long max = null;
         for (SubStep subStep : getSubSteps()) {

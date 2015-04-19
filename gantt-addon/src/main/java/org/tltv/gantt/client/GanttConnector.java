@@ -622,6 +622,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     public void onConnectorHierarchyChange(
             ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
 
+        // StepConnector handles adding new step.
+        // Here we handle removing and other necessary changed related
+        // hierarchy.
         Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
         // remove old steps
         for (ComponentConnector c : connectorHierarchyChangeEvent

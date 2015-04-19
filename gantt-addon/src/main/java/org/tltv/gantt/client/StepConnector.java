@@ -125,6 +125,10 @@ public class StepConnector extends AbstractHasComponentsConnector {
     @Override
     public void onConnectorHierarchyChange(
             ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+
+        // SubStepConnector handles adding new sub-step.
+        // Here we handle removing and other necessary changed related
+        // hierarchy.
         Set<SubStepWidget> removed = new HashSet<SubStepWidget>();
         // remove old sub-steps
         for (ComponentConnector c : connectorHierarchyChangeEvent

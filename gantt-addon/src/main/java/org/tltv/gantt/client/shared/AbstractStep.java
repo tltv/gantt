@@ -42,10 +42,19 @@ public abstract class AbstractStep implements Serializable {
         setCaptionMode(captionMode);
     }
 
+    /**
+     * Unique identifier for this step. This is auto-generated for new steps
+     * when not set explicitly.
+     */
     public String getUid() {
         return uid;
     }
 
+    /**
+     * Set unique identifier for this step. It's not recommended to set this
+     * explicitly as it will be auto-generated when step is added first time
+     * into Gantt and UID is not already set.
+     */
     public void setUid(String uid) {
         this.uid = uid;
     }
