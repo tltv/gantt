@@ -154,6 +154,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected DivElement container;
     protected DivElement content;
     protected DivElement scrollbarSpacer;
+    protected BgGridElement bgGrid;
 
     /* Extra elements inside the content. */
     protected Set<Widget> extraContentElements = new HashSet<Widget>();
@@ -1078,7 +1079,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     protected Element getBar(NativeEvent event) {
         Element element = event.getEventTarget().cast();
-        if (element == null) {
+        if (element == null || isSvg(element)) {
             return null;
         }
         Element parent = element;
@@ -1087,23 +1088,49 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             parent = parent.getParentElement();
         }
         if (isBar(parent)) {
-            if ("svg".equalsIgnoreCase(parent.getTagName())) {
-                return null;
-            }
             return parent;
         }
         return null;
     }
 
+    protected boolean isBgElement(Element target) {
+        return bgGrid != null && bgGrid.equals(target);
+    }
+
+    private boolean isSvg(Element element) {
+        // safety check to avoid calling non existing functions
+        if (!isPartOfSvg(element)) {
+            return element.hasTagName("svg");
+        }
+        return true;
+    }
+
+    private static native boolean isPartOfSvg(Element element)
+    /*-{
+        if(element.ownerSVGElement) {
+            return true;
+        }
+        return false;
+    }-*/;
+
     protected boolean isBar(Element element) {
+        if (isSvg(element)) {
+            return false;
+        }
         return element.hasClassName(AbstractStepWidget.STYLE_BAR);
     }
 
     protected boolean isSubBar(Element element) {
+        if (isSvg(element)) {
+            return false;
+        }
         return element.hasClassName(SubStepWidget.STYLE_SUB_BAR);
     }
 
     protected boolean hasSubBars(Element element) {
+        if (isSvg(element)) {
+            return false;
+        }
         return element.hasClassName(StepWidget.STYLE_HAS_SUB_STEPS);
     }
 
@@ -1334,8 +1361,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return getSubStepUid(stepElement);
         }
 
+        // get widget by index known by this ComplexPanel.
         Widget widget = getWidget(getChildIndex(content, stepElement)
-                - isMoveElementAttached());
+                - getAdditionalNonWidgetContentElementCount());
         if (widget instanceof StepWidget) {
             return ((StepWidget) widget).getStep().getUid();
         }
@@ -1345,7 +1373,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected String getSubStepUid(Element subStepElement) {
         Element stepElement = subStepElement.getParentElement();
         Widget widget = getWidget(getChildIndex(content, stepElement)
-                - isMoveElementAttached());
+                - getAdditionalNonWidgetContentElementCount());
         if (widget instanceof StepWidget) {
             return ((StepWidget) widget)
                     .getStepUidBySubStepElement(subStepElement);
@@ -1353,13 +1381,24 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         return null;
     }
 
+    protected BgGridElement createBackgroundGrid() {
+        // implementation may be overridden via deferred binding. There is
+        // BgGridSvgElement alternative available and also used by Chrome.
+        BgGridElement grid = GWT.create(BgGridCssElement.class);
+        grid.init(container, content);
+        return grid;
+    }
+
     private double calculateBackgroundGridWidth() {
         return timeline.calculateTimelineWidth();
     }
 
     private void updateContainerStyle() {
+        if (bgGrid == null) {
+            bgGrid = createBackgroundGrid();
+        }
         if (!isBackgroundGridEnabled()) {
-            container.getStyle().setBackgroundImage("none");
+            bgGrid.hide();
             return;
         }
         // Container element has a background image that is positioned, sized
@@ -1420,8 +1459,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         int gridBlockHeightPx = getBgGridCellHeight();
-        container.getStyle().setProperty("backgroundSize",
-                gridBlockWidth + " " + gridBlockHeightPx + "px");
+        bgGrid.setBackgroundSize(gridBlockWidth, gridBlockWidthPx,
+                gridBlockHeightPx);
     }
 
     private void updateContainerBackgroundPosition(
@@ -1432,19 +1471,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             double realBgPosXPx = firstResolutionBlockWidth - 1.0;
 
             if (useAlwaysPxSizeInBackground() || contentOverflowingHorizontally) {
-                container.getStyle().setProperty(
-                        "backgroundPosition",
-                        timeline.toCssCalcOrNumberString(realBgPosXPx, "px")
-                                + " 0px");
+                bgGrid.setBackgroundPosition(
+                        timeline.toCssCalcOrNumberString(realBgPosXPx, "px"),
+                        "0px", realBgPosXPx, 0);
             } else {
                 double timelineWidth = calculateBackgroundGridWidth();
                 double relativeBgAreaWidth = timelineWidth - gridBlockWidthPx;
                 double bgPosX = (100.0 / relativeBgAreaWidth) * realBgPosXPx;
-                container.getStyle().setProperty("backgroundPosition",
-                        timeline.toCssCalcOrNumberString(bgPosX, "%") + " 0px");
+                bgGrid.setBackgroundPosition(
+                        timeline.toCssCalcOrNumberString(bgPosX, "%"), "0px",
+                        realBgPosXPx, 0);
             }
         } else {
-            container.getStyle().setProperty("backgroundPosition", "-1px 0");
+            bgGrid.setBackgroundPosition("-1px", "0", -1, 0);
         }
     }
 
@@ -1570,13 +1609,26 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private int getAdditonalContentElementCount() {
-        // moveElement inside the content is noticed.
+        // moveElement and background element inside the content is noticed.
         // extraContentElements are also noticed.
-        return (isMoveElementAttached()) + extraContentElements.size();
+        return getAdditionalNonWidgetContentElementCount()
+                + extraContentElements.size();
     }
 
     private int isMoveElementAttached() {
         return moveElement.hasParentElement() ? 1 : 0;
+    }
+
+    private int getAdditionalNonWidgetContentElementCount() {
+        return isMoveElementAttached() + isBgGridAttached();
+    }
+
+    /**
+     * Return the number of background grid related elements in the content. May
+     * return 0...n, depending on which browser is used.
+     */
+    private int isBgGridAttached() {
+        return (bgGrid != null && bgGrid.isAttached()) ? 1 : 0;
     }
 
     private int getChildIndex(Element parent, Element child) {

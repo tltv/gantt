@@ -15,6 +15,8 @@
  */
 package org.tltv.gantt.client;
 
+import static org.tltv.gantt.client.SvgUtil.createSVGElementNS;
+import static org.tltv.gantt.client.SvgUtil.setAttributeNS;
 import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
 import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
 
@@ -51,8 +53,6 @@ import com.vaadin.client.event.PointerUpHandler;
 
 /** SVG implementation of {@link ArrowElement} arrow between two elements. */
 public class SvgArrowWidget extends Widget implements ArrowElement {
-
-    public static final String SVG_NS = "http://www.w3.org/2000/svg";
 
     public static final String SELECTION_STYLE_NAME = "select-target-step";
     private static final int POINTER_TOUCH_DETECTION_INTERVAL = 100;
@@ -285,6 +285,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         return readOnly;
     }
 
+    @Override
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
     }
@@ -523,29 +524,6 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         internalDrawCurve(movingData);
         event.stopPropagation();
     }
-
-    public static Element createSVGElementNS(String tag) {
-        return createElementNS(SVG_NS, tag);
-    }
-
-    public static native Element createElementNS(String ns, String tag)
-    /*-{
-        return $doc.createElementNS(ns, tag);
-    }-*/;
-
-    public static void setAttributeNS(Element elem, String attr, int value) {
-        setAttributeNS(null, elem, attr, "" + value);
-    }
-
-    public static void setAttributeNS(Element elem, String attr, String value) {
-        setAttributeNS(null, elem, attr, value);
-    }
-
-    public static native void setAttributeNS(String uri, Element elem,
-            String attr, String value)
-    /*-{
-        elem.setAttributeNS(uri, attr, value);
-    }-*/;
 
     boolean touchSupported;
     boolean msTouchSupported;

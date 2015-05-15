@@ -33,6 +33,8 @@ import org.tltv.gantt.client.shared.Resolution;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
@@ -723,8 +725,7 @@ public class TimelineWidget extends Widget {
         }
 
         double width = getResolutionDivWidth();
-        if (isAlwaysCalculatePixelWidths() && resSpacerDiv != null
-                && resSpacerDiv.hasParentElement()) {
+        if (isAlwaysCalculatePixelWidths() && containsResBlockSpacer()) {
             width = width - getElementWidth(resSpacerDiv);
         }
         return width;
@@ -737,7 +738,11 @@ public class TimelineWidget extends Widget {
      * @return
      */
     public double calculateTimelineWidth() {
-        double r = getBoundingClientRectRight(getLastResolutionElement());
+        Element last = getLastResolutionElement();
+        if (last == null) {
+            return 0.0;
+        }
+        double r = getBoundingClientRectRight(last);
         double l = getBoundingClientRectLeft(getFirstResolutionElement());
         double timelineRealWidth = r - l;
         return timelineRealWidth;
@@ -896,13 +901,22 @@ public class TimelineWidget extends Widget {
     }
 
     private Element getLastResolutionElement() {
-        int blockCount = getResolutionDiv().getChildCount();
-        if (blockCount == 0) {
+        DivElement div = getResolutionDiv();
+        if (div == null) {
             return null;
         }
-        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
-            if (blockCount > 1) {
-                return Element.as(getResolutionDiv().getChild(blockCount - 2));
+        NodeList<Node> nodeList = div.getChildNodes();
+        if (nodeList == null) {
+            return null;
+        }
+        int blockCount = nodeList.getLength();
+        if (blockCount < 1) {
+            return null;
+        }
+        if (containsResBlockSpacer()) {
+            int index = blockCount - 2;
+            if (blockCount > 1 && index >= 0) {
+                return Element.as(getResolutionDiv().getChild(index));
             }
             return null;
         }
@@ -991,7 +1005,7 @@ public class TimelineWidget extends Widget {
             boolean lastResBlockIsShort = isLastResBlockShort();
             // styleElement is not set, set width for each block explicitly.
             int count = resolutionDiv.getChildCount();
-            if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
+            if (containsResBlockSpacer()) {
                 count--;
             }
             int lastIndex = count - 1;
@@ -1031,9 +1045,14 @@ public class TimelineWidget extends Widget {
     }
 
     private void removeResolutionSpacerBlock() {
-        if (resSpacerDiv != null && resSpacerDiv.hasParentElement()) {
+        if (containsResBlockSpacer()) {
             resSpacerDiv.removeFromParent();
         }
+    }
+
+    private boolean containsResBlockSpacer() {
+        return resSpacerDiv != null && resSpacerDiv.hasParentElement()
+                && resSpacerDiv.getParentElement().equals(resolutionDiv);
     }
 
     private void prepareTimelineForHourResolution(long startDate, long endDate) {

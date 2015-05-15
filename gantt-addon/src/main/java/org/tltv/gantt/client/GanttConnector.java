@@ -371,11 +371,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         BrowserInfo info = BrowserInfo.get();
         getWidget().setBrowserInfo(info.isIE(), info.isIE8(), info.isIE9(),
                 info.isChrome(), info.isSafari(), info.isWebkit());
-        // if background grid is not needed, chrome and ie9 works without
+        // If background grid is not needed, ie9 works without
         // setting alwaysCalculatePixelWidths flag to true.
         getWidget().setAlwaysCalculatePixelWidths(
-                info.isChrome() || info.isSafari() || info.isOpera()
-                        || info.isIE8() || info.isIE9());
+                info.isSafari() || info.isOpera() || info.isIE8()
+                        || info.isIE9());
         getWidget().setTouchSupported(info.isTouchDevice());
         getWidget().initWidget(ganttRpc, localeDataProvider);
         getLayoutManager().addElementResizeListener(getWidget().getElement(),
