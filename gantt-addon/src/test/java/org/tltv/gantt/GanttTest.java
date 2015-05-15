@@ -1,7 +1,9 @@
 package org.tltv.gantt;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -12,6 +14,7 @@ import org.joda.time.DateTimeZone;
 import org.junit.Test;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
+import org.tltv.gantt.client.shared.Step;
 
 public class GanttTest {
 
@@ -21,6 +24,74 @@ public class GanttTest {
 
         Assert.assertEquals(gantt.getStartDate(), null);
         Assert.assertEquals(gantt.getEndDate(), null);
+    }
+
+    @Test
+    public void addEmptyStepAndGetByUid_addAndGetSuccessfully() {
+        Gantt gantt = new Gantt();
+        gantt.setResolution(Resolution.Day);
+
+        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
+        DateTime end = new DateTime(2014, 9, 1, 10, 30, 30, 123);
+
+        gantt.setStartDate(start.toDate());
+        gantt.setEndDate(end.toDate());
+
+        List<Step> steps = new ArrayList<Step>();
+
+        Step step = new Step();
+        gantt.addStep(step);
+
+        steps.add(step);
+
+        Assert.assertNotNull(step.getUid());
+
+        Step foundStep = (Step) gantt.getStep(step.getUid());
+
+        Assert.assertNotNull(foundStep);
+        Assert.assertEquals(step, foundStep);
+        Assert.assertEquals(step.getUid(), foundStep.getUid());
+        Assert.assertTrue(steps.contains(foundStep));
+    }
+
+    @Test
+    public void addStepWithDatesAndGetByUid_addAndGetSuccessfully() {
+        Gantt gantt = new Gantt();
+        gantt.setResolution(Resolution.Day);
+
+        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
+        DateTime end = new DateTime(2014, 9, 1, 10, 30, 30, 123);
+
+        gantt.setStartDate(start.toDate());
+        gantt.setEndDate(end.toDate());
+
+        List<Step> steps = new ArrayList<Step>();
+
+        DateTime expectedStart = new DateTime(2014, 1, 1, 10, 30, 30, 123);
+        DateTime expectedEnd = new DateTime(2014, 1, 8, 10, 30, 30, 123);
+
+        DateTime stepStart = new DateTime(2014, 1, 1, 10, 30, 30, 123);
+        DateTime stepEnd = new DateTime(2014, 1, 8, 10, 30, 30, 123);
+
+        Step step = new Step();
+        step.setStartDate(stepStart.toDate());
+        step.setEndDate(stepEnd.toDate());
+        gantt.addStep(step);
+
+        steps.add(step);
+
+        Assert.assertNotNull(step.getUid());
+
+        Step foundStep = (Step) gantt.getStep(step.getUid());
+
+        Assert.assertNotNull(foundStep);
+        Assert.assertEquals(step, foundStep);
+        Assert.assertEquals(step.getUid(), foundStep.getUid());
+        Assert.assertTrue(steps.contains(foundStep));
+        Assert.assertEquals(expectedStart.toDate().getTime(),
+                foundStep.getStartDate());
+        Assert.assertEquals(expectedEnd.toDate().getTime(),
+                foundStep.getEndDate());
     }
 
     @Test
