@@ -105,8 +105,8 @@
 		  	-moz-box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 		  	box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 		  	
-		  	&.sub-bar {
-		  		
+			&.sub-bar {
+			
 			}
 			&.has-sub-steps:hover {
 		  		> .bar-label {
@@ -123,6 +123,10 @@
 				}
 				> .bar-label:hover {
 					cursor: move;
+					
+					~ .bar-progress {
+						display: block;	
+					}
 				}
 			}
 			
@@ -133,6 +137,11 @@
 					position: absolute;
 					max-width: 100%;
 				}
+				> .bar-progress {
+					z-index: 2;
+					bottom: 0;
+					display: none;				
+				}
 			}
 		}
 		
@@ -141,6 +150,19 @@
 			white-space: nowrap;
 			overflow: hidden;
 			margin: 3px;
+		}
+		
+		.bar-progress {
+			position: absolute;
+			bottom: 0;
+			display: block;
+			width: 100%;
+			overflow: hidden;
+			
+			.v-progressbar-wrapper,
+			.v-progressbar-indicator {
+				min-width: auto;
+			}
 		}
 		
 		.bar.moving {

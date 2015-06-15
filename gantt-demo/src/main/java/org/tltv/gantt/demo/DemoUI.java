@@ -61,6 +61,7 @@ import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Slider;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -210,12 +211,17 @@ public class DemoUI extends UI {
         cal.setTime(new Date());
         Step step1 = new Step("First step");
         step1.setDescription("Description tooltip");
+        step1.setShowProgress(true);
+        step1.setProgress(50.0);
         step1.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 2);
+
         step1.setEndDate(cal.getTime().getTime());
 
         Step step2 = new Step("Second step");
         step2.setDescription("Description tooltip for second step");
+        step2.setShowProgress(true);
+        step2.setProgress(15.0);
         cal.add(Calendar.DATE, 1);
         step2.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 4);
@@ -633,6 +639,16 @@ public class DemoUI extends UI {
         captionMode.setVisible(false);
         hidden.add(captionMode);
 
+        CheckBox showProgress = new CheckBox("Show progress");
+        group.bind(showProgress, "showProgress");
+        showProgress.setVisible(false);
+        hidden.add(showProgress);
+
+        Slider progress = new Slider("Progress");
+        group.bind(progress, "progress");
+        progress.setVisible(false);
+        hidden.add(progress);
+
         final NativeSelect parentStepSelect = new NativeSelect("Parent Step");
         parentStepSelect.setEnabled(false);
         if (!gantt.getSteps().contains(step)) {
@@ -694,6 +710,8 @@ public class DemoUI extends UI {
         content.addComponent(captionField);
         content.addComponent(captionMode);
         content.addComponent(descriptionField);
+        content.addComponent(showProgress);
+        content.addComponent(progress);
         content.addComponent(parentStepSelect);
         content.addComponent(bgField);
         content.addComponent(startDate);
@@ -741,6 +759,8 @@ public class DemoUI extends UI {
                 subStep.setEndDate(dataSource.getEndDate());
                 subStep.setBackgroundColor(dataSource.getBackgroundColor());
                 subStep.setDescription(dataSource.getDescription());
+                subStep.setProgress(dataSource.getProgress());
+                subStep.setShowProgress(dataSource.isShowProgress());
                 subStep.setStyleName(dataSource.getStyleName());
                 ((Step) parentStepSelect.getValue()).addSubStep(subStep);
                 return subStep;

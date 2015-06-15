@@ -26,6 +26,8 @@ public abstract class AbstractStep implements Serializable {
     private String caption;
     private String description;
     private String backgroundColor = "#A8D9FF";
+    private double progress;
+    private boolean showProgress;
 
     private long startDate = -1;
     private long endDate = -1;
@@ -146,6 +148,26 @@ public abstract class AbstractStep implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public double getProgress() {
+        return progress;
+    }
+
+    /**
+     * Set progress between 0-100%.
+     */
+    public void setProgress(double progress) {
+        this.progress = progress;
+    }
+
+    public boolean isShowProgress() {
+        return showProgress;
+    }
+
+    /** Show or hide progress bar inside the step. */
+    public void setShowProgress(boolean showProgress) {
+        this.showProgress = showProgress;
     }
 
     public enum CaptionMode {

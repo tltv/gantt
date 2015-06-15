@@ -24,6 +24,7 @@ public class AbstractStepWidget extends ComplexPanel {
     protected long start = -1;
     protected long end = -1;
 
+    protected ProgressElement progressElement;
     protected AbstractStep step;
 
     protected GanttWidget gantt;
@@ -72,6 +73,7 @@ public class AbstractStepWidget extends ComplexPanel {
         updateBackground();
         updateStyle();
         updateCaption();
+        updateProgress();
     }
 
     /**
@@ -121,6 +123,32 @@ public class AbstractStepWidget extends ComplexPanel {
                 step.getEndDate() + offset, getElement());
     }
 
+    protected void updateProgress() {
+        if (step.isShowProgress()) {
+            showProgress();
+        } else {
+            hideProgress();
+        }
+    }
+
+    private void showProgress() {
+        if (progressElement == null) {
+            progressElement = new ProgressBarElement();
+            progressElement.init(step.getProgress());
+        } else {
+            progressElement.setProgress(step.getProgress());
+        }
+        if (!progressElement.getElement().hasParentElement()) {
+            getElement().insertAfter(progressElement.getElement(), caption);
+        }
+    }
+
+    private void hideProgress() {
+        if (progressElement != null && progressElement.getElement() != null) {
+            progressElement.getElement().removeFromParent();
+        }
+    }
+
     /**
      * Updates width of this widget to match the Gantt chart's timeline.
      */
@@ -157,6 +185,8 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     protected int countNonSubStepChilds() {
-        return (caption != null && caption.hasParentElement()) ? 1 : 0;
+        return ((caption != null && caption.hasParentElement()) ? 1 : 0)
+                + ((progressElement != null && progressElement.getElement()
+                        .hasParentElement()) ? 1 : 0);
     }
 }
