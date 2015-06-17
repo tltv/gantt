@@ -31,6 +31,7 @@ import org.tltv.gantt.Gantt.ResizeEvent;
 import org.tltv.gantt.client.shared.AbstractStep;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
+import org.tltv.gantt.demo.util.CssColorToColorPickerConverter;
 import org.tltv.gantt.demo.util.UriFragmentWrapperFactory;
 import org.tltv.gantt.demo.util.Util;
 
@@ -51,6 +52,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ColorPicker;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
@@ -67,6 +69,8 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.ui.components.colorpicker.ColorChangeEvent;
+import com.vaadin.ui.components.colorpicker.ColorChangeListener;
 
 @Theme("demo")
 @Title("Gantt Add-on Demo")
@@ -461,7 +465,7 @@ public class DemoUI extends UI {
             setResolution(gantt.getResolution());
 
             // make user to confirm hour resolution, if the timeline range is
-            // more than one week long.
+            // very long.
             Util.showConfirmationPopup(
                     "Timeline range is a quite long for hour resolution. Rendering may be slow. Continue anyway?",
                     new Runnable() {
@@ -645,36 +649,53 @@ public class DemoUI extends UI {
         hidden.add(showProgress);
 
         Slider progress = new Slider("Progress");
+        progress.setWidth(100, Unit.PERCENTAGE);
         group.bind(progress, "progress");
         progress.setVisible(false);
         hidden.add(progress);
 
-        final NativeSelect parentStepSelect = new NativeSelect("Parent Step");
-        parentStepSelect.setEnabled(false);
-        if (!gantt.getSteps().contains(step)) {
-            // new step
-            parentStepSelect.setEnabled(true);
-            for (Step parentStepCanditate : gantt.getSteps()) {
-                parentStepSelect.addItem(parentStepCanditate);
-                parentStepSelect.setItemCaption(parentStepCanditate,
-                        parentStepCanditate.getCaption());
-                if (step instanceof SubStep) {
-                    if (parentStepCanditate.getSubSteps().contains(step)) {
-                        parentStepSelect.setValue(parentStepCanditate);
-                        parentStepSelect.setEnabled(false);
-                        break;
-                    }
-                }
-            }
+        NativeSelect predecessorSelect = new NativeSelect("Predecessor Step");
+        predecessorSelect.setWidth(100, Unit.PERCENTAGE);
+        fillPredecessorCanditatesToSelect(step, predecessorSelect);
+        predecessorSelect.setEnabled(step instanceof Step);
+        if (step instanceof Step) {
+            group.bind(predecessorSelect, "predecessor");
         }
+        predecessorSelect.setVisible(false);
+        hidden.add(predecessorSelect);
+
+        final NativeSelect parentStepSelect = new NativeSelect("Parent Step");
+        parentStepSelect.setWidth(100, Unit.PERCENTAGE);
+        parentStepSelect.setEnabled(false);
+        fillParentStepCanditatesToSelect(step, parentStepSelect);
         parentStepSelect.setVisible(false);
         hidden.add(parentStepSelect);
 
-        TextField bgField = new TextField("Background color");
+        HorizontalLayout colorLayout = new HorizontalLayout();
+        colorLayout.setWidth(100, Unit.PERCENTAGE);
+        colorLayout.setVisible(false);
+        hidden.add(colorLayout);
+
+        final TextField bgField = new TextField("Background color");
         bgField.setNullRepresentation("");
         group.bind(bgField, "backgroundColor");
-        bgField.setVisible(false);
-        hidden.add(bgField);
+        bgField.setEnabled(false);
+
+        final ColorPicker bgColorPicker = new ColorPicker();
+        bgColorPicker.setPosition(300, 100);
+        bgColorPicker.setColor(new CssColorToColorPickerConverter()
+                .convertToModel(step.getBackgroundColor()));
+        bgColorPicker.addColorChangeListener(new ColorChangeListener() {
+            @Override
+            public void colorChanged(ColorChangeEvent event) {
+                bgField.setValue(event.getColor().getCSS());
+            }
+        });
+
+        colorLayout.addComponent(bgField);
+        colorLayout.addComponent(bgColorPicker);
+        colorLayout.setExpandRatio(bgField, 1);
+        colorLayout.setComponentAlignment(bgColorPicker, Alignment.BOTTOM_LEFT);
 
         DateField startDate = new DateField("Start date");
         startDate.setLocale(gantt.getLocale());
@@ -712,8 +733,9 @@ public class DemoUI extends UI {
         content.addComponent(descriptionField);
         content.addComponent(showProgress);
         content.addComponent(progress);
+        content.addComponent(predecessorSelect);
         content.addComponent(parentStepSelect);
-        content.addComponent(bgField);
+        content.addComponent(colorLayout);
         content.addComponent(startDate);
         content.addComponent(endDate);
         content.addComponent(showMore);
@@ -725,72 +747,24 @@ public class DemoUI extends UI {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                try {
-                    group.commit();
-                    AbstractStep step = ((BeanItem<AbstractStep>) group
-                            .getItemDataSource()).getBean();
-                    gantt.markStepDirty(step);
-                    if (parentStepSelect.isEnabled()
-                            && parentStepSelect.getValue() != null) {
-                        SubStep subStep = addSubStep(parentStepSelect, step);
-                        step = subStep;
-                    }
-                    if (step instanceof Step
-                            && !gantt.getSteps().contains(step)) {
-                        gantt.addStep((Step) step);
-                    }
-                    if (ganttListener != null && step instanceof Step) {
-                        ganttListener.stepModified((Step) step);
-                    }
-                    win.close();
-                } catch (CommitException e) {
-                    Notification.show("Commit failed", e.getMessage(),
-                            Type.ERROR_MESSAGE);
-                    e.printStackTrace();
-                }
+                commit(win, group, parentStepSelect);
             }
 
-            private SubStep addSubStep(final NativeSelect parentStepSelect,
-                    AbstractStep dataSource) {
-                SubStep subStep = new SubStep();
-                subStep.setCaption(dataSource.getCaption());
-                subStep.setCaptionMode(dataSource.getCaptionMode());
-                subStep.setStartDate(dataSource.getStartDate());
-                subStep.setEndDate(dataSource.getEndDate());
-                subStep.setBackgroundColor(dataSource.getBackgroundColor());
-                subStep.setDescription(dataSource.getDescription());
-                subStep.setProgress(dataSource.getProgress());
-                subStep.setShowProgress(dataSource.isShowProgress());
-                subStep.setStyleName(dataSource.getStyleName());
-                ((Step) parentStepSelect.getValue()).addSubStep(subStep);
-                return subStep;
-            }
         });
         Button cancel = new Button("Cancel", new ClickListener() {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                group.discard();
-                win.close();
+                cancel(win, group);
             }
         });
         Button delete = new Button("Delete", new ClickListener() {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                AbstractStep step = ((BeanItem<AbstractStep>) group
-                        .getItemDataSource()).getBean();
-                if (step instanceof SubStep) {
-                    SubStep substep = (SubStep) step;
-                    substep.getOwner().removeSubStep(substep);
-                } else {
-                    gantt.removeStep((Step) step);
-                    if (ganttListener != null) {
-                        ganttListener.stepDeleted((Step) step);
-                    }
-                }
-                win.close();
+                delete(win, group);
             }
+
         });
         buttons.addComponent(ok);
         buttons.addComponent(cancel);
@@ -798,5 +772,101 @@ public class DemoUI extends UI {
         win.setClosable(true);
 
         getUI().addWindow(win);
+    }
+
+    private void fillPredecessorCanditatesToSelect(AbstractStep step,
+            final NativeSelect predecessorSelect) {
+        for (Step stepCanditate : gantt.getSteps()) {
+            if (!stepCanditate.equals(step) && stepCanditate instanceof Step) {
+                addItemToSelect(predecessorSelect, stepCanditate);
+            }
+        }
+    }
+
+    private void fillParentStepCanditatesToSelect(AbstractStep step,
+            final NativeSelect parentStepSelect) {
+        if (!gantt.getSteps().contains(step)) {
+            // new step
+            parentStepSelect.setEnabled(true);
+            for (Step parentStepCanditate : gantt.getSteps()) {
+                addItemToSelect(parentStepSelect, parentStepCanditate);
+                if (step instanceof SubStep) {
+                    if (parentStepCanditate.getSubSteps().contains(step)) {
+                        parentStepSelect.setValue(parentStepCanditate);
+                        parentStepSelect.setEnabled(false);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void addItemToSelect(NativeSelect select, AbstractStep step) {
+        select.addItem(step);
+        select.setItemCaption(step, step.getCaption());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void commit(final Window win, final FieldGroup group,
+            final NativeSelect parentStepSelect) {
+        try {
+            group.commit();
+            AbstractStep step = ((BeanItem<AbstractStep>) group
+                    .getItemDataSource()).getBean();
+            gantt.markStepDirty(step);
+            if (parentStepSelect.isEnabled()
+                    && parentStepSelect.getValue() != null) {
+                SubStep subStep = addSubStep(parentStepSelect, step);
+                step = subStep;
+            }
+            if (step instanceof Step && !gantt.getSteps().contains(step)) {
+                gantt.addStep((Step) step);
+            }
+            if (ganttListener != null && step instanceof Step) {
+                ganttListener.stepModified((Step) step);
+            }
+            win.close();
+        } catch (CommitException e) {
+            Notification.show("Commit failed", e.getMessage(),
+                    Type.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private void cancel(final Window win, final FieldGroup group) {
+        group.discard();
+        win.close();
+    }
+
+    @SuppressWarnings("unchecked")
+    private void delete(final Window win, final FieldGroup group) {
+        AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource())
+                .getBean();
+        if (step instanceof SubStep) {
+            SubStep substep = (SubStep) step;
+            substep.getOwner().removeSubStep(substep);
+        } else {
+            gantt.removeStep((Step) step);
+            if (ganttListener != null) {
+                ganttListener.stepDeleted((Step) step);
+            }
+        }
+        win.close();
+    }
+
+    private SubStep addSubStep(final NativeSelect parentStepSelect,
+            AbstractStep dataSource) {
+        SubStep subStep = new SubStep();
+        subStep.setCaption(dataSource.getCaption());
+        subStep.setCaptionMode(dataSource.getCaptionMode());
+        subStep.setStartDate(dataSource.getStartDate());
+        subStep.setEndDate(dataSource.getEndDate());
+        subStep.setBackgroundColor(dataSource.getBackgroundColor());
+        subStep.setDescription(dataSource.getDescription());
+        subStep.setProgress(dataSource.getProgress());
+        subStep.setShowProgress(dataSource.isShowProgress());
+        subStep.setStyleName(dataSource.getStyleName());
+        ((Step) parentStepSelect.getValue()).addSubStep(subStep);
+        return subStep;
     }
 }
