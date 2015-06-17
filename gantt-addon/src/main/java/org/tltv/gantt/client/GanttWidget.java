@@ -1531,7 +1531,16 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
         moveElement.getStyle().clearDisplay();
 
-        double left = parseSize(target.getStyle().getLeft(), "px");
+        String styleLeft = target.getStyle().getLeft();
+        // user capturePointLeftPx as default
+        double left = capturePointLeftPx;
+        if (styleLeft != null && styleLeft.length() > 2
+                && styleLeft.endsWith("px")) {
+            // if target's 'left' is pixel value like '123px', use that.
+            // When target is already moved, then it's using pixel values. If
+            // it's not moved yet, it may use percentage value.
+            left = parseSize(styleLeft, "px");
+        }
         if (isSubBar(target)) {
             left += target.getParentElement().getOffsetLeft();
         }
