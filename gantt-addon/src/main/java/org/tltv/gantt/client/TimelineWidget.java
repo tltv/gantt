@@ -1174,31 +1174,59 @@ public class TimelineWidget extends Widget {
                     public void fillResolutionBlock(int index, Date date,
                             String currentYear, boolean lastTimelineBlock) {
 
-                        weekday = getWeekday(dayCounter);
+                        try {
+                            weekday = getWeekday(dayCounter);
 
-                        if (resolution == Resolution.Week) {
-                            DivElement resBlock = null;
-                            if (index > 0 && weekday == Weekday.First) {
-                                weekIndex++;
-                                firstWeek = false;
-                                even = !even;
+                            if (resolution == Resolution.Week) {
+                                DivElement resBlock = null;
+                                if (index > 0 && weekday == Weekday.First) {
+                                    weekIndex++;
+                                    firstWeek = false;
+                                    even = !even;
+                                }
+                                if (index == 0 || weekday == Weekday.First) {
+                                    int childCount = getResolutionDiv()
+                                            .getChildCount();
+                                    if (isValidChildIndex(weekIndex, childCount)) {
+                                        resBlock = DivElement.as(Element
+                                                .as(getResolutionDiv()
+                                                        .getChild(weekIndex)));
+                                    } else {
+                                        logIndexOutOfBounds("week", weekIndex,
+                                                childCount);
+                                        return;
+                                    }
+                                }
+                                fillWeekResolutionBlock(resBlock, date,
+                                        weekIndex, weekday, firstWeek,
+                                        lastTimelineBlock, left, even);
+                            } else {
+                                int childCount = getResolutionDiv()
+                                        .getChildCount();
+                                if (isValidChildIndex(index, childCount)) {
+                                    DivElement resBlock = DivElement.as(Element
+                                            .as(getResolutionDiv().getChild(
+                                                    index)));
+                                    fillDayResolutionBlock(resBlock, date,
+                                            index, isWeekEnd(dayCounter), left);
+                                } else {
+                                    logIndexOutOfBounds("day", index,
+                                            childCount);
+                                    return;
+                                }
+
                             }
-                            if (index == 0 || weekday == Weekday.First) {
-                                resBlock = DivElement.as(Element
-                                        .as(getResolutionDiv().getChild(
-                                                weekIndex)));
-                            }
-                            fillWeekResolutionBlock(resBlock, date, weekIndex,
-                                    weekday, firstWeek, lastTimelineBlock,
-                                    left, even);
-                        } else {
-                            DivElement resBlock = DivElement.as(Element
-                                    .as(getResolutionDiv().getChild(index)));
-                            fillDayResolutionBlock(resBlock, date, index,
-                                    isWeekEnd(dayCounter), left);
+
+                        } finally {
+                            dayCounter = Math.max((dayCounter + 1) % 8, 1);
                         }
+                    }
 
-                        dayCounter = Math.max((dayCounter + 1) % 8, 1);
+                    private void logIndexOutOfBounds(String indexName,
+                            int index, int childCount) {
+                        GWT.log(indexName + " index " + index
+                                + " out of bounds with childCount "
+                                + childCount + ". Can't fill content.");
                     }
 
                     private int calcDaysLeftInFirstWeek(int startDay) {
@@ -1893,6 +1921,10 @@ public class TimelineWidget extends Widget {
         GWT.log(getClass().getSimpleName() + " Added " + blocks
                 + " visible timeline elements for resolution ."
                 + String.valueOf(resolution));
+    }
+
+    private boolean isValidChildIndex(int index, int childCount) {
+        return (index >= 0) && (index < childCount);
     }
 
     public static int getWeekNumber(Date d, long timezoneOffset,
