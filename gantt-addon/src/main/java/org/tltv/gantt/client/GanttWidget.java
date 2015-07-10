@@ -440,15 +440,32 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Add new StepWidget into content area.
      * 
+     * @param stepIndex
+     *            Index of step (0 based) (not element index in container)
      * @param widget
      */
-    public void addStep(Widget widget) {
+    public void addStep(int stepIndex, Widget widget) {
         DivElement bar = DivElement.as(widget.getElement());
-        add(widget);
+        insert(stepIndex + getAdditonalContentElementCount(), widget);
 
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
-        bar.getStyle().setTop(contentHeight, Unit.PX);
+        if ((stepIndex + 1) < (getChildren().size() - extraContentElements
+                .size())) {
+            // not the first step, update contentHeight by the previous step
+            int prevIndex = extraContentElements.size() + stepIndex;
+            int thisStepWidgetIndex = prevIndex + 1;
+            Widget w = getWidget(prevIndex);
+            if (w instanceof StepWidget) {
+                double top = parseSize(w.getElement().getStyle().getTop(), "px");
+                top += getElementHeightWithMargin(w.getElement());
+                bar.getStyle().setTop(top, Unit.PX);
+
+                updateTopForAllStepsBelow(thisStepWidgetIndex, height);
+            }
+        } else {
+            bar.getStyle().setTop(contentHeight, Unit.PX);
+        }
         contentHeight += height;
 
         registerBarEventListener(bar);
@@ -1003,6 +1020,35 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         super.add(w, content);
     }
 
+    @Override
+    protected void insert(Widget child, Element container, int beforeIndex,
+            boolean domInsert) {
+        // Validate index; adjust if the widget is already a child of this
+        // panel.
+        int adjustedBeforeIndex = adjustIndex(child, beforeIndex
+                - getAdditionalNonWidgetContentElementCount());
+
+        // Detach new child.
+        child.removeFromParent();
+
+        // Logical attach.
+        getChildren().insert(child, adjustedBeforeIndex);
+
+        // Physical attach.
+        if (domInsert) {
+            DOM.insertChild(container, child.getElement(), beforeIndex);
+        } else {
+            DOM.appendChild(container, child.getElement());
+        }
+
+        // Adopt.
+        adopt(child);
+    }
+
+    public void insert(int beforeIndex, Widget w) {
+        insert(w, content, beforeIndex, true);
+    }
+
     public void insertFirst(Widget child) {
         // Detach new child.
         child.removeFromParent();
@@ -1028,13 +1074,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         contentHeight -= height;
 
         if ((startIndex = removeAndReturnIndex(w)) >= 0) {
-            // update top for all elements below
-            Element elementBelow;
-            for (int i = startIndex; i < getChildren().size(); i++) {
-                elementBelow = getWidget(i).getElement();
-                double top = parseSize(elementBelow.getStyle().getTop(), "px");
-                elementBelow.getStyle().setTop(top - height, Unit.PX);
-            }
+            updateTopForAllStepsBelow(startIndex, -height);
 
             // update content height
             content.getStyle().setHeight(contentHeight, Unit.PX);
@@ -1387,6 +1427,16 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         BgGridElement grid = GWT.create(BgGridCssElement.class);
         grid.init(container, content);
         return grid;
+    }
+
+    private void updateTopForAllStepsBelow(int startIndex, int delta) {
+        // update top for all elements below
+        Element elementBelow;
+        for (int i = startIndex; i < getChildren().size(); i++) {
+            elementBelow = getWidget(i).getElement();
+            double top = parseSize(elementBelow.getStyle().getTop(), "px");
+            elementBelow.getStyle().setTop(top + delta, Unit.PX);
+        }
     }
 
     private double calculateBackgroundGridWidth() {

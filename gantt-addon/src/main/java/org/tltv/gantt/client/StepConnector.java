@@ -74,7 +74,7 @@ public class StepConnector extends AbstractHasComponentsConnector {
         }
 
         if (gantt == null) {
-            gantt = ((GanttConnector) getParent()).getWidget();
+            gantt = getGanttConnector().getWidget();
         }
 
         if (stateChangeEvent.hasPropertyChanged("step")) {
@@ -83,7 +83,7 @@ public class StepConnector extends AbstractHasComponentsConnector {
             getWidget().setStep(getState().step);
         }
         if (!getWidget().getElement().hasParentElement()) {
-            gantt.addStep(getWidget());
+            gantt.addStep(getStepIndex(), getWidget());
         }
         getWidget().updateWidth();
 
@@ -91,13 +91,17 @@ public class StepConnector extends AbstractHasComponentsConnector {
             @Override
             public void execute() {
                 getWidget().updatePredecessor();
-                GanttConnector ganttConnector = (GanttConnector) getParent();
+                GanttConnector ganttConnector = getGanttConnector();
                 for (StepWidget stepWidget : ganttConnector.findRelatedSteps(
                         getState().step, ganttConnector.getChildComponents())) {
                     stepWidget.updatePredecessor();
                 }
             }
         });
+    }
+
+    protected int getStepIndex() {
+        return Math.max(0, getGanttConnector().getState().steps.indexOf(this));
     }
 
     private void updatePredecessorWidgetReference() {
@@ -115,6 +119,11 @@ public class StepConnector extends AbstractHasComponentsConnector {
             getWidget().setPredecessorStepWidget(
                     ((GanttConnector) getParent()).getStepWidget(predecessor));
         }
+    }
+
+    protected GanttConnector getGanttConnector() {
+        return (GanttConnector) getParent();
+
     }
 
     @Override

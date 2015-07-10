@@ -655,7 +655,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
-        updateAllStepsPredecessors();
+        deferredUpdateAllStepsPredecessors();
     }
 
     /** Updates all steps predecessor visualizations. */
@@ -664,6 +664,15 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             StepWidget stepWidget = ((StepConnector) c).getWidget();
             stepWidget.updatePredecessor();
         }
+    }
+
+    private void deferredUpdateAllStepsPredecessors() {
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+            @Override
+            public void execute() {
+                updateAllStepsPredecessors();
+            }
+        });
     }
 
     /**
