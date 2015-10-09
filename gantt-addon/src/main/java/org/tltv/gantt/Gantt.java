@@ -105,17 +105,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             if (newPredecessorStepUid == forTargetStepUid) {
                 return;
             }
-            Step newPredecessorStep = (Step) getStep(newPredecessorStepUid);
-            Step forTargetStep = (Step) getStep(forTargetStepUid);
-            Step clearPredecessorForStep = (Step) getStep(clearPredecessorForStepUid);
-            if (forTargetStep != null) {
-                forTargetStep.setPredecessor(newPredecessorStep);
-                stepComponents.get(forTargetStep).getState(true);
-            }
-            if (clearPredecessorForStep != null) {
-                clearPredecessorForStep.setPredecessor(null);
-                stepComponents.get(clearPredecessorForStep).getState(true);
-            }
+            firePredecessorChangeEvent(newPredecessorStepUid, forTargetStepUid,
+                    clearPredecessorForStepUid);
         }
     };
 
@@ -667,7 +658,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         endDate = resetTimeToMax(date);
 
         Calendar cal = getCalendar();
-        cal.setTime(new Date());
+        cal.setTime(getTimezoneOffsetDate());
         Long dst_offset = Long.valueOf(cal.get(Calendar.DST_OFFSET));
         endDate = new Date(endDate.getTime() - dst_offset);
 
@@ -719,7 +710,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             getState().endDate = endDate.getTime();
         }
         Calendar cal = getCalendar();
-        cal.setTime(new Date());
+        cal.setTime(getTimezoneOffsetDate());
         getState().timeZoneOffset = Long.valueOf(cal.get(Calendar.ZONE_OFFSET)
                 + cal.get(Calendar.DST_OFFSET));
     }
@@ -814,6 +805,23 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
                 step.getEndDate()));
     }
 
+    protected void firePredecessorChangeEvent(String newPredecessorStepUid,
+            String forTargetStepUid, String clearPredecessorForStepUid) {
+        Step newPredecessorStep = (Step) getStep(newPredecessorStepUid);
+        Step forTargetStep = (Step) getStep(forTargetStepUid);
+        Step clearPredecessorForStep = (Step) getStep(clearPredecessorForStepUid);
+        if (forTargetStep != null) {
+            forTargetStep.setPredecessor(newPredecessorStep);
+            stepComponents.get(forTargetStep).getState(true);
+            fireEvent(new PredecessorChangeEvent(this, forTargetStep));
+        }
+        if (clearPredecessorForStep != null) {
+            clearPredecessorForStep.setPredecessor(null);
+            stepComponents.get(clearPredecessorForStep).getState(true);
+            fireEvent(new PredecessorChangeEvent(this, clearPredecessorForStep));
+        }
+    }
+
     protected void moveDatesByOwnerStep(AbstractStep step,
             long previousStartDate, long previousEndDate) {
         if (!(step instanceof Step)) {
@@ -886,6 +894,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return owner;
     }
 
+    /**
+     * Return Date which will be used to detect timezone offset and daylight
+     * saving offset. Returns new Date() by default.
+     */
+    protected Date getTimezoneOffsetDate() {
+        return new Date();
+    }
+
     /** Mark step/substeps dirty. */
     public void markStepDirty(AbstractStep step) {
         AbstractStepComponent component = getStepComponent(step);
@@ -896,8 +912,6 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Add {@link ClickListener} to listen clicks on steps.
-     * 
-     * @param listener
      */
     public void addClickListener(ClickListener listener) {
         addListener(ClickEvent.class, listener,
@@ -906,8 +920,6 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Add {@link MoveListener} to listen step's move events.
-     * 
-     * @param listener
      */
     public void addMoveListener(MoveListener listener) {
         addListener(MoveEvent.class, listener, MoveListener.GANTT_MOVE_METHOD);
@@ -915,12 +927,19 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Add {@link ResizeListener} to listen step's resize events.
-     * 
-     * @param listener
      */
     public void addResizeListener(ResizeListener listener) {
         addListener(ResizeEvent.class, listener,
                 ResizeListener.GANTT_RESIZE_METHOD);
+    }
+
+    /**
+     * Add {@link PredecessorChangeListener} to listen step's predecessor step
+     * change events.
+     * */
+    public void addPredecessorChangeListener(PredecessorChangeListener listener) {
+        addListener(PredecessorChangeEvent.class, listener,
+                PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
     }
 
     public void removeClickListener(ClickListener listener) {
@@ -928,7 +947,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
                 ClickListener.GANTT_CLICK_METHOD);
     }
 
-    public void removemoveListener(MoveListener listener) {
+    public void removeMoveListener(MoveListener listener) {
         removeListener(MoveEvent.class, listener,
                 MoveListener.GANTT_MOVE_METHOD);
     }
@@ -936,6 +955,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     public void removeResizeListener(ResizeListener listener) {
         removeListener(ResizeEvent.class, listener,
                 ResizeListener.GANTT_RESIZE_METHOD);
+    }
+
+    public void removePredecessorChangeListener(
+            PredecessorChangeListener listener) {
+        removeListener(PredecessorChangeEvent.class, listener,
+                PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
     }
 
     public class ClickEvent extends Component.Event {
@@ -1075,6 +1100,32 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
     }
 
+    public class PredecessorChangeEvent extends Component.Event {
+
+        private Step step;
+
+        public PredecessorChangeEvent(Gantt source, Step targetStep) {
+            super(source);
+            step = targetStep;
+        }
+
+        /**
+         * Get target Step.
+         */
+        public Step getStep() {
+            return step;
+        }
+
+        public void setStep(Step targetStep) {
+            step = targetStep;
+        }
+
+        /** Get new predecessor step or null if none. */
+        public Step getPredecessor() {
+            return (step != null) ? step.getPredecessor() : null;
+        }
+    }
+
     public interface ClickListener extends Serializable {
 
         public static final Method GANTT_CLICK_METHOD = ReflectTools
@@ -1099,6 +1150,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
                         ResizeEvent.class);
 
         public void onGanttResize(ResizeEvent event);
+    }
+
+    public interface PredecessorChangeListener extends Serializable {
+        public static final Method GANTT_PERDECESSORCHANGE_METHOD = ReflectTools
+                .findMethod(PredecessorChangeListener.class,
+                        "onPredecessorChange", PredecessorChangeEvent.class);
+
+        public void onPredecessorChange(PredecessorChangeEvent event);
     }
 
     @Override
