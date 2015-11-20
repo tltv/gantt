@@ -632,6 +632,28 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
     }
 
+    /**
+     * Bind application specific data object into step. The component does not
+     * use or modify this.
+     * <p>
+     * Step must exist. Otherwise data is not set.
+     */
+    public void setData(AbstractStep step, Object data) {
+        AbstractStepComponent c = getStepComponent(step);
+        if (c != null) {
+            c.setData(data);
+        }
+    }
+
+    /**
+     * Get application specific data object for specific step. The component
+     * does not use or modify this.
+     */
+    public Object getData(AbstractStep step) {
+        AbstractStepComponent c = getStepComponent(step);
+        return (c != null) ? c.getData() : null;
+    }
+
     private Calendar getCalendar() {
         if (calendar == null) {
             if (timezone != null) {
