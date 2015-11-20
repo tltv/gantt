@@ -448,20 +448,20 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         DivElement bar = DivElement.as(widget.getElement());
         insert(stepIndex + getAdditonalContentElementCount(), widget);
 
+        int widgetsInContainer = getChildren().size();
+        int indexInWidgetContainer = stepIndex + extraContentElements.size();
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
-        if ((stepIndex + 1) < (getChildren().size() - extraContentElements
-                .size())) {
+        if ((stepIndex + 1) < (widgetsInContainer - extraContentElements.size())) {
             // not the first step, update contentHeight by the previous step
-            int prevIndex = extraContentElements.size() + stepIndex;
-            int thisStepWidgetIndex = prevIndex + 1;
+            int prevIndex = indexInWidgetContainer - 1;
             Widget w = getWidget(prevIndex);
             if (w instanceof StepWidget) {
                 double top = parseSize(w.getElement().getStyle().getTop(), "px");
                 top += getElementHeightWithMargin(w.getElement());
                 bar.getStyle().setTop(top, Unit.PX);
 
-                updateTopForAllStepsBelow(thisStepWidgetIndex, height);
+                updateTopForAllStepsBelow(indexInWidgetContainer + 1, height);
             }
         } else {
             bar.getStyle().setTop(contentHeight, Unit.PX);
