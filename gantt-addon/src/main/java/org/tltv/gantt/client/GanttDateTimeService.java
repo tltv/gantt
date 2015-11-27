@@ -47,8 +47,6 @@ public class GanttDateTimeService extends DateTimeService {
      *            The date to convert
      * @param formatStr
      *            The format string that might contain MMM or MMMM
-     * @param dateTimeService
-     *            Reference to the Vaadin DateTimeService
      * @return
      */
     @Override
