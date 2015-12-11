@@ -159,11 +159,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set start date of the Gantt chart's timeline. When resolution is
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
-     * to a minimum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
+     * to a minimum possible for the given date (1/1/2010 12:12:12 &rarr; 1/1/20120
      * 00:00:00).
      * <p>
      * For {@link Resolution#Hour}, given date is adjusted like this: 1/1/2010
-     * 12:12:12 => 1/1/2010 12:00:00.
+     * 12:12:12 &rarr; 1/1/2010 12:00:00.
      * 
      * @param date
      */
@@ -179,7 +179,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set end date of the Gantt chart's timeline. When resolution is
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
-     * to a maximum possible for the given date (1/1/2010 12:12:12 => 1/1/20120
+     * to a maximum possible for the given date (1/1/2010 12:12:12 &rarr; 1/1/20120
      * 23:59:59).
      * 
      * @param date
@@ -461,7 +461,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Set timeline's week row's week format for {@link Resolution#Week}
      * resolution. Default is week number.
      * 
-     * @param format
+     * @param weekFormat
      *            Format string like 'dd'
      */
     public void setTimelineWeekFormat(String weekFormat) {
@@ -481,7 +481,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Set timeline's day row's format for {@link Resolution#Hour} resolution.
      * Default is number of day in month.
      * 
-     * @param format
+     * @param dayFormat
      *            Format string like 'dd'
      */
     public void setTimelineDayFormat(String dayFormat) {

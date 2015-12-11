@@ -85,7 +85,7 @@ import com.vaadin.client.event.PointerUpHandler;
  * <p>
  * Timeline's localization is handled via {@link LocaleDataProvider}.
  * <p>
- * Here are few steps that need to be notified when taking this widget in use. <br/>
+ * Here are few steps that need to be notified when taking this widget in use. <br>
  * First of all, after constructing this widget, you need to initialize it by
  * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
  * that, make sure to call
@@ -96,14 +96,12 @@ import com.vaadin.client.event.PointerUpHandler;
  * <p>
  * Sample code snippet:
  * 
- * <code>
  * <pre>
  * GanttWidget widget = new GanttWidget();    
  * widget.setBrowserInfo(isIe(), isIe8(), isIe9(), isChrome(), isSafari(), isWebkit());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>
- * </code>
  * <p>
  * After initializing, widget is ready to go. But to let this widget know when
  * it should re-calculate content widths/heights, call either
@@ -871,7 +869,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     /**
-     * @see {@link TimelineWidget#setAlwaysCalculatePixelWidths(boolean)}
+     * @see TimelineWidget#setAlwaysCalculatePixelWidths(boolean)
      * @param calcPx
      */
     public void setAlwaysCalculatePixelWidths(boolean calcPx) {
@@ -880,7 +878,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Sets timeline's force update flag up. Next
-     * {@link TimelineWidget#update(Resolution, long, long, int, LocaleDataProvider)}
+     * {@link TimelineWidget#update(Resolution, long, long, int, int, LocaleDataProvider)}
      * call knows then to update everything.
      */
     public void setForceUpdateTimeline() {

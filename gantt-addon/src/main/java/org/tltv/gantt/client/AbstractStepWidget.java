@@ -63,7 +63,7 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     /**
-     * Set data source for this widget. Called when {@linkplain StepState#state}
+     * Set data source for this widget. Called when {@linkplain StepState}
      * is changed.
      * 
      * @param step

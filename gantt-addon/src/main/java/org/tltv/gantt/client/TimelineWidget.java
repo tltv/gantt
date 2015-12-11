@@ -61,7 +61,7 @@ import com.google.gwt.user.client.ui.Widget;
  * <p>
  * There's always a minimum width calculated and updated to the timeline
  * element. Percentage values set some limitation for the component's width.
- * Wider the component (> 4000px), bigger the change to get year, month and date
+ * Wider the component (&gt; 4000px), bigger the change to get year, month and date
  * blocks not being vertically in-line with each others.
  * <p>
  * Supports setting a scroll left position.
@@ -196,7 +196,7 @@ public class TimelineWidget extends Widget {
 
     /**
      * Constructs the widget. Call
-     * {@link #update(Resolution, long, long, int, LocaleDataProvider)} after
+     * {@link #update(Resolution, long, long, int, int, LocaleDataProvider)} after
      * the component is attached to some parent widget.
      */
     public TimelineWidget() {
@@ -353,7 +353,7 @@ public class TimelineWidget extends Widget {
 
     /**
      * Set minimum width (pixels) of this widget's root DIV element. Default is
-     * -1. Notice that {@link #update(Resolution, long, long)} will calculate
+     * -1. Notice that {@link #update(Resolution, long, long, int, int, LocaleDataProvider)} will calculate
      * min-width and call this internally.
      * 
      * @param minWidth
@@ -400,7 +400,7 @@ public class TimelineWidget extends Widget {
      * Calculate CSS value for 'left' property matching left offset in
      * percentage for a date ( {@link Date#getTime()}).
      * <p>
-     * May return '2.123456%' or 'calc(2.123456%)' if IE(>8);
+     * May return '2.123456%' or 'calc(2.123456%)' if IE(&gt;8);
      * 
      * @param date
      *            Target date in milliseconds.
@@ -440,7 +440,7 @@ public class TimelineWidget extends Widget {
      * Calculate CSS value for 'width' property matching date interval inside
      * the time-line. Returns percentage value. Interval is in milliseconds.
      * <p>
-     * May return '2.123456%' or 'calc(2.123456%)' if IE(>8);
+     * May return '2.123456%' or 'calc(2.123456%)' if IE(&gt;8);
      * 
      * @param interval
      *            Date interval in milliseconds.
@@ -451,7 +451,7 @@ public class TimelineWidget extends Widget {
         return getWidthPercentageStringForDateInterval(interval, range);
     }
 
-    /** @see {@link #getWidthPercentageStringForDateInterval(long)} */
+    /** @see #getWidthPercentageStringForDateInterval(long) */
     public String getWidthPercentageStringForDateInterval(long interval,
             double range) {
         String calc = createCalcCssValue(range, interval);
@@ -698,7 +698,6 @@ public class TimelineWidget extends Widget {
      * Default value is false.
      * 
      * @param calcPx
-     * @return
      */
     public void setAlwaysCalculatePixelWidths(boolean calcPx) {
         calcPixels = calcPx;
@@ -812,7 +811,7 @@ public class TimelineWidget extends Widget {
 
     /**
      * Sets force update flag up. Next
-     * {@link #update(Resolution, long, long, int, LocaleDataProvider)} call
+     * {@link #update(Resolution, long, long, int, int, LocaleDataProvider)} call
      * knows then to update everything.
      */
     public void setForceUpdate() {
