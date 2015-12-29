@@ -25,6 +25,15 @@ public class GanttTest {
         Assert.assertEquals(gantt.getStartDate(), null);
         Assert.assertEquals(gantt.getEndDate(), null);
     }
+    
+    @Test
+    public void ganttRemoveAll() {
+    	Gantt gantt = new Gantt();
+    	gantt.addStep(new Step());
+    	gantt.addStep(new Step());
+    	gantt.removeSteps();
+    	Assert.assertEquals(0, gantt.getSteps().size());
+    }
 
     @Test
     public void addEmptyStepAndGetByUid_addAndGetSuccessfully() {

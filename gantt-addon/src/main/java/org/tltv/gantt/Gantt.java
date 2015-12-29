@@ -25,6 +25,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -339,7 +340,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Removes all the steps in this Gantt chart.
      */
     public void removeSteps() {
-    	Set<Step> allSteps = stepComponents.keySet();
+    	Set<Step> allSteps = new HashSet<Step>( stepComponents.keySet() );
     	for (Step step : allSteps) {
 			removeStep(step);
 		}
