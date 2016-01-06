@@ -1,8 +1,17 @@
 package org.tltv.gantt.demo.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import com.google.gwt.i18n.client.constants.TimeZoneConstants;
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
@@ -171,6 +180,45 @@ public class Util {
         window.setContent(content);
 
         UI.getCurrent().addWindow(window);
+    }
+
+    /**
+     * Get all supported Time zone identifiers (like "Europe/Rome"). Reads them
+     * from TimeZoneConstants.properties.
+     */
+    public static Set<String> getSupportedTimeZoneIDs() {
+        Set<String> zones = new HashSet<String>();
+        String properties = TimeZoneConstants.class.getSimpleName()
+                + ".properties";
+        // read time zones from TimeZoneConstants.properties.
+        InputStream is = TimeZoneConstants.class
+                .getResourceAsStream(properties);
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader reader = new BufferedReader(isr);
+        try {
+            try {
+                for (String line; (line = reader.readLine()) != null;) {
+                    Pattern pattern = Pattern
+                            .compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
+                    Matcher matcher = pattern.matcher(line);
+                    if (matcher.matches()) {
+                        zones.add(matcher.group(2));
+                    }
+                }
+                return zones;
+            } catch (IOException e) {
+                throw new RuntimeException(String.format(
+                        "Failed to read time zones from %s", properties), e);
+            }
+        } finally {
+            try {
+                reader.close();
+                isr.close();
+                is.close();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to close open resources.", e);
+            }
+        }
     }
 
     public interface TextValueChange {

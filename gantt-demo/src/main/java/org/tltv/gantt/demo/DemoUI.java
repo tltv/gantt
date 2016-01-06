@@ -46,6 +46,7 @@ import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.converter.DateToLongConverter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
@@ -53,6 +54,7 @@ import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.ColorPicker;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.DateField;
 import com.vaadin.ui.HorizontalLayout;
@@ -405,21 +407,17 @@ public class DemoUI extends UI {
         }
         localeSelect.setImmediate(true);
 
-        String[] zones = new String[] { "GMT-0", "GMT-1", "GMT-2", "GMT-3",
-                "GMT-4", "GMT-5", "GMT-6", "GMT-7", "GMT-8", "GMT-9", "GMT-10",
-                "GMT-11", "GMT-12", "GMT+1", "GMT+2", "GMT+3", "GMT+4",
-                "GMT+5", "GMT+6", "GMT+7", "GMT+8", "GMT+9", "GMT+10",
-                "GMT+11", "GMT+12", "GMT+13", "GMT+14" };
-        NativeSelect timezoneSelect = new NativeSelect("Timezone");
+        ComboBox timezoneSelect = new ComboBox("Timezone");
+        timezoneSelect.setFilteringMode(FilteringMode.CONTAINS);
         timezoneSelect.setNullSelectionAllowed(false);
         timezoneSelect.addItem("Default");
         timezoneSelect.setItemCaption("Default", "Default ("
                 + TimeZone.getDefault().getDisplayName() + ")");
-        for (String timezoneId : zones) {
+        for (String timezoneId : Util.getSupportedTimeZoneIDs()) {
             TimeZone tz = TimeZone.getTimeZone(timezoneId);
             timezoneSelect.addItem(timezoneId);
-            timezoneSelect.setItemCaption(timezoneId,
-                    tz.getDisplayName(getLocale()));
+            timezoneSelect.setItemCaption(timezoneId, tz.getID()
+                    + " (raw offset " + (tz.getRawOffset() / 60000) + "m)");
         }
         timezoneSelect.setValue("Default");
         timezoneSelect.setImmediate(true);
