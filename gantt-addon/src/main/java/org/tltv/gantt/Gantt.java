@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Tomi Virtanen
+ * Copyright 2016 Tomi Virtanen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,11 @@
 
 package org.tltv.gantt;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.DateFormatSymbols;
@@ -30,6 +35,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.tltv.gantt.client.shared.AbstractStep;
 import org.tltv.gantt.client.shared.GanttClientRpc;
@@ -39,6 +46,7 @@ import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
 
+import com.google.gwt.i18n.client.constants.TimeZoneConstants;
 import com.vaadin.shared.Connector;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
@@ -80,6 +88,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     protected final Map<Step, StepComponent> stepComponents = new HashMap<Step, StepComponent>();
     protected final Map<SubStep, SubStepComponent> subStepMap = new HashMap<SubStep, SubStepComponent>();
+
+    protected Map<String, String> timezoneJsonCache = new HashMap<String, String>();
 
     private GanttServerRpc rpc = new GanttServerRpc() {
 
@@ -159,8 +169,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set start date of the Gantt chart's timeline. When resolution is
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
-     * to a minimum possible for the given date (1/1/2010 12:12:12 &rarr; 1/1/20120
-     * 00:00:00).
+     * to a minimum possible for the given date (1/1/2010 12:12:12 &rarr;
+     * 1/1/20120 00:00:00).
      * <p>
      * For {@link Resolution#Hour}, given date is adjusted like this: 1/1/2010
      * 12:12:12 &rarr; 1/1/2010 12:00:00.
@@ -179,8 +189,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set end date of the Gantt chart's timeline. When resolution is
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
-     * to a maximum possible for the given date (1/1/2010 12:12:12 &rarr; 1/1/20120
-     * 23:59:59).
+     * to a maximum possible for the given date (1/1/2010 12:12:12 &rarr;
+     * 1/1/20120 23:59:59).
      * 
      * @param date
      */
@@ -546,15 +556,61 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      */
     public void setTimeZone(TimeZone zone) {
         if (!getTimeZone().equals(zone)) {
-            timezone = zone; // internal timezone cmay be null
+            int startdate = 0;
+            int startmonth = 0;
+            int startyear = 0;
+            int starthour = 0;
+            int enddate = 0;
+            int endmonth = 0;
+            int endyear = 0;
+            int endhour = 0;
+            // keep previous date/month/year
+            if (getStartDate() != null) {
+                getCalendar().setTime(getStartDate());
+                startdate = getCalendar().get(Calendar.DATE);
+                startmonth = getCalendar().get(Calendar.MONTH);
+                startyear = getCalendar().get(Calendar.YEAR);
+                starthour = getCalendar().get(Calendar.HOUR_OF_DAY);
+            }
+            if (getEndDate() != null) {
+                getCalendar().setTime(getEndDate());
+                enddate = getCalendar().get(Calendar.DATE);
+                endmonth = getCalendar().get(Calendar.MONTH);
+                endyear = getCalendar().get(Calendar.YEAR);
+                endhour = getCalendar().get(Calendar.HOUR_OF_DAY);
+            }
+
+            timezone = zone; // internal timezone may be null
             if (zone == null) {
                 zone = TimeZone.getDefault();
             }
-            getCalendar().setTimeZone(zone);
+
             // refresh timeline range. Depending on the resolution, it might
             // need some adjusting.
-            setInternalStartDate(getStartDate());
-            setInternalEndDate(getEndDate());
+
+            getCalendar().setTimeZone(zone);
+            if (getStartDate() != null) {
+                getCalendar().setTime(getStartDate());
+                getCalendar().set(Calendar.DATE, startdate);
+                getCalendar().set(Calendar.MONTH, startmonth);
+                getCalendar().set(Calendar.YEAR, startyear);
+                if (getResolution() == Resolution.Hour) {
+                    getCalendar().set(Calendar.HOUR_OF_DAY, starthour);
+                }
+                setInternalStartDate(getCalendar().getTime());
+            }
+
+            if (getEndDate() != null) {
+                getCalendar().setTime(getEndDate());
+                getCalendar().set(Calendar.DATE, enddate);
+                getCalendar().set(Calendar.MONTH, endmonth);
+                getCalendar().set(Calendar.YEAR, endyear);
+                if (getResolution() == Resolution.Hour) {
+                    getCalendar().set(Calendar.HOUR_OF_DAY, endhour);
+                }
+                setInternalEndDate(getCalendar().getTime());
+            }
+
             updateTimelineStartTimeDetails();
             markAsDirty();
         }
@@ -679,11 +735,6 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
         endDate = resetTimeToMax(date);
 
-        Calendar cal = getCalendar();
-        cal.setTime(getTimezoneOffsetDate());
-        Long dst_offset = Long.valueOf(cal.get(Calendar.DST_OFFSET));
-        endDate = new Date(endDate.getTime() - dst_offset);
-
         getState().endDate = endDate.getTime();
     }
 
@@ -693,6 +744,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         if (!getResolution().equals(Resolution.Hour)) {
             // reset hour only if the resolution is set to DAY, WEEK or MONTH
             cal.set(Calendar.HOUR, cal.getMinimum(Calendar.HOUR));
+            cal.set(Calendar.HOUR_OF_DAY, cal.getMinimum(Calendar.HOUR_OF_DAY));
             cal.set(Calendar.AM_PM, cal.getMinimum(Calendar.AM_PM));
         }
         cal.set(Calendar.MINUTE, cal.getMinimum(Calendar.MINUTE));
@@ -731,10 +783,24 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         if (endDate != null) {
             getState().endDate = endDate.getTime();
         }
-        Calendar cal = getCalendar();
-        cal.setTime(getTimezoneOffsetDate());
-        getState().timeZoneOffset = Long.valueOf(cal.get(Calendar.ZONE_OFFSET)
-                + cal.get(Calendar.DST_OFFSET));
+        getState().timeZoneId = getTimeZone().getID();
+        getState().timeZoneJson = getTimeZoneJson(getTimeZone().getID());
+    }
+
+    private void closeStream(String failMsg, InputStream is) {
+        try {
+            is.close();
+        } catch (IOException e) {
+            throw new RuntimeException(failMsg, e);
+        }
+    }
+
+    private void closeReader(String failMsg, Reader r) {
+        try {
+            r.close();
+        } catch (IOException e) {
+            throw new RuntimeException(failMsg, e);
+        }
     }
 
     private void updateFirstHourOfRange() {
@@ -773,6 +839,63 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             return subStepMap.get(step);
         }
         return null;
+    }
+
+    private BufferedReader createTimeZonePropertiesReader(
+            InputStream inputStream) {
+        InputStreamReader isr = new InputStreamReader(inputStream);
+        return new BufferedReader(isr);
+    }
+
+    private String readTimeZoneJson(String id, String properties,
+            BufferedReader reader) {
+        try {
+            for (String line; (line = reader.readLine()) != null;) {
+                Pattern pattern = Pattern
+                        .compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.matches()) {
+                    if (id.equals(matcher.group(2))) {
+                        String json = matcher.group(1);
+                        timezoneJsonCache.put(id, json);
+                        return json;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(String.format(
+                    "Failed to read time zone from %s", properties), e);
+        }
+        return null;
+    }
+
+    protected InputStream createTimeZonePropertiesInputStream(
+            String propertiesFileName) {
+        // read time zone json from TimeZoneConstants.properties.
+        return TimeZoneConstants.class.getResourceAsStream(propertiesFileName);
+    }
+
+    protected String getTimeZoneJson(String id) {
+        if (timezoneJsonCache.containsKey(id)) {
+            return timezoneJsonCache.get(id);
+        }
+        String propertiesFileName = TimeZoneConstants.class.getSimpleName()
+                + ".properties";
+        // read time zone json from TimeZoneConstants.properties.
+        InputStream is = createTimeZonePropertiesInputStream(propertiesFileName);
+        BufferedReader reader = createTimeZonePropertiesReader(is);
+        try {
+            String json = readTimeZoneJson(id, propertiesFileName, reader);
+            if (json != null) {
+                return json;
+            }
+            throw new IllegalArgumentException(String.format(
+                    "Time zone %s not found in %s", id, propertiesFileName));
+        } finally {
+            closeReader("Failed to close time-zone resource stream reader.",
+                    reader);
+            closeStream("Failed to close time-zone resource stream.", is);
+        }
     }
 
     /**
@@ -919,7 +1042,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return Date which will be used to detect timezone offset and daylight
      * saving offset. Returns new Date() by default.
+     * 
+     * @deprecated All time-zone specific information is in
+     *             {@link GanttState#timeZoneJson}.
      */
+    @Deprecated
     protected Date getTimezoneOffsetDate() {
         return new Date();
     }

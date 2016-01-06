@@ -10,7 +10,9 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
 
     public String locale;
 
-    public Long timeZoneOffset;
+    public String timeZoneJson;
+
+    public String timeZoneId;
 
     @DelegateToWidget
     public Resolution resolution = Resolution.Day;
@@ -21,9 +23,11 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     @DelegateToWidget
     public int firstHourOfRange;
 
+    /** GMT start date */
     @DelegateToWidget
     public Long startDate;
 
+    /** GMT end date */
     @DelegateToWidget
     public Long endDate;
 

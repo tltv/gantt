@@ -18,6 +18,9 @@ package org.tltv.gantt.client;
 import java.util.Date;
 import java.util.Locale;
 
+import com.google.gwt.i18n.client.TimeZone;
+import com.google.gwt.i18n.shared.DateTimeFormat;
+
 public interface LocaleDataProvider {
 
     /**
@@ -42,15 +45,19 @@ public interface LocaleDataProvider {
     int getFirstDayOfWeek();
 
     /**
-     * Format date to String.
+     * Format zoned date to String.
      * 
      * @param date
-     *            Date to format
+     *            Date to format (Expected to be in same TimeZone as
+     *            {@link #getTimeZone()}).
      * @param format
      *            Pattern of the date format. Like MMM or MMMM.
      * @return Formatted date
      */
     String formatDate(Date date, String format);
+
+    /** Format zoned date. */
+    String formatDate(Date zonedDate, DateTimeFormat formatter);
 
     /**
      * Returns true, if active locale uses twelve hour clock.
@@ -67,9 +74,17 @@ public interface LocaleDataProvider {
     String getLocale();
 
     /**
-     * Return current timezone offset + daylight saving offset.
-     * 
-     * @return
+     * Get currently active Gantt specific time-zone.
      */
-    long getTimeZoneOffset();
+    TimeZone getTimeZone();
+
+    /** Get daylight saving time adjustment in milliseconds for the target date. */
+    long getDaylightAdjustment(Date zonedDate);
+
+    /**
+     * Return time-zone offset + daylight saving offset in milliseconds for the
+     * target date.
+     */
+    long getTimeZoneOffset(Date zonedDate);
+
 }

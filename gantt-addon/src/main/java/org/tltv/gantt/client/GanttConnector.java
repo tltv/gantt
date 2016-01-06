@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Tomi Virtanen
+ * Copyright 2016 Tomi Virtanen
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,8 @@ import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.i18n.client.TimeZone;
+import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
@@ -71,7 +73,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
     String locale;
-    long timeZoneOffset = 0;
+    String timeZoneId;
+    TimeZone timeZone;
     GanttDateTimeService dateTimeService;
     boolean notifyHeight = false;
 
@@ -222,7 +225,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         @Override
-        public String formatDate(Date date, String formatStr) {
+        public String formatDate(Date zonedDate, String formatStr) {
             if (dateTimeService == null) {
                 try {
                     dateTimeService = new GanttDateTimeService(getLocale());
@@ -232,7 +235,13 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     return "";
                 }
             }
-            return dateTimeService.formatDate(date, formatStr);
+            return dateTimeService.formatDate(zonedDate, formatStr,
+                    getTimeZone());
+        }
+
+        @Override
+        public String formatDate(Date zonedDate, DateTimeFormat formatter) {
+            return formatter.format(zonedDate, getTimeZone());
         }
 
         @Override
@@ -251,8 +260,19 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         @Override
-        public long getTimeZoneOffset() {
-            return timeZoneOffset;
+        public long getTimeZoneOffset(Date zonedDate) {
+            int offset = -getTimeZone().getOffset(zonedDate) * 60000;
+            return offset;
+        }
+
+        @Override
+        public TimeZone getTimeZone() {
+            return timeZone;
+        }
+
+        @Override
+        public long getDaylightAdjustment(Date zonedDate) {
+            return getTimeZone().getDaylightAdjustment(zonedDate) * 60000;
         }
 
     };
@@ -409,10 +429,16 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         super.onStateChanged(stateChangeEvent);
 
         locale = getState().locale;
-        timeZoneOffset = (getState().timeZoneOffset != null ? getState().timeZoneOffset
-                : 0);
+        timeZoneId = getState().timeZoneId;
         if (stateChangeEvent.hasPropertyChanged("locale")) {
             dateTimeService = null;
+        }
+        if (stateChangeEvent.hasPropertyChanged("timeZoneId")) {
+            if (getState().timeZoneJson != null) {
+                timeZone = TimeZone.createTimeZone(getState().timeZoneJson);
+            } else {
+                timeZone = TimeZone.createTimeZone(0);
+            }
         }
 
         final boolean changeHasInpactToSteps = stateChangeEvent

@@ -4,6 +4,7 @@ import java.util.Date;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.i18n.client.TimeZone;
 
 public class GanttUtil {
 
@@ -173,5 +174,30 @@ public class GanttUtil {
             el = el.parentNode;
         }
         return el;
+    }-*/;
+
+    /**
+     * Returns daylight saving adjustment (in minutes) for normalized date.
+     * Normalized date is zoned date without DST.
+     * 
+     * @param normalDate
+     *            Date representing target time zone without DST.
+     * @param targetTimeZone
+     * @return Daylight saving adjustment in minutes
+     */
+    public static native int getDaylightAdjustmentForNormalDate(
+            Long normalDate, TimeZone targetTimeZone)
+    /*-{
+        if (targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints == null) {
+            return 0;
+        }
+        var timeInHours = normalDate / 1000 / 3600;
+        var index = 0;
+        while (index < targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints.length
+                && timeInHours >= (targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints[index] 
+                - ( ((index == 0) ? 0 : targetTimeZone.@com.google.gwt.i18n.client.TimeZone::adjustments[index - 1]) / 60) )) {
+            ++index;
+        }
+        return (index == 0) ? 0 : targetTimeZone.@com.google.gwt.i18n.client.TimeZone::adjustments[index - 1];
     }-*/;
 }

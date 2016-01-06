@@ -97,8 +97,9 @@ import com.vaadin.client.event.PointerUpHandler;
  * Sample code snippet:
  * 
  * <pre>
- * GanttWidget widget = new GanttWidget();    
- * widget.setBrowserInfo(isIe(), isIe8(), isIe9(), isChrome(), isSafari(), isWebkit());
+ * GanttWidget widget = new GanttWidget();
+ * widget.setBrowserInfo(isIe(), isIe8(), isIe9(), isChrome(), isSafari(),
+ *         isWebkit());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>
@@ -493,13 +494,16 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         content.getStyle().setHeight(contentHeight, Unit.PX);
 
-        long offset = getLocaleDataProvider().getTimeZoneOffset();
-        GWT.log("GanttWidget's active TimeZone offset: " + offset);
+        GWT.log("GanttWidget's active TimeZone: "
+                + getLocaleDataProvider().getTimeZone().getID()
+                + " (raw offset: "
+                + getLocaleDataProvider().getTimeZone().getStandardOffset()
+                + ")");
 
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
-        timeline.update(resolution, startDate + offset, endDate + offset,
-                firstDayOfRange, firstHourOfRange, localeDataProvider);
+        timeline.update(resolution, startDate, endDate, firstDayOfRange,
+                firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
         updateContainerStyle();
         updateContentWidth();
@@ -1632,12 +1636,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             updateBarPercentagePosition(startDate, endDate, bar);
         }
 
-        long offset = getLocaleDataProvider().getTimeZoneOffset();
         if (move) {
-            getRpc().onMove(stepUid, newStepUid, startDate - offset,
-                    endDate - offset);
+            getRpc().onMove(stepUid, newStepUid, startDate, endDate);
         } else {
-            getRpc().onResize(stepUid, startDate - offset, endDate - offset);
+            getRpc().onResize(stepUid, startDate, endDate);
         }
     }
 

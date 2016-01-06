@@ -45,13 +45,8 @@ public class SubStepWidget extends AbstractStepWidget {
 
     @Override
     protected void updatePositionAndWidth() {
-        long offset = 0;
-        if (getLocaleDataProvider() != null) {
-            offset = getLocaleDataProvider().getTimeZoneOffset();
-        }
-        gantt.updateBarPercentagePosition(step.getStartDate() + offset,
-                step.getEndDate() + offset, getOwner().getStep().getStartDate()
-                        + offset, getOwner().getStep().getEndDate() + offset,
-                getElement());
+        gantt.updateBarPercentagePosition(step.getStartDate(),
+                step.getEndDate(), getOwner().getStep().getStartDate(),
+                getOwner().getStep().getEndDate(), getElement());
     }
 }

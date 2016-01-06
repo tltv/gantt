@@ -63,8 +63,8 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     /**
-     * Set data source for this widget. Called when {@linkplain StepState}
-     * is changed.
+     * Set data source for this widget. Called when {@linkplain StepState} is
+     * changed.
      * 
      * @param step
      */
@@ -115,12 +115,8 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     protected void updatePositionAndWidth() {
-        long offset = 0;
-        if (getLocaleDataProvider() != null) {
-            offset = getLocaleDataProvider().getTimeZoneOffset();
-        }
-        gantt.updateBarPercentagePosition(step.getStartDate() + offset,
-                step.getEndDate() + offset, getElement());
+        gantt.updateBarPercentagePosition(step.getStartDate(),
+                step.getEndDate(), getElement());
     }
 
     protected void updateProgress() {
