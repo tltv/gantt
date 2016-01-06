@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.client.shared.SubStep;
 
 public class GanttTest {
 
@@ -24,6 +25,31 @@ public class GanttTest {
 
         Assert.assertEquals(gantt.getStartDate(), null);
         Assert.assertEquals(gantt.getEndDate(), null);
+    }
+
+    @Test
+    public void removeSteps_withTwoStepsOneHasSubStep_sizeIsZeroAndComponetHierarchyCleaned() {
+        Gantt gantt = new Gantt();
+
+        SubStep subStep = new SubStep();
+        Step stepWithSubStep = new Step();
+        stepWithSubStep.addSubStep(subStep);
+        gantt.addStep(stepWithSubStep);
+        gantt.addStep(new Step());
+
+        AbstractStepComponent stepWithSubStepComponent = gantt
+                .getStepComponent(stepWithSubStep);
+        AbstractStepComponent subStepComponent = gantt
+                .getStepComponent(subStep);
+        Assert.assertNotNull(stepWithSubStepComponent.getParent());
+        Assert.assertNotNull(subStepComponent.getParent());
+
+        gantt.removeSteps();
+        Assert.assertEquals(0, gantt.getSteps().size());
+        Assert.assertNull(stepWithSubStepComponent.getParent());
+        Assert.assertNull(subStepComponent.getParent());
+        Assert.assertNull(gantt.getStepComponent(stepWithSubStep));
+        Assert.assertNull(gantt.getStepComponent(subStep));
     }
 
     @Test

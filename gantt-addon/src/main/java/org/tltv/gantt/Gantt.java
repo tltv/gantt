@@ -30,10 +30,12 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -284,6 +286,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * @return true when removed successfully.
      */
     public boolean removeStep(Step step) {
+        for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
+            step.removeSubStep(subStep);
+        }
         StepComponent sc = stepComponents.remove(step);
         sc.setParent(null);
         return getState().steps.remove(sc);
@@ -348,8 +353,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Removes all the steps in this Gantt chart.
      */
     public void removeSteps() {
-        stepComponents.clear();
-        getState().steps.clear();
+        Set<Step> allSteps = new HashSet<Step>(stepComponents.keySet());
+        for (Step step : allSteps) {
+            removeStep(step);
+        }
     }
 
     /**
@@ -832,7 +839,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return format;
     }
 
-    private AbstractStepComponent getStepComponent(AbstractStep step) {
+    AbstractStepComponent getStepComponent(AbstractStep step) {
         if (stepComponents.containsKey(step)) {
             return stepComponents.get(step);
         } else if (subStepMap.containsKey(step)) {
