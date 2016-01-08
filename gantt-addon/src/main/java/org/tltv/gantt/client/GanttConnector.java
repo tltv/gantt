@@ -389,8 +389,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     protected void init() {
         super.init();
         BrowserInfo info = BrowserInfo.get();
-        getWidget().setBrowserInfo(info.isIE(), info.isIE8(), info.isIE9(),
-                info.isChrome(), info.isSafari(), info.isWebkit());
+        getWidget()
+                .setBrowserInfo(info.isIE(), info.isChrome(), info.isSafari(),
+                        info.isWebkit(), info.getBrowserMajorVersion());
         // If background grid is not needed, ie9 works without
         // setting alwaysCalculatePixelWidths flag to true.
         getWidget().setAlwaysCalculatePixelWidths(

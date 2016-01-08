@@ -98,7 +98,7 @@ public class TimelineWidget extends Widget {
     public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
     public static final int RESOLUTION_HOUR_DAYBLOCK_WIDTH = 4;
 
-    private boolean ie, ie8;
+    private boolean ie, ie8, ie11AndLater;
 
     private boolean forceUpdateFlag;
 
@@ -705,9 +705,10 @@ public class TimelineWidget extends Widget {
         }
     }
 
-    public void setBrowserInfo(boolean ie, boolean ie8) {
+    public void setBrowserInfo(boolean ie, boolean ie8, int majorVersion) {
         this.ie = ie;
         this.ie8 = ie8;
+        ie11AndLater = ie && majorVersion > 10;
     }
 
     /**
@@ -1037,6 +1038,11 @@ public class TimelineWidget extends Widget {
     private void updateResolutionBlockWidths(String pct) {
 
         if (styleElement == null) {
+            if (ie11AndLater && !isTimelineOverflowingHorizontally()) {
+                resolutionDiv.getStyle().setProperty("display", "flex");
+            } else {
+                resolutionDiv.getStyle().clearProperty("display");
+            }
             boolean firstResBlockIsShort = isFirstResBlockShort();
             boolean lastResBlockIsShort = isLastResBlockShort();
             // styleElement is not set, set width for each block explicitly.
@@ -1756,6 +1762,9 @@ public class TimelineWidget extends Widget {
             if (isAlwaysCalculatePixelWidths()) {
                 element.getStyle().setWidth(resBlockWidthPx, Unit.PX);
             } else {
+                if (ie11AndLater) {
+                    element.getStyle().setProperty("flex", "1");
+                }
                 setCssPercentageWidth(element, resBlockWidthPercentage, pct);
             }
         }

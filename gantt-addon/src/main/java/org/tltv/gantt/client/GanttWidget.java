@@ -89,17 +89,17 @@ import com.vaadin.client.event.PointerUpHandler;
  * First of all, after constructing this widget, you need to initialize it by
  * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
  * that, make sure to call
- * {@link #setBrowserInfo(boolean, boolean, boolean, boolean, boolean, boolean)}
- * to let this widget know some details of the browser. And if client supports
- * touch events, let this widget know that by calling
- * {@link #setTouchSupported(boolean)} method before initWidget.
+ * {@link #setBrowserInfo(boolean, boolean, boolean, boolean, int)} to let this
+ * widget know some details of the browser. And if client supports touch events,
+ * let this widget know that by calling {@link #setTouchSupported(boolean)}
+ * method before initWidget.
  * <p>
  * Sample code snippet:
  * 
  * <pre>
  * GanttWidget widget = new GanttWidget();
- * widget.setBrowserInfo(isIe(), isIe8(), isIe9(), isChrome(), isSafari(),
- *         isWebkit());
+ * widget.setBrowserInfo(isIe(), isChrome(), isSafari(), isWebkit(),
+ *         getMajorBrowserVersion());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>
@@ -856,20 +856,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * argument is true.
      * 
      * @param ie
-     * @param ie8
-     * @param ie9
      * @param chrome
      * @param safari
      * @param webkit
+     * @param majorVersion
      */
-    public void setBrowserInfo(boolean ie, boolean ie8, boolean ie9,
-            boolean chrome, boolean safari, boolean webkit) {
+    public void setBrowserInfo(boolean ie, boolean chrome, boolean safari,
+            boolean webkit, int majorVersion) {
         this.ie = ie;
-        this.ie8 = ie8;
+        ie8 = ie && majorVersion == 8;
         this.chrome = chrome;
         this.safari = safari;
         this.webkit = webkit;
-        timeline.setBrowserInfo(ie, ie8);
+        timeline.setBrowserInfo(ie, ie8, majorVersion);
     }
 
     /**
