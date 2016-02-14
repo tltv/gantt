@@ -96,6 +96,7 @@ public class DemoUI extends UI {
             "MMM dd HH:mm:ss zzz yyyy");
 
     private HorizontalLayout controls;
+    private HorizontalLayout subControls;
 
     private GanttListener ganttListener;
 
@@ -278,17 +279,17 @@ public class DemoUI extends UI {
         stepWithSubSteps.addSubStep(subStep2);
         stepWithSubSteps.addSubStep(subStep3);
 
-        gantt.addStep(step1);
-        gantt.addStep(step2);
-        gantt.addStep(step3);
-        gantt.addStep(step4);
-        gantt.addStep(stepWithSubSteps);
+        // gantt.addStep(step1);
+        // gantt.addStep(step2);
+        // gantt.addStep(step3);
+        // gantt.addStep(step4);
+        // gantt.addStep(stepWithSubSteps);
 
         String[] colors = new String[] { "11FF11", "33FF33", "55FF55",
                 "77FF77", "99FF99", "BBFFBB", "DDFFDD" };
 
         cal.setTime(new Date());
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 3; i++) {
             Step step = new Step("Step " + i);
             step.setStartDate(cal.getTime().getTime());
             cal.add(Calendar.DATE, 14);
@@ -365,6 +366,10 @@ public class DemoUI extends UI {
         controls.setMargin(true);
         panel.setContent(controls);
 
+        subControls = new HorizontalLayout();
+        subControls.setSpacing(true);
+        subControls.setVisible(false);
+
         start = createStartDateField();
         end = createEndDateField();
 
@@ -423,15 +428,32 @@ public class DemoUI extends UI {
         timezoneSelect.setImmediate(true);
         timezoneSelect.addValueChangeListener(timezoneValueChangeListener);
 
+        final Button toggleSubControlsBtn = new Button("Show More Settings...");
+        toggleSubControlsBtn.addStyleName("link");
+        toggleSubControlsBtn.addClickListener(new ClickListener() {
+
+            @Override
+            public void buttonClick(ClickEvent event) {
+                subControls.setVisible(!subControls.isVisible());
+                toggleSubControlsBtn.setCaption(subControls.isVisible() ? "Less Settings..."
+                        : "More Settings...");
+            }
+        });
+
         controls.addComponent(start);
         controls.addComponent(end);
         controls.addComponent(reso);
-        controls.addComponent(localeSelect);
-        controls.addComponent(timezoneSelect);
-        controls.addComponent(heightAndUnit);
-        controls.addComponent(widthAndUnit);
-        controls.addComponent(createStep);
-        controls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
+        controls.addComponent(subControls);
+        controls.addComponent(toggleSubControlsBtn);
+        controls.setComponentAlignment(toggleSubControlsBtn,
+                Alignment.BOTTOM_CENTER);
+
+        subControls.addComponent(localeSelect);
+        subControls.addComponent(timezoneSelect);
+        subControls.addComponent(heightAndUnit);
+        subControls.addComponent(widthAndUnit);
+        subControls.addComponent(createStep);
+        subControls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
 
         return panel;
     }
@@ -517,6 +539,15 @@ public class DemoUI extends UI {
         item.setCheckable(true);
         item.setChecked(gantt.isReadOnly());
 
+        editItem.addSeparator();
+        item = editItem.addItem("Create New Step...", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                createStepClickListener.buttonClick(null);
+            }
+        });
+
         item = formatItem.addItem("Set 'MMM' month format", new Command() {
 
             @Override
@@ -562,6 +593,18 @@ public class DemoUI extends UI {
                     }
                 });
 
+        item = viewItem.addItem("Show Control Panel", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                controls.setVisible(!controls.isVisible());
+                selectedItem.setChecked(controls.isVisible());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(true);
+
+        viewItem.addSeparator();
         item = viewItem.addItem("Show years", new Command() {
 
             @Override
