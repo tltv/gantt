@@ -5,12 +5,12 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-demo</artifactId>
 	<packaging>war</packaging>
-	<version>0.9.1</version>
+	<version>0.9.3</version>
 	<name>Gantt Add-on Demo</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<vaadin.version>7.5.9</vaadin.version>
+		<vaadin.version>7.6.2</vaadin.version>
 		<vaadin.plugin.version>${vaadin.version}</vaadin.plugin.version>
 	</properties>
 
@@ -84,6 +84,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+			<version>${vaadin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-client-compiler</artifactId>
 			<version>${vaadin.version}</version>
 		</dependency>
@@ -138,7 +143,7 @@
 						**/VAADIN/gwt-unitCache/**,
 						**/VAADIN/widgetsets/WEB-INF/**,
 						**/WEB-INF/lib/servlet-api-*.jar,
-						**/WEB-INF/lib/vaadin-client-*.jar,
+						**/WEB-INF/lib/vaadin-client-compiler-*.jar,
 						**/WEB-INF/lib/jetty-*.jar,
 						**/WEB-INF/lib/ant-*.jar,
 						**/WEB-INF/classes/gwt-unitCache/**,

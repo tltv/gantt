@@ -5,7 +5,7 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-root</artifactId>
 	<packaging>pom</packaging>
-	<version>0.9.1</version>
+	<version>0.9.3</version>
 	<name>Gantt Add-on Root Project</name>
 
 	<modules>
