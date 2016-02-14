@@ -153,10 +153,18 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public String getStepUidBySubStepElement(Element element) {
+        SubStepWidget w = getSubStepWidgetByElement(element);
+        if (w != null) {
+            return w.getStep().getUid();
+        }
+        return null;
+    }
+
+    public SubStepWidget getSubStepWidgetByElement(Element element) {
         Widget w = getWidget(DOM.getChildIndex(getElement(), element)
                 - countNonSubStepChilds());
         if (w instanceof SubStepWidget) {
-            return ((SubStepWidget) w).getStep().getUid();
+            return (SubStepWidget) w;
         }
         return null;
     }

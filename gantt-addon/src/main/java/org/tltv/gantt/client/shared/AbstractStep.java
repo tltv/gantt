@@ -29,6 +29,7 @@ public abstract class AbstractStep implements Serializable {
     private String backgroundColor = "#A8D9FF";
     private double progress;
     private boolean showProgress;
+    private boolean resizable = true;
 
     private long startDate = -1;
     private long endDate = -1;
@@ -178,6 +179,14 @@ public abstract class AbstractStep implements Serializable {
     /** Show or hide progress bar inside the step. */
     public void setShowProgress(boolean showProgress) {
         this.showProgress = showProgress;
+    }
+
+    public boolean isResizable() {
+        return resizable;
+    }
+
+    public void setResizable(boolean resizable) {
+        this.resizable = resizable;
     }
 
     public enum CaptionMode {

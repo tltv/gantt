@@ -1403,23 +1403,45 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         // get widget by index known by this ComplexPanel.
-        Widget widget = getWidget(getChildIndex(content, stepElement)
-                - getAdditionalNonWidgetContentElementCount());
-        if (widget instanceof StepWidget) {
-            return ((StepWidget) widget).getStep().getUid();
+        StepWidget widget = getStepWidget(stepElement);
+        if (widget != null) {
+            return widget.getStep().getUid();
         }
         return null;
     }
 
     protected String getSubStepUid(Element subStepElement) {
         Element stepElement = subStepElement.getParentElement();
+        StepWidget widget = getStepWidget(stepElement);
+        if (widget != null) {
+            return widget.getStepUidBySubStepElement(subStepElement);
+        }
+        return null;
+    }
+
+    protected SubStepWidget getSubStepWidget(Element subStepElement) {
+        Element stepElement = subStepElement.getParentElement();
+        StepWidget widget = getStepWidget(stepElement);
+        if (widget != null) {
+            return widget.getSubStepWidgetByElement(subStepElement);
+        }
+        return null;
+    }
+
+    protected StepWidget getStepWidget(Element stepElement) {
         Widget widget = getWidget(getChildIndex(content, stepElement)
                 - getAdditionalNonWidgetContentElementCount());
         if (widget instanceof StepWidget) {
-            return ((StepWidget) widget)
-                    .getStepUidBySubStepElement(subStepElement);
+            return (StepWidget) widget;
         }
         return null;
+    }
+
+    protected AbstractStepWidget getAbstractStepWidget(Element stepElement) {
+        if (isSubBar(stepElement)) {
+            return getSubStepWidget(stepElement);
+        }
+        return getStepWidget(stepElement);
     }
 
     protected BgGridElement createBackgroundGrid() {
@@ -1695,8 +1717,17 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private boolean detectResizing(Element bar) {
-        return isResizableSteps() && !hasSubBars(bar)
+        return isResizableStep(bar) && !hasSubBars(bar)
                 && (isResizingLeft(bar) || isResizingRight(bar));
+    }
+
+    private boolean isResizableStep(Element bar) {
+        if (!isResizableSteps()) {
+            return false;
+        }
+        AbstractStepWidget step = getAbstractStepWidget(bar);
+        return step != null && step.getStep() != null
+                && step.getStep().isResizable();
     }
 
     private boolean isResizingLeft(Element bar) {
