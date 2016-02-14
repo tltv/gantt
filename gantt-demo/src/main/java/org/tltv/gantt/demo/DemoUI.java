@@ -84,6 +84,8 @@ public class DemoUI extends UI {
     public static class Servlet extends VaadinServlet {
     }
 
+    private TimeZone defaultTimeZone;
+
     private Gantt gantt;
 
     private NativeSelect localeSelect;
@@ -166,7 +168,7 @@ public class DemoUI extends UI {
         public void valueChange(ValueChangeEvent event) {
             String tzId = (String) event.getProperty().getValue();
             if ("Default".equals(tzId)) {
-                gantt.setTimeZone(null);
+                gantt.setTimeZone(getDefaultTimeZone());
             } else {
                 gantt.setTimeZone(TimeZone.getTimeZone(tzId));
             }
@@ -209,6 +211,7 @@ public class DemoUI extends UI {
         gantt.setResizableSteps(true);
         gantt.setMovableSteps(true);
         gantt.addAttachListener(ganttAttachListener);
+        gantt.setTimeZone(getDefaultTimeZone());
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         gantt.setStartDate(cal.getTime());
@@ -417,7 +420,7 @@ public class DemoUI extends UI {
         timezoneSelect.setNullSelectionAllowed(false);
         timezoneSelect.addItem("Default");
         timezoneSelect.setItemCaption("Default", "Default ("
-                + TimeZone.getDefault().getDisplayName() + ")");
+                + getDefaultTimeZone().getDisplayName() + ")");
         for (String timezoneId : Util.getSupportedTimeZoneIDs()) {
             TimeZone tz = TimeZone.getTimeZone(timezoneId);
             timezoneSelect.addItem(timezoneId);
@@ -915,5 +918,18 @@ public class DemoUI extends UI {
         subStep.setStyleName(dataSource.getStyleName());
         ((Step) parentStepSelect.getValue()).addSubStep(subStep);
         return subStep;
+    }
+
+    private TimeZone getDefaultTimeZone() {
+        if (defaultTimeZone != null) {
+            return defaultTimeZone;
+        }
+        TimeZone tz = TimeZone.getDefault();
+        if (Util.getSupportedTimeZoneIDs().contains(tz.getID())) {
+            defaultTimeZone = tz;
+        } else {
+            defaultTimeZone = TimeZone.getTimeZone("Europe/Helsinki");
+        }
+        return defaultTimeZone;
     }
 }
