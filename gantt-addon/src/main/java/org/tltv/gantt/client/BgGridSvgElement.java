@@ -77,6 +77,11 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
         this.gridBlockWidthPx = gridBlockWidthPx;
         this.gridBlockHeightPx = gridBlockHeightPx;
 
+        // set background to cover the whole content area.
+        setAttributeNS(svgElement, "width", content.getClientWidth()
+                + gridBlockWidthPx + "px");
+        setAttributeNS(svgElement, "height", content.getClientHeight()
+                + gridBlockHeightPx + "px");
         setAttributeNS(pattern, "width", "" + gridBlockWidthPx);
         setAttributeNS(pattern, "height", "" + gridBlockHeightPx);
 
