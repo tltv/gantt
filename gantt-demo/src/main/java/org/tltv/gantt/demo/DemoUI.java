@@ -279,17 +279,17 @@ public class DemoUI extends UI {
         stepWithSubSteps.addSubStep(subStep2);
         stepWithSubSteps.addSubStep(subStep3);
 
-        // gantt.addStep(step1);
-        // gantt.addStep(step2);
-        // gantt.addStep(step3);
-        // gantt.addStep(step4);
-        // gantt.addStep(stepWithSubSteps);
+        gantt.addStep(step1);
+        gantt.addStep(step2);
+        gantt.addStep(step3);
+        gantt.addStep(step4);
+        gantt.addStep(stepWithSubSteps);
 
         String[] colors = new String[] { "11FF11", "33FF33", "55FF55",
                 "77FF77", "99FF99", "BBFFBB", "DDFFDD" };
 
         cal.setTime(new Date());
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 10; i++) {
             Step step = new Step("Step " + i);
             step.setStartDate(cal.getTime().getTime());
             cal.add(Calendar.DATE, 14);
@@ -684,6 +684,11 @@ public class DemoUI extends UI {
         captionMode.setVisible(false);
         hidden.add(captionMode);
 
+        CheckBox resizable = new CheckBox("Resizable");
+        group.bind(resizable, "resizable");
+        resizable.setVisible(false);
+        hidden.add(resizable);
+
         CheckBox showProgress = new CheckBox("Show progress");
         group.bind(showProgress, "showProgress");
         showProgress.setVisible(false);
@@ -772,6 +777,7 @@ public class DemoUI extends UI {
         content.addComponent(captionField);
         content.addComponent(captionMode);
         content.addComponent(descriptionField);
+        content.addComponent(resizable);
         content.addComponent(showProgress);
         content.addComponent(progress);
         content.addComponent(predecessorSelect);
