@@ -329,6 +329,18 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                             source.getStep().getUid());
                     return true;
                 }
+
+                if (source.getStep().getPredecessor() != null) {
+                    StepWidget w = getStepWidget(source.getStep()
+                            .getPredecessor());
+                    if (w.getStep() != null
+                            && w.getStep().getPredecessor() != null
+                            && w.getStep().getPredecessor()
+                                    .equals(sw.getStep())) {
+                        // there's relation already, with different direction.
+                        return false;
+                    }
+                }
                 rpc.onPredecessorChanged(source.getStep().getPredecessor()
                         .getUid(), sw.getStep().getUid(), source.getStep()
                         .getUid());
@@ -405,6 +417,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
     @Override
     public void onUnregister() {
+        super.onUnregister();
         getLayoutManager().removeElementResizeListener(
                 getWidget().getElement(), widgetResizeListener);
         unRegisterScrollDelegateHandlers();
