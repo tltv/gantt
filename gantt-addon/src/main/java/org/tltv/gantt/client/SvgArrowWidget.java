@@ -260,6 +260,17 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
     }
 
     @Override
+    protected void onDetach() {
+        if (isAttached()) {
+            // Only call onDetach for attached widget. Otherwise GanttWidget's
+            // content widget container may throw IllegalStateException on
+            // detach when this widget is already detached explicitly by
+            // GanttWidget.unregisterContentElement(SvgArrowWidget).
+            super.onDetach();
+        }
+    }
+
+    @Override
     public void setWidth(double width) {
         this.width = (int) width;
         setAttributeNS(getElement(), "width", getWidthWithMargin());
