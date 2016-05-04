@@ -78,6 +78,7 @@ public class StepComponent extends AbstractStepComponent implements
         gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
+    /** Detach sub-step component from the UI. */
     @Override
     public void onRemoveSubStep(SubStep subStep) {
         SubStepComponent component = gantt.subStepMap.get(subStep);

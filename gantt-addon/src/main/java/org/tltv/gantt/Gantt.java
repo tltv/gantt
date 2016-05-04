@@ -286,10 +286,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * @return true when removed successfully.
      */
     public boolean removeStep(Step step) {
-        for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
-            step.removeSubStep(subStep);
-        }
         StepComponent sc = stepComponents.remove(step);
+        for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
+            sc.onRemoveSubStep(subStep);
+        }
         sc.setParent(null);
         return getState().steps.remove(sc);
     }
