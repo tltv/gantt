@@ -80,6 +80,7 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_MONTH = "month";
     public static final String STYLE_YEAR = "year";
     public static final String STYLE_DAY = "day";
+    public static final String STYLE_WEEK = "w";
     public static final String STYLE_RESOLUTION = "resolution";
     public static final String STYLE_WEEK_FIRST = "week-f";
     public static final String STYLE_WEEK_LAST = "week-l";
@@ -90,13 +91,13 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_FIRST = "f-col";
     public static final String STYLE_CENTER = "c-col";
     public static final String STYLE_LAST = "l-col";
+    public static final String STYLE_MEASURE = "measure";
 
     public static final int DAYS_IN_WEEK = 7;
     public static final int HOURS_IN_DAY = 24;
     public static final long DAY_INTERVAL = 24 * 60 * 60 * 1000;
     public static final long HOUR_INTERVAL = 60 * 60 * 1000;
     public static final int RESOLUTION_WEEK_DAYBLOCK_WIDTH = 4;
-    public static final int RESOLUTION_HOUR_DAYBLOCK_WIDTH = 4;
 
     private boolean ie, ie8, ie11AndLater;
 
@@ -1969,20 +1970,30 @@ public class TimelineWidget extends Widget {
 
     private int calculateResolutionMinWidth() {
 
-        if (resolution == Resolution.Week) {
-            return RESOLUTION_WEEK_DAYBLOCK_WIDTH;
-        }
-
         boolean removeResolutionDiv = false;
         if (!resolutionDiv.hasParentElement()) {
             removeResolutionDiv = true;
             getElement().appendChild(resolutionDiv);
         }
         DivElement resBlockMeasure = DivElement.as(DOM.createDiv());
-        resBlockMeasure.setInnerText("MM");
-        resBlockMeasure.setClassName(STYLE_COL);
+        if (resolution == Resolution.Week) {
+            // configurable with '.col.w.measure' selector
+            resBlockMeasure.setClassName(STYLE_COL + " " + STYLE_WEEK + " "
+                    + STYLE_MEASURE);
+        } else {
+            // measure for text 'MM'
+            resBlockMeasure.setInnerText("MM");
+            // configurable with '.col.measure' selector
+            resBlockMeasure.setClassName(STYLE_COL + " " + STYLE_MEASURE);
+        }
         resolutionDiv.appendChild(resBlockMeasure);
         int width = resBlockMeasure.getClientWidth();
+        if (resolution == Resolution.Week) {
+            // divide given width by number of days in week
+            width = width / DAYS_IN_WEEK;
+        }
+        width = (width < RESOLUTION_WEEK_DAYBLOCK_WIDTH) ? RESOLUTION_WEEK_DAYBLOCK_WIDTH
+                : width;
         resBlockMeasure.removeFromParent();
         if (removeResolutionDiv) {
             resolutionDiv.removeFromParent();

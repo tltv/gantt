@@ -57,6 +57,15 @@
 			background-color: #ccc;
 		}
 		
+		.col.measure {
+		    // Change min-width to adjust grid's cell width with day and hour-resolution.
+			//min-width: 40px;
+		}
+		.col.w.measure {
+			// Change min-width to adjust grid's cell width with week-resolution.
+			//min-width: 70px;
+		}
+		
 		.row {
 			width: 100%;
 			float: left;
