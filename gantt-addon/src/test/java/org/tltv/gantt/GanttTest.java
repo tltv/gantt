@@ -121,18 +121,19 @@ public class GanttTest {
     }
 
     @Test
-    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_DST_OFFSET_OVER_0() {
+    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_TimeZoneAustraliaMelbourne() {
         Gantt gantt = new Gantt();
         gantt.setResolution(Resolution.Day);
+        gantt.setTimeZone(TimeZone.getTimeZone("Australia/Melbourne"));
 
-        DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000);
-        DateTime expectedEnd = new DateTime(2014, 9, 1, 23, 59, 59, 999);
-        Long dst_offset = Long.valueOf(Calendar.getInstance().get(
-                Calendar.DST_OFFSET));
-        expectedEnd = expectedEnd.minusMillis(dst_offset.intValue());
+        DateTimeZone tz = DateTimeZone.forTimeZone(TimeZone
+                .getTimeZone("Australia/Melbourne"));
 
-        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
-        DateTime end = new DateTime(2014, 9, 1, 10, 30, 30, 123);
+        DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000, tz);
+        DateTime expectedEnd = new DateTime(2014, 9, 1, 23, 59, 59, 999, tz);
+
+        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123, tz);
+        DateTime end = new DateTime(2014, 9, 1, 10, 30, 30, 123, tz);
 
         gantt.setStartDate(start.toDate());
         gantt.setEndDate(end.toDate());
@@ -142,18 +143,19 @@ public class GanttTest {
     }
 
     @Test
-    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_DST_OFFSET_0() {
+    public void setDateRangeForDayResolutionAndDefaultTimezoneTest_TimeZonePacificHonolulu() {
         Gantt gantt = new Gantt();
         gantt.setResolution(Resolution.Day);
+        gantt.setTimeZone(TimeZone.getTimeZone("Pacific/Honolulu"));
 
-        DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000);
-        DateTime expectedEnd = new DateTime(2015, 1, 1, 23, 59, 59, 999);
-        Long dst_offset = Long.valueOf(Calendar.getInstance().get(
-                Calendar.DST_OFFSET));
-        expectedEnd = expectedEnd.minusMillis(dst_offset.intValue());
+        DateTimeZone tz = DateTimeZone.forTimeZone(TimeZone
+                .getTimeZone("Pacific/Honolulu"));
 
-        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123);
-        DateTime end = new DateTime(2015, 1, 1, 10, 30, 30, 123);
+        DateTime expectedStart = new DateTime(2014, 1, 1, 0, 0, 0, 000, tz);
+        DateTime expectedEnd = new DateTime(2015, 1, 1, 23, 59, 59, 999, tz);
+
+        DateTime start = new DateTime(2014, 1, 1, 10, 30, 30, 123, tz);
+        DateTime end = new DateTime(2015, 1, 1, 10, 30, 30, 123, tz);
 
         gantt.setStartDate(start.toDate());
         gantt.setEndDate(end.toDate());
@@ -271,62 +273,6 @@ public class GanttTest {
 
         Assert.assertEquals(gantt.getStartDate(), expectedStart.toDate());
         Assert.assertEquals(gantt.getEndDate(), expectedEnd.toDate());
-    }
-
-    @Test
-    public void dateAndTimeZoneTest() {
-        Locale locale = Locale.GERMANY;
-
-        long tzGMTOffset = getTimezoneOffset(
-                TimeZone.getTimeZone("Europe/London"), locale); // gmt+0
-        long tzGMTplus3Offset = getTimezoneOffset(
-                TimeZone.getTimeZone("Asia/Tehran"), locale); // gmt+3
-        long tzGMTplus10Offset = getTimezoneOffset(
-                TimeZone.getTimeZone("Australia/Melbourne"), locale); // gmt+10
-        long tzGMTminus10Offset = getTimezoneOffset(
-                TimeZone.getTimeZone("Pacific/Honolulu"), locale); // gmt-10
-
-        Assert.assertEquals(0, tzGMTOffset);
-
-        Calendar cal = Calendar.getInstance(
-                TimeZone.getTimeZone("Australia/Melbourne"), locale);
-        cal.set(Calendar.YEAR, 2014);
-        cal.set(Calendar.MONTH, 0);
-        cal.set(Calendar.DATE, 1);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-
-        DateTime dateGMT = new DateTime(2014, 1, 1, 0, 0, 0, 000,
-                DateTimeZone.forTimeZone(TimeZone.getTimeZone("Europe/London")));
-
-        DateTime dateGMTplus3 = new DateTime(2014, 1, 1, 0, 0, 0, 000,
-                DateTimeZone.forTimeZone(TimeZone.getTimeZone("Asia/Tehran")));
-
-        DateTime dateGMTplus10 = new DateTime(2014, 1, 1, 0, 0, 0, 000,
-                DateTimeZone.forTimeZone(TimeZone
-                        .getTimeZone("Australia/Melbourne")));
-
-        DateTime dateGMTminus10 = new DateTime(2014, 1, 1, 0, 0, 0, 000,
-                DateTimeZone.forTimeZone(TimeZone
-                        .getTimeZone("Pacific/Honolulu")));
-
-        long gmtTime = dateGMT.toDate().getTime();
-        long gmtp3Time = dateGMTplus3.toDate().getTime();
-        long gmtp10Time = dateGMTplus10.toDate().getTime();
-        long gmtm10Time = dateGMTminus10.toDate().getTime();
-
-        Assert.assertEquals(cal.getTime().getTime(), gmtp10Time);
-
-        Assert.assertEquals(gmtTime, (gmtp3Time + tzGMTplus3Offset));
-        Assert.assertEquals(gmtTime, (gmtp10Time + tzGMTplus10Offset));
-        Assert.assertEquals(gmtTime, (gmtm10Time + tzGMTminus10Offset));
-
-        Assert.assertEquals((gmtp3Time + tzGMTplus3Offset),
-                (gmtp10Time + tzGMTplus10Offset));
-        Assert.assertEquals((gmtp3Time + tzGMTplus3Offset),
-                (gmtm10Time + tzGMTminus10Offset));
     }
 
     @Test
