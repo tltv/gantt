@@ -66,7 +66,6 @@ import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Slider;
-import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
@@ -183,9 +182,6 @@ public class DemoUI extends UI {
 
         MenuBar menu = controlsMenuBar();
         Panel controls = createControls();
-
-        TabSheet tabsheet = new TabSheet();
-        tabsheet.setSizeFull();
 
         Component wrapper = UriFragmentWrapperFactory.wrapByUriFragment(UI
                 .getCurrent().getPage().getUriFragment(), gantt);
