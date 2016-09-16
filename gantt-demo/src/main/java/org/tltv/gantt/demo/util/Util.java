@@ -11,7 +11,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.google.gwt.i18n.client.constants.TimeZoneConstants;
+import org.tltv.gantt.Gantt;
+
 import com.vaadin.data.Property.ValueChangeEvent;
 import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
@@ -188,11 +189,9 @@ public class Util {
      */
     public static Set<String> getSupportedTimeZoneIDs() {
         Set<String> zones = new HashSet<String>();
-        String properties = TimeZoneConstants.class.getSimpleName()
-                + ".properties";
+        String properties = "TimeZoneConstants.properties";
         // read time zones from TimeZoneConstants.properties.
-        InputStream is = TimeZoneConstants.class
-                .getResourceAsStream(properties);
+        InputStream is = Gantt.class.getResourceAsStream(properties);
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader reader = new BufferedReader(isr);
         try {

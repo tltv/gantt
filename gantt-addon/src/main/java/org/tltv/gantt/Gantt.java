@@ -48,7 +48,6 @@ import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
 
-import com.google.gwt.i18n.client.constants.TimeZoneConstants;
 import com.vaadin.shared.Connector;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
@@ -879,15 +878,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     protected InputStream createTimeZonePropertiesInputStream(
             String propertiesFileName) {
         // read time zone json from TimeZoneConstants.properties.
-        return TimeZoneConstants.class.getResourceAsStream(propertiesFileName);
+        return Gantt.class.getResourceAsStream(propertiesFileName);
     }
 
     protected String getTimeZoneJson(String id) {
         if (timezoneJsonCache.containsKey(id)) {
             return timezoneJsonCache.get(id);
         }
-        String propertiesFileName = TimeZoneConstants.class.getSimpleName()
-                + ".properties";
+        String propertiesFileName = "TimeZoneConstants.properties";
         // read time zone json from TimeZoneConstants.properties.
         InputStream is = createTimeZonePropertiesInputStream(propertiesFileName);
         BufferedReader reader = createTimeZonePropertiesReader(is);
