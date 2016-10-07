@@ -54,6 +54,7 @@ import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.touch.client.Point;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -126,6 +127,21 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private static final String STYLE_MOVING = "moving";
     private static final String STYLE_RESIZING = "resizing";
     private static final String STYLE_MOVE_ELEMENT = "mv-el";
+
+    private HandlerRegistration msPointerDownHandlerRegistration;
+    private HandlerRegistration msPointerUpHandlerRegistration;
+    private HandlerRegistration msPointerMoveHandlerRegistration;
+    private HandlerRegistration msPointerCancelHandlerRegistration;
+
+    private HandlerRegistration touchStartHandlerRegistration;
+    private HandlerRegistration touchEndHandlerRegistration;
+    private HandlerRegistration touchMoveHandlerRegistration;
+    private HandlerRegistration touchCancelHandlerRegistration;
+
+    private HandlerRegistration scrollHandlerRegistration;
+    private HandlerRegistration mouseMoveHandlerRegistration;
+    private HandlerRegistration mouseDownHandlerHandlerRegistration;
+    private HandlerRegistration mouseUpHandlerHandlerRegistration;
 
     private WidgetCollection children = new WidgetCollection(this);
 
@@ -433,7 +449,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             LocaleDataProvider localeDataProvider) {
         setRpc(ganttRpc);
         setLocaleDataProvider(localeDataProvider);
-        initListeners();
+        resetListeners();
     }
 
     /**
@@ -695,28 +711,70 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     /**
-     * Initialize listeners.
+     * Reset listeners.
      */
-    protected void initListeners() {
+    public void resetListeners() {
         Event.sinkEvents(container, Event.ONSCROLL);
 
-        addHandler(scrollHandler, ScrollEvent.getType());
+        if (scrollHandlerRegistration == null) {
+            scrollHandlerRegistration = addHandler(scrollHandler,
+                    ScrollEvent.getType());
+        }
         if (isMsTouchSupported()) {
             // IE10 pointer events (ms-prefixed events)
-            addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
-            addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
-            addDomHandler(msPointerMoveHandler, PointerMoveEvent.getType());
-            addHandler(msPointerCancelHandler, PointerCancelEvent.getType());
+            if (msPointerDownHandlerRegistration == null) {
+                msPointerDownHandlerRegistration = addDomHandler(
+                        msPointerDownHandler, PointerDownEvent.getType());
+            }
+            if (msPointerUpHandlerRegistration == null) {
+                msPointerUpHandlerRegistration = addDomHandler(
+                        msPointerUpHandler, PointerUpEvent.getType());
+            }
+            if (msPointerMoveHandlerRegistration == null) {
+                msPointerMoveHandlerRegistration = addDomHandler(
+                        msPointerMoveHandler, PointerMoveEvent.getType());
+            }
+            if (msPointerCancelHandlerRegistration == null) {
+                msPointerCancelHandlerRegistration = addHandler(
+                        msPointerCancelHandler, PointerCancelEvent.getType());
+            }
         } else if (touchSupported) {
             // touch events replaces mouse events
-            addDomHandler(touchStartHandler, TouchStartEvent.getType());
-            addDomHandler(touchEndHandler, TouchEndEvent.getType());
-            addDomHandler(touchMoveHandler, TouchMoveEvent.getType());
-            addHandler(touchCancelHandler, TouchCancelEvent.getType());
+            if (touchStartHandlerRegistration == null) {
+                touchStartHandlerRegistration = addDomHandler(
+                        touchStartHandler, TouchStartEvent.getType());
+            }
+            if (touchEndHandlerRegistration == null) {
+                touchEndHandlerRegistration = addDomHandler(touchEndHandler,
+                        TouchEndEvent.getType());
+            }
+            if (touchMoveHandlerRegistration == null) {
+                touchMoveHandlerRegistration = addDomHandler(touchMoveHandler,
+                        TouchMoveEvent.getType());
+            }
+            if (touchCancelHandlerRegistration == null) {
+                touchCancelHandlerRegistration = addHandler(touchCancelHandler,
+                        TouchCancelEvent.getType());
+            }
+
         } else {
-            addDomHandler(mouseDownHandler, MouseDownEvent.getType());
-            addDomHandler(mouseUpHandler, MouseUpEvent.getType());
-            addDomHandler(mouseMoveHandler, MouseMoveEvent.getType());
+            if (mouseDownHandlerHandlerRegistration == null) {
+                mouseDownHandlerHandlerRegistration = addDomHandler(
+                        mouseDownHandler, MouseDownEvent.getType());
+            }
+            if (mouseUpHandlerHandlerRegistration == null) {
+                mouseUpHandlerHandlerRegistration = addDomHandler(
+                        mouseUpHandler, MouseUpEvent.getType());
+            }
+            if (isMovableSteps() || isResizableSteps()) {
+                if (mouseMoveHandlerRegistration == null) {
+                    mouseMoveHandlerRegistration = addDomHandler(
+                            mouseMoveHandler, MouseMoveEvent.getType());
+                }
+            } else if (mouseMoveHandlerRegistration != null) {
+                mouseMoveHandlerRegistration.removeHandler();
+                mouseMoveHandlerRegistration = null;
+            }
         }
     }
 

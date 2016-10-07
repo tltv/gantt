@@ -472,6 +472,10 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         if (!notifyHeight && stateChangeEvent.hasPropertyChanged("resolution")) {
             notifyHeight = !stateChangeEvent.isInitialStateChange();
         }
+        if (stateChangeEvent.hasPropertyChanged("movableSteps")
+                || stateChangeEvent.hasPropertyChanged("resizableSteps")) {
+            getWidget().resetListeners();
+        }
 
         if (stateChangeEvent.hasPropertyChanged("readOnly")) {
             getWidget().setMovableSteps(
