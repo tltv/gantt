@@ -539,6 +539,29 @@ public class DemoUI extends UI {
         item.setChecked(gantt.isReadOnly());
 
         editItem.addSeparator();
+        item = editItem.addItem("Movable Steps", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setMovableSteps(!gantt.isMovable());
+                selectedItem.setChecked(gantt.isMovable());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isMovable());
+
+        item = editItem.addItem("Resizable Steps", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setResizableSteps(!gantt.isResizableSteps());
+                selectedItem.setChecked(gantt.isResizableSteps());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isResizableSteps());
+
+        editItem.addSeparator();
         item = editItem.addItem("Create New Step...", new Command() {
 
             @Override
