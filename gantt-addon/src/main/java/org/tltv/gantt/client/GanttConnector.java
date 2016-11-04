@@ -33,6 +33,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
@@ -47,6 +48,7 @@ import com.vaadin.client.ComponentConnector;
 import com.vaadin.client.ConnectorHierarchyChangeEvent;
 import com.vaadin.client.LocaleNotLoadedException;
 import com.vaadin.client.LocaleService;
+import com.vaadin.client.MouseEventDetailsBuilder;
 import com.vaadin.client.WidgetUtil;
 import com.vaadin.client.communication.RpcProxy;
 import com.vaadin.client.communication.StateChangeEvent;
@@ -58,6 +60,7 @@ import com.vaadin.client.ui.layout.ElementResizeEvent;
 import com.vaadin.client.ui.layout.ElementResizeListener;
 import com.vaadin.client.ui.table.TableConnector;
 import com.vaadin.shared.Connector;
+import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.ui.Connect;
 
 /**
@@ -280,8 +283,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     GanttRpc ganttRpc = new GanttRpc() {
 
         @Override
-        public void stepClicked(String stepUid) {
-            rpc.stepClicked(stepUid);
+        public void stepClicked(String stepUid, NativeEvent event,
+                Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder
+                    .buildMouseEventDetails(event, relativeToElement);
+            rpc.stepClicked(stepUid, details);
         }
 
         @Override

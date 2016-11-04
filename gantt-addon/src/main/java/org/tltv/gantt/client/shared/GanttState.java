@@ -58,6 +58,9 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     @DelegateToWidget
     public String yearFormat;
 
+    @DelegateToWidget
+    public boolean defaultContextMenuEnabled = false;
+
     public List<Connector> steps = new LinkedList<Connector>();
 
     public Connector verticalScrollDelegateTarget;

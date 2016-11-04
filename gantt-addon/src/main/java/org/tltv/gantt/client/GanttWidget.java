@@ -38,6 +38,8 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ContextMenuEvent;
+import com.google.gwt.event.dom.client.ContextMenuHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
@@ -143,6 +145,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private HandlerRegistration mouseDownHandlerHandlerRegistration;
     private HandlerRegistration mouseUpHandlerHandlerRegistration;
 
+    private HandlerRegistration contextMenuHandlerRegistration;
+
     private WidgetCollection children = new WidgetCollection(this);
 
     private boolean enabled = true;
@@ -150,6 +154,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private boolean movableSteps;
     private boolean resizableSteps;
     private boolean backgroundGridEnabled;
+    private boolean defaultContextMenuEnabled = false;
 
     private GanttRpc ganttRpc;
     private LocaleDataProvider localeDataProvider;
@@ -175,6 +180,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected Set<Widget> extraContentElements = new HashSet<Widget>();
 
     protected boolean clickOnNextMouseUp = true;
+    protected boolean secondaryClickOnNextMouseUp = true;
     protected Point movePoint;
     protected boolean resizing = false;
     protected boolean resizingFromLeft = false;
@@ -243,6 +249,16 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             GWT.log("onMouseDown(MouseDownEvent)");
             if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
                 GanttWidget.this.onTouchOrMouseDown(event.getNativeEvent());
+            } else {
+                secondaryClickOnNextMouseUp = true;
+                new Timer() {
+
+                    @Override
+                    public void run() {
+                        secondaryClickOnNextMouseUp = false;
+                    }
+                }.schedule(CLICK_INTERVAL);
+                event.stopPropagation();
             }
         }
     };
@@ -253,6 +269,26 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         public void onMouseUp(MouseUpEvent event) {
             if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
                 GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
+
+            } else {
+                if (secondaryClickOnNextMouseUp) {
+                    Element bar = getBar(event.getNativeEvent());
+                    if (bar != null && isEnabled()) {
+                        getRpc().stepClicked(getStepUid(bar),
+                                event.getNativeEvent(), bar);
+                    }
+                }
+                secondaryClickOnNextMouseUp = true;
+            }
+        }
+    };
+
+    private ContextMenuHandler contextMenuHandler = new ContextMenuHandler() {
+
+        @Override
+        public void onContextMenu(ContextMenuEvent event) {
+            if (!defaultContextMenuEnabled) {
+                event.preventDefault();
             }
         }
     };
@@ -715,6 +751,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      */
     public void resetListeners() {
         Event.sinkEvents(container, Event.ONSCROLL);
+        Event.sinkEvents(container, Event.ONCONTEXTMENU);
+
+        if (contextMenuHandlerRegistration == null) {
+            contextMenuHandlerRegistration = addDomHandler(contextMenuHandler,
+                    ContextMenuEvent.getType());
+        }
 
         if (scrollHandlerRegistration == null) {
             scrollHandlerRegistration = addHandler(scrollHandler,
@@ -893,6 +935,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     public void setDayFormat(String dayFormat) {
         timeline.setDayFormat(dayFormat);
+    }
+
+    public boolean isDefaultContextMenuEnabled() {
+        return defaultContextMenuEnabled;
+    }
+
+    public void setDefaultContextMenuEnabled(boolean defaultContextMenuEnabled) {
+        this.defaultContextMenuEnabled = defaultContextMenuEnabled;
     }
 
     /**
@@ -1301,7 +1351,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
             if (isEnabled()) {
-                getRpc().stepClicked(getStepUid(bar));
+                getRpc().stepClicked(getStepUid(bar), event, bar);
             }
 
         } else {

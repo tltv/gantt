@@ -49,6 +49,7 @@ import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
 
 import com.vaadin.shared.Connector;
+import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Table;
@@ -95,8 +96,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     private GanttServerRpc rpc = new GanttServerRpc() {
 
         @Override
-        public void stepClicked(String stepUid) {
-            fireClickEvent(stepUid);
+        public void stepClicked(String stepUid, MouseEventDetails details) {
+            fireClickEvent(stepUid, details);
         }
 
         @Override
@@ -513,6 +514,18 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return getState().dayFormat;
     }
 
+    /**
+     * Return true when Default Context Menu will show up on "Right click". It's
+     * disabled by default.
+     */
+    public boolean isDefaultContextMenuEnabled() {
+        return getState().defaultContextMenuEnabled;
+    }
+
+    public void setDefaultContextMenuEnabled(boolean enabled) {
+        getState().defaultContextMenuEnabled = enabled;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -925,9 +938,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return Arrays.copyOf(s.getMonths(), 12);
     }
 
-    protected void fireClickEvent(String stepUid) {
+    protected void fireClickEvent(String stepUid, MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
-        fireEvent(new ClickEvent(this, step));
+        fireEvent(new ClickEvent(this, step, details));
     }
 
     protected void fireMoveEvent(String stepUid, String newStepUid,
@@ -1120,10 +1133,13 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     public class ClickEvent extends Component.Event {
 
         private AbstractStep step;
+        private MouseEventDetails details;
 
-        public ClickEvent(Gantt source, AbstractStep step) {
+        public ClickEvent(Gantt source, AbstractStep step,
+                MouseEventDetails details) {
             super(source);
             this.step = step;
+            this.details = details;
         }
 
         /**
@@ -1137,6 +1153,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         public void setStep(AbstractStep step) {
             this.step = step;
+        }
+
+        public MouseEventDetails getDetails() {
+            return details;
         }
 
     }
@@ -1345,4 +1365,5 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
         return l.iterator();
     }
+
 }
