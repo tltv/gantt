@@ -46,6 +46,7 @@ import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.converter.DateToLongConverter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.MouseEventDetails.MouseButton;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Alignment;
@@ -301,7 +302,13 @@ public class DemoUI extends UI {
 
             @Override
             public void onGanttClick(org.tltv.gantt.Gantt.ClickEvent event) {
-                openStepEditor(event.getStep());
+                if (MouseButton.RIGHT.equals(event.getDetails().getButton())) {
+                    Notification.show(String.format("Right Click on Step %s",
+                            event.getStep().getCaption()),
+                            Type.TRAY_NOTIFICATION);
+                } else {
+                    openStepEditor(event.getStep());
+                }
             }
         });
 
@@ -560,6 +567,18 @@ public class DemoUI extends UI {
         });
         item.setCheckable(true);
         item.setChecked(gantt.isResizableSteps());
+
+        item = editItem.addItem("Disable Default Context Menu", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setDefaultContextMenuEnabled(!gantt
+                        .isDefaultContextMenuEnabled());
+                selectedItem.setChecked(!gantt.isDefaultContextMenuEnabled());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(!gantt.isDefaultContextMenuEnabled());
 
         editItem.addSeparator();
         item = editItem.addItem("Create New Step...", new Command() {
