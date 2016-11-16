@@ -525,6 +525,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         } else if (lineIndex >= 0) {
             double top = height * lineIndex;
             bar.getStyle().setTop(top, Unit.PX);
+            if( contentHeight < (top + height) ) {
+                contentHeight = top + height;
+            }
         } else {
             bar.getStyle().setTop(contentHeight, Unit.PX);
             contentHeight += height;
