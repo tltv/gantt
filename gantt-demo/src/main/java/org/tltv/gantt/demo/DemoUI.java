@@ -25,6 +25,7 @@ import java.util.TimeZone;
 
 import javax.servlet.annotation.WebServlet;
 
+import com.vaadin.data.Property;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
@@ -321,10 +322,15 @@ public class DemoUI extends UI {
 
                 dateFormat.setTimeZone(gantt.getTimeZone());
 
-                Notification.show("Moved " + event.getStep().getCaption()
+                String message = "Moved " + event.getStep().getCaption()
                         + " to Start Date: " + dateFormat.format(start)
-                        + " End Date: " + dateFormat.format(end),
-                        Type.TRAY_NOTIFICATION);
+                        + " End Date: " + dateFormat.format(end);
+
+                if( gantt.isMovableStepsBetweenLines() ) {
+                    message += " Line index: " + event.getLineIndex();
+                }
+
+                Notification.show(message,Type.TRAY_NOTIFICATION);
             }
         });
 
@@ -378,6 +384,15 @@ public class DemoUI extends UI {
 
         start = createStartDateField();
         end = createEndDateField();
+
+        CheckBox moveStepsBetweenLines = new CheckBox("Move steps between lines", false);
+        moveStepsBetweenLines.addValueChangeListener(new ValueChangeListener() {
+            @Override
+            public void valueChange(ValueChangeEvent event) {
+                boolean enabled = (Boolean) event.getProperty().getValue();
+                gantt.setMovableStepsBetweenLines(enabled);
+            }
+        });
 
         Button createStep = new Button("Create New Step...",
                 createStepClickListener);
@@ -458,8 +473,11 @@ public class DemoUI extends UI {
         subControls.addComponent(timezoneSelect);
         subControls.addComponent(heightAndUnit);
         subControls.addComponent(widthAndUnit);
+        subControls.addComponent(moveStepsBetweenLines);
+        subControls.setComponentAlignment(moveStepsBetweenLines, Alignment.MIDDLE_LEFT);
         subControls.addComponent(createStep);
         subControls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
+
 
         return panel;
     }

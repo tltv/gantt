@@ -38,6 +38,9 @@ public class GanttState extends com.vaadin.shared.AbstractComponentState {
     public boolean movableSteps = true;
 
     @DelegateToWidget
+    public boolean movableStepsBetweenLines = false;
+
+    @DelegateToWidget
     public boolean monthRowVisible = true;
 
     @DelegateToWidget

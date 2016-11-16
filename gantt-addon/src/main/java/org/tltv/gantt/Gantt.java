@@ -101,9 +101,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
 
         @Override
-        public void onMove(String stepUid, String newStepUid, long startDate,
-                long endDate) {
-            fireMoveEvent(stepUid, newStepUid, startDate, endDate);
+        public void onMove(String stepUid, String newStepUid, int lineIndex,
+                           long startDate, long endDate) {
+            fireMoveEvent(stepUid, newStepUid, lineIndex, startDate, endDate);
         }
 
         @Override
@@ -396,6 +396,26 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      */
     public void setMovableSteps(boolean movable) {
         getState().movableSteps = movable;
+    }
+
+    /**
+     * Return true if user can move the step position in between timelines. Default
+     * is false.
+     *
+     * @return true if movable
+     */
+    public boolean isMovableStepsBetweenLines() {
+        return getState().movableStepsBetweenLines;
+    }
+
+    /**
+     * Enable or disable step moving between lines -feature. Disabled by default.
+     *
+     * @param movable
+     *            True enables step moving.
+     */
+    public void setMovableStepsBetweenLines(boolean movable) {
+        getState().movableStepsBetweenLines = movable;
     }
 
     /**
@@ -944,16 +964,19 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     protected void fireMoveEvent(String stepUid, String newStepUid,
-            long startDate, long endDate) {
+                                 int lineIndex, long startDate, long endDate) {
         AbstractStep step = getStep(stepUid);
         long previousStartDate = step.getStartDate();
         long previousEndDate = step.getEndDate();
+        int previousLineIndex = step.getLineIndex();
         step.setStartDate(startDate);
         step.setEndDate(endDate);
+        step.setLineIndex(lineIndex);
         moveDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
         fireEvent(new MoveEvent(this, step, step.getStartDate(),
-                step.getEndDate(), previousStartDate, previousEndDate));
+                step.getEndDate(), step.getLineIndex(), previousStartDate,
+                previousEndDate, previousLineIndex));
     }
 
     protected void fireResizeEvent(String stepUid, long startDate, long endDate) {
@@ -1166,17 +1189,22 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private AbstractStep step;
         private long startDate;
         private long endDate;
+        private int lineIndex;
         private long previousStartDate;
         private long previousEndDate;
+        private int previousLineIndex;
 
         public MoveEvent(Gantt source, AbstractStep step, long startDate,
-                long endDate, long previousStartDate, long previousEndDate) {
+                long endDate, int lineIndex, long previousStartDate,
+                         long previousEndDate, int previousLineIndex) {
             super(source);
             this.step = step;
             this.startDate = startDate;
             this.endDate = endDate;
+            this.lineIndex = lineIndex;
             this.previousStartDate = previousStartDate;
             this.previousEndDate = previousEndDate;
+            this.previousLineIndex = previousLineIndex;
         }
 
         /**
@@ -1226,6 +1254,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         public long getPreviousEndDate() {
             return previousEndDate;
+        }
+
+        public int getLineIndex() {
+            return lineIndex;
+        }
+
+        public int getPreviousLineIndex() {
+            return previousLineIndex;
         }
     }
 
