@@ -510,7 +510,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             lineIndex = ((StepWidget)widget).getStep().getLineIndex();
         }
 
-        if ( (stepIndex + 1) < (widgetsInContainer - extraContentElements.size()) ) {
+        if (lineIndex >= 0) {
+            double top = height * lineIndex;
+            bar.getStyle().setTop(top, Unit.PX);
+            if( contentHeight < (top + height) ) {
+                contentHeight = top + height;
+            }
+        } else if ( (stepIndex + 1) < (widgetsInContainer - extraContentElements.size()) ) {
             // not the first step, update contentHeight by the previous step
             int prevIndex = indexInWidgetContainer - 1;
             Widget w = getWidget(prevIndex);
@@ -522,12 +528,6 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 updateTopForAllStepsBelow(indexInWidgetContainer + 1, height);
             }
             contentHeight += height;
-        } else if (lineIndex >= 0) {
-            double top = height * lineIndex;
-            bar.getStyle().setTop(top, Unit.PX);
-            if( contentHeight < (top + height) ) {
-                contentHeight = top + height;
-            }
         } else {
             bar.getStyle().setTop(contentHeight, Unit.PX);
             contentHeight += height;
@@ -1216,20 +1216,26 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     public boolean remove(Widget w) {
         if (!(w instanceof StepWidget)) {
             return super.remove(w);
+        } else {
+            StepWidget stepWidget = (StepWidget) w;
+
+            if( stepWidget.getStep().getLineIndex() >= 0 ) {
+                return super.remove(stepWidget);
+            } else {
+                int startIndex = getWidgetIndex(w);
+                int height = getElementHeightWithMargin(w.getElement());
+                contentHeight -= height;
+
+                if ((startIndex = removeAndReturnIndex(w)) >= 0) {
+                    updateTopForAllStepsBelow(startIndex, -height);
+
+                    // update content height
+                    content.getStyle().setHeight(contentHeight, Unit.PX);
+                    return true;
+                }
+                return false;
+            }
         }
-
-        int startIndex = getWidgetIndex(w);
-        int height = getElementHeightWithMargin(w.getElement());
-        contentHeight -= height;
-
-        if ((startIndex = removeAndReturnIndex(w)) >= 0) {
-            updateTopForAllStepsBelow(startIndex, -height);
-
-            // update content height
-            content.getStyle().setHeight(contentHeight, Unit.PX);
-            return true;
-        }
-        return false;
     }
 
     public int removeAndReturnIndex(Widget w) {
@@ -1971,7 +1977,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         if( deltaTop <= -1 * barHeight / 2 ) {
             //move up
-            bar.getStyle().setTop(barTop-barHeight, Unit.PX);
+            if( (barTop - barHeight) >= 0 ) {
+                bar.getStyle().setTop(barTop - barHeight, Unit.PX);
+            }
         } else if( deltaTop >= barHeight / 2 ) {
             //move down
             bar.getStyle().setTop(barTop+barHeight, Unit.PX);
