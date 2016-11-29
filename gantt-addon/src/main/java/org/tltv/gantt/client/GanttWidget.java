@@ -672,9 +672,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      */
     public void notifyHeightChanged(int height) {
         if (container != null && timeline != null) {
-            container.getStyle().setHeight(
-                    height - getTimelineHeight()
-                            - getHorizontalScrollbarSpacerHeight(), Unit.PX);
+            if( !"".equals(getElement().getStyle().getHeight()) ) {
+                container.getStyle().setHeight(
+                        height - getTimelineHeight()
+                                - getHorizontalScrollbarSpacerHeight(), Unit.PX);
+            } else {
+                //if the component has undefined height also set undefined height to the container
+                container.getStyle().setHeight(-1, Unit.PX);
+            }
 
             boolean overflow = isContentOverflowingVertically();
             if (wasContentOverflowingVertically != overflow) {
