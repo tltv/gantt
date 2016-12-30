@@ -152,6 +152,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private boolean enabled = true;
     private boolean touchSupported = false;
     private boolean movableSteps;
+    private boolean movableStepsBetweenLines;
     private boolean resizableSteps;
     private boolean backgroundGridEnabled;
     private boolean defaultContextMenuEnabled = false;
@@ -194,6 +195,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected String capturePointLeftPercentage;
     protected String capturePointWidthPercentage;
     protected double capturePointLeftPx;
+    protected double capturePointTopPx;
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
     protected Element targetBarElement;
@@ -504,7 +506,18 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         int indexInWidgetContainer = stepIndex + extraContentElements.size();
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
-        if ((stepIndex + 1) < (widgetsInContainer - extraContentElements.size())) {
+        int lineIndex = -1;
+        if (widget instanceof StepWidget) {
+            lineIndex = ((StepWidget)widget).getStep().getLineIndex();
+        }
+
+        if (lineIndex >= 0) {
+            double top = height * lineIndex;
+            bar.getStyle().setTop(top, Unit.PX);
+            if( contentHeight < (top + height) ) {
+                contentHeight = top + height;
+            }
+        } else if ( (stepIndex + 1) < (widgetsInContainer - extraContentElements.size()) ) {
             // not the first step, update contentHeight by the previous step
             int prevIndex = indexInWidgetContainer - 1;
             Widget w = getWidget(prevIndex);
@@ -515,10 +528,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
                 updateTopForAllStepsBelow(indexInWidgetContainer + 1, height);
             }
+            contentHeight += height;
         } else {
             bar.getStyle().setTop(contentHeight, Unit.PX);
+            contentHeight += height;
         }
-        contentHeight += height;
 
         registerBarEventListener(bar);
     }
@@ -884,7 +898,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     /**
-     * Enable of disable movable step's -feature.
+     * Enable or disable movable step's -feature.
      * 
      * @param movableSteps
      *            True makes steps movable.
@@ -900,6 +914,32 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      */
     public boolean isMovableSteps() {
         return isEnabled() && movableSteps;
+    }
+
+    /**
+     * Returns true if the widget is enabled the steps are movable and the steps are movable between lines
+     * @return
+     */
+    public boolean isMovableStepsBetweenLines() {
+        return isMovableSteps() && movableStepsBetweenLines;
+    }
+
+    /**
+     * Returns true if the the bar is not a sub bar and
+     *  the widget is enabled the steps are movable and the steps are movable between lines
+     * @return
+     */
+    public boolean isMovableStepsBetweenLines(Element bar) {
+        return isMovableStepsBetweenLines() && movableStepsBetweenLines && !isSubBar(bar);
+    }
+
+    /**
+     * Enable or disable movable steps between lines feature
+     *
+     * @param movableStepsBetweenLines True makes steps movable between lines
+     */
+    public void setMovableStepsBetweenLines(boolean movableStepsBetweenLines) {
+        this.movableStepsBetweenLines = movableStepsBetweenLines;
     }
 
     public boolean isMonthRowVisible() {
@@ -1205,20 +1245,26 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     public boolean remove(Widget w) {
         if (!(w instanceof StepWidget)) {
             return super.remove(w);
+        } else {
+            StepWidget stepWidget = (StepWidget) w;
+
+            if( stepWidget.getStep().getLineIndex() >= 0 ) {
+                return super.remove(stepWidget);
+            } else {
+                int startIndex = getWidgetIndex(w);
+                int height = getElementHeightWithMargin(w.getElement());
+                contentHeight -= height;
+
+                if ((startIndex = removeAndReturnIndex(w)) >= 0) {
+                    updateTopForAllStepsBelow(startIndex, -height);
+
+                    // update content height
+                    content.getStyle().setHeight(contentHeight, Unit.PX);
+                    return true;
+                }
+                return false;
+            }
         }
-
-        int startIndex = getWidgetIndex(w);
-        int height = getElementHeightWithMargin(w.getElement());
-        contentHeight -= height;
-
-        if ((startIndex = removeAndReturnIndex(w)) >= 0) {
-            updateTopForAllStepsBelow(startIndex, -height);
-
-            // update content height
-            content.getStyle().setHeight(contentHeight, Unit.PX);
-            return true;
-        }
-        return false;
     }
 
     public int removeAndReturnIndex(Widget w) {
@@ -1324,7 +1370,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         double deltay = y - capturePoint.getY();
         GWT.log("Position delta y: " + deltay + "px");
 
-        Element newPosition = findStepElement(bar, y, deltay);
+
+        Element newPosition;
+        if( isMovableStepsBetweenLines(bar) ) {
+            newPosition = bar; //if movement between lines are enabled findStepElement may give wrong result
+        } else {
+            newPosition = findStepElement(bar, y, deltay);
+        }
         internalMoveOrResizeCompleted(bar, newPosition, true);
     }
 
@@ -1354,6 +1406,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
         capturePointLeftPx = bar.getOffsetLeft();
+        capturePointTopPx = bar.getOffsetTop();
         capturePointWidthPx = bar.getClientWidth();
         capturePointBgColor = bar.getStyle().getBackgroundColor();
 
@@ -1468,18 +1521,21 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             addResizingStyles(bar);
             bar.getStyle().clearBackgroundColor();
         } else if (isMovableSteps()) {
-            updateMoveInProgressFlag(deltax, deltay);
+            updateMoveInProgressFlag(bar, deltax, deltay);
             updateBarMovingPosition(bar, deltax);
             addMovingStyles(bar);
             bar.getStyle().clearBackgroundColor();
+            if( isMovableStepsBetweenLines(bar) ) {
+                updateBarYPosition(bar, deltay);
+            }
         }
 
         // event.stopPropagation();
         return true;
     }
 
-    protected void updateMoveInProgressFlag(double deltax, double deltay) {
-        moveInProgress = deltax != 0.0;
+    protected void updateMoveInProgressFlag(Element bar, double deltax, double deltay) {
+        moveInProgress = deltax != 0.0 && (!isMovableStepsBetweenLines(bar) || deltay != 0.0 ) ;
     }
 
     /**
@@ -1775,6 +1831,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         long ownerStartDate = 0;
         long ownerEndDate = 0;
         double left = parseSize(bar.getStyle().getLeft(), "px");
+        int lineIndex = -1;
         if (subBar) {
             double ownerLeft = bar.getParentElement().getOffsetLeft();
             left += ownerLeft;
@@ -1795,10 +1852,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         if (move) {
-            getRpc().onMove(stepUid, newStepUid, startDate, endDate);
+            if( isMovableStepsBetweenLines(bar) ) {
+                lineIndex = getLineIndexByPosition(bar);
+            }
+            getRpc().onMove(stepUid, newStepUid, lineIndex, startDate, endDate);
         } else {
             getRpc().onResize(stepUid, startDate, endDate);
         }
+    }
+
+    private int getLineIndexByPosition(Element bar) {
+        double top = parseSize(bar.getStyle().getTop(), "px");
+        double height = getElementHeightWithMargin(bar);
+        return (int) (top / height);
     }
 
     private void registerBarEventListener(final DivElement bar) {
@@ -1934,6 +2000,24 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private void updateBarMovingPosition(Element bar, double deltax) {
         bar.getStyle().setLeft(capturePointLeftPx + deltax, Unit.PX);
+    }
+
+    private void updateBarYPosition(Element bar, double deltay) {
+        int barHeight = getElementHeightWithMargin(bar);
+
+        double barTop = parseSize(bar.getStyle().getTop(), "px");
+        double movementFromTop = capturePointTopPx + deltay;
+        double deltaTop = movementFromTop - barTop;
+
+        if( deltaTop <= -1 * barHeight / 2 ) {
+            //move up
+            if( (barTop - barHeight) >= 0 ) {
+                bar.getStyle().setTop(barTop - barHeight, Unit.PX);
+            }
+        } else if( deltaTop >= barHeight / 2 ) {
+            //move down
+            bar.getStyle().setTop(barTop+barHeight, Unit.PX);
+        }
     }
 
     private void resetBarPosition(Element bar) {
