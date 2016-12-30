@@ -497,6 +497,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      */
     public void addStep(int stepIndex, Widget widget) {
         DivElement bar = DivElement.as(widget.getElement());
+
         insert(stepIndex + getAdditonalContentElementCount(), widget);
 
         int widgetsInContainer = getChildren().size();
@@ -750,8 +751,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * Reset listeners.
      */
     public void resetListeners() {
-        Event.sinkEvents(container, Event.ONSCROLL);
-        Event.sinkEvents(container, Event.ONCONTEXTMENU);
+        Event.sinkEvents(container, Event.ONSCROLL | Event.ONCONTEXTMENU);
 
         if (contextMenuHandlerRegistration == null) {
             contextMenuHandlerRegistration = addDomHandler(contextMenuHandler,
@@ -1129,23 +1129,47 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         super.add(w, content);
     }
 
+    /**
+     * @param child
+     *            Child widget.
+     * @param container
+     *            Parent element.
+     * @param beforeIndex
+     *            Target index of element in DOM.
+     * @param domInsert
+     *            true: Insert at specific position. false: append at the end.
+     * */
     @Override
     protected void insert(Widget child, Element container, int beforeIndex,
             boolean domInsert) {
+        GWT.log("Count content elements: "
+                + content.getChildCount()
+                + " ("
+                + getAdditionalNonWidgetContentElementCount()
+                + " non-widget non-step elements, "
+                + (getAdditonalContentElementCount() - getAdditionalNonWidgetContentElementCount())
+                + " non-step widgets.)");
+
         // Validate index; adjust if the widget is already a child of this
         // panel.
-        int adjustedBeforeIndex = adjustIndex(child, beforeIndex
-                - getAdditionalNonWidgetContentElementCount());
+        int adjustedBeforeStepIndex = adjustIndex(child, beforeIndex
+                - getAdditionalNonWidgetContentElementCount())
+                - getAdditionalWidgetContentElementCount();
 
-        // Detach new child.
+        // Detach new child. Might also remove additional widgets like
+        // predecessor arrows.
         child.removeFromParent();
 
         // Logical attach.
-        getChildren().insert(child, adjustedBeforeIndex);
+        getChildren().insert(
+                child,
+                adjustedBeforeStepIndex
+                        + getAdditionalWidgetContentElementCount());
 
         // Physical attach.
         if (domInsert) {
-            DOM.insertChild(container, child.getElement(), beforeIndex);
+            DOM.insertChild(container, child.getElement(),
+                    adjustedBeforeStepIndex + getAdditonalContentElementCount());
         } else {
             DOM.appendChild(container, child.getElement());
         }
@@ -1809,6 +1833,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private int getAdditionalNonWidgetContentElementCount() {
         return isMoveElementAttached() + isBgGridAttached();
+    }
+
+    private int getAdditionalWidgetContentElementCount() {
+        return getAdditonalContentElementCount()
+                - getAdditionalNonWidgetContentElementCount();
     }
 
     /**

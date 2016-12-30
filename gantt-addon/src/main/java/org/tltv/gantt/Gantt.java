@@ -260,9 +260,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      *            New Step object
      */
     public void addStep(Step step) {
-        StepComponent sc = createStepComponent(step);
-        stepComponents.put(step, sc);
-        getState().steps.add(sc);
+        if (!stepComponents.containsKey(step)) {
+            StepComponent sc = createStepComponent(step);
+            stepComponents.put(step, sc);
+            getState().steps.add(sc);
+        }
     }
 
     /**
@@ -271,11 +273,39 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * 
      * @param step
      *            New Step object
+     * 
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (index < 0 || index >=
+     *             getState().steps.size())
      */
     public void addStep(int index, Step step) {
-        StepComponent sc = createStepComponent(step);
-        stepComponents.put(step, sc);
-        getState().steps.add(index, sc);
+        if (stepComponents.containsKey(step)) {
+            moveStep(index, step);
+        } else {
+            StepComponent sc = createStepComponent(step);
+            stepComponents.put(step, sc);
+            getState().steps.add(index, sc);
+        }
+    }
+
+    /**
+     * Move existing step at a specific index and shifts the current object at
+     * that index and any subsequent objects forward.
+     * 
+     * @throws IndexOutOfBoundsException
+     *             if the index is out of range (index < 0 || index >=
+     *             getState().steps.size())
+     */
+    public void moveStep(int toIndex, Step step) {
+        if (!stepComponents.containsKey(step)) {
+            return;
+        }
+        StepComponent targetComponent = stepComponents.get(getStep(toIndex));
+        StepComponent moveComponent = stepComponents.get(step);
+        getState().steps.remove(moveComponent);
+        getState().steps.add(indexOf(targetComponent), moveComponent);
+        moveComponent.setParent(null);
+        moveComponent.setParent(this);
     }
 
     /**
@@ -292,6 +322,15 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
         sc.setParent(null);
         return getState().steps.remove(sc);
+    }
+
+    public int getStepIndex(int index) {
+        StepComponent sc = stepComponents.get(getStep(index));
+        return indexOf(sc);
+    }
+
+    private int indexOf(StepComponent stepComponent) {
+        return getState(false).steps.indexOf(stepComponent);
     }
 
     /**

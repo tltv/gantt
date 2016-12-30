@@ -686,6 +686,13 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
+        int index = 0;
+        for (ComponentConnector c : getChildComponents()) {
+            StepWidget stepWidget = ((StepConnector) c).getWidget();
+            getWidget().addStep(index, stepWidget);
+            index++;
+        }
+
         Map<Step, StepWidget> steps = getStepsMap();
 
         // update new steps with references to gantt widget and locale data
