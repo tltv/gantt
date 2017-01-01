@@ -83,7 +83,7 @@ public class StepConnector extends AbstractHasComponentsConnector {
             getWidget().setStep(getState().step);
         }
         if (!getWidget().getElement().hasParentElement()) {
-            gantt.addStep(getStepIndex(), getWidget());
+            gantt.addStep(getStepIndex(), getWidget(), true);
         }
         getWidget().updateWidth();
 

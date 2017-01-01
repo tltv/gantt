@@ -131,4 +131,14 @@ public class TreeTableGanttLayout extends HorizontalLayout implements
     public void stepDeleted(Step step) {
         container.removeItem(step);
     }
+
+    @Override
+    public void stepMoved(Step step, int newStepIndex, int oldStepIndex) {
+        // move to new position
+        if (oldStepIndex < newStepIndex) {
+            newStepIndex--;
+        }
+        ganttTable.removeItem(step);
+        container.addItemAt(newStepIndex, step);
+    }
 }

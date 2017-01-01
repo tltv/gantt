@@ -25,7 +25,6 @@ import java.util.TimeZone;
 
 import javax.servlet.annotation.WebServlet;
 
-import com.vaadin.data.Property;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
@@ -326,11 +325,18 @@ public class DemoUI extends UI {
                         + " to Start Date: " + dateFormat.format(start)
                         + " End Date: " + dateFormat.format(end);
 
-                if( gantt.isMovableStepsBetweenLines() ) {
-                    message += " Line index: " + event.getLineIndex();
+                if (gantt.isMovableStepsBetweenRows()
+                        && event.getStepIndex() != event.getPreviousStepIndex()) {
+                    message += " New Step index: " + event.getStepIndex();
+
+                    if (ganttListener != null) {
+                        ganttListener.stepMoved((Step) event.getStep(),
+                                event.getStepIndex(),
+                                event.getPreviousStepIndex());
+                    }
                 }
 
-                Notification.show(message,Type.TRAY_NOTIFICATION);
+                Notification.show(message, Type.TRAY_NOTIFICATION);
             }
         });
 
@@ -384,15 +390,6 @@ public class DemoUI extends UI {
 
         start = createStartDateField();
         end = createEndDateField();
-
-        CheckBox moveStepsBetweenLines = new CheckBox("Move steps between lines", false);
-        moveStepsBetweenLines.addValueChangeListener(new ValueChangeListener() {
-            @Override
-            public void valueChange(ValueChangeEvent event) {
-                boolean enabled = (Boolean) event.getProperty().getValue();
-                gantt.setMovableStepsBetweenLines(enabled);
-            }
-        });
 
         Button createStep = new Button("Create New Step...",
                 createStepClickListener);
@@ -473,11 +470,8 @@ public class DemoUI extends UI {
         subControls.addComponent(timezoneSelect);
         subControls.addComponent(heightAndUnit);
         subControls.addComponent(widthAndUnit);
-        subControls.addComponent(moveStepsBetweenLines);
-        subControls.setComponentAlignment(moveStepsBetweenLines, Alignment.MIDDLE_LEFT);
         subControls.addComponent(createStep);
         subControls.setComponentAlignment(createStep, Alignment.MIDDLE_LEFT);
-
 
         return panel;
     }
@@ -574,6 +568,18 @@ public class DemoUI extends UI {
         });
         item.setCheckable(true);
         item.setChecked(gantt.isMovable());
+
+        item = editItem.addItem("Movable Steps between rows", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setMovableStepsBetweenRows(!gantt
+                        .isMovableStepsBetweenRows());
+                selectedItem.setChecked(gantt.isMovableStepsBetweenRows());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isMovableStepsBetweenRows());
 
         item = editItem.addItem("Resizable Steps", new Command() {
 

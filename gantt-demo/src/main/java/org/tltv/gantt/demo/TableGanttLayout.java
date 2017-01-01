@@ -66,4 +66,14 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
     public void stepDeleted(Step step) {
         ganttTable.removeItem(step);
     }
+
+    @Override
+    public void stepMoved(Step step, int newStepIndex, int oldStepIndex) {
+        if (oldStepIndex < newStepIndex) {
+            newStepIndex--;
+        }
+        ganttTable.removeItem(step);
+        ((BeanItemContainer<Step>) ganttTable.getContainerDataSource())
+                .addItemAt(newStepIndex, step);
+    }
 }

@@ -291,9 +291,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         @Override
-        public void onMove(String stepUid, String newStepUid, int lineIndex,
-                           long startDate, long endDate) {
-            rpc.onMove(stepUid, newStepUid, lineIndex, startDate, endDate);
+        public void onMove(String stepUid, String newStepUid, long startDate,
+                long endDate) {
+            rpc.onMove(stepUid, newStepUid, startDate, endDate);
         }
 
         @Override
@@ -686,11 +686,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
-        int index = 0;
+        int stepIndex = 0;
         for (ComponentConnector c : getChildComponents()) {
             StepWidget stepWidget = ((StepConnector) c).getWidget();
-            getWidget().addStep(index, stepWidget);
-            index++;
+            getWidget().addStep(stepIndex, stepWidget, false);
+            stepIndex++;
         }
 
         Map<Step, StepWidget> steps = getStepsMap();
