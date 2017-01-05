@@ -1588,7 +1588,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      */
     protected Element findStepElement(Element startFromBar, int startTopY,
             int startBottomY, int newY, double deltay) {
-        if (isSubBar(startFromBar)) {
+        boolean subStep = isSubBar(startFromBar);
+        if (subStep) {
             startFromBar = startFromBar.getParentElement();
         }
 
@@ -1606,9 +1607,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 barCanditate = Element.as(content.getChild(i));
                 if (isBetween(newY, barCanditate.getAbsoluteTop(),
                         barCanditate.getAbsoluteBottom())) {
-                    if (i == (startIndex + 1)) {
+                    if (!subStep && i == (startIndex + 1)) {
                         // moving directly over the following step will be
-                        // ignored.
+                        // ignored (if not sub-step).
                         return startFromBar;
                     }
                     return barCanditate;
