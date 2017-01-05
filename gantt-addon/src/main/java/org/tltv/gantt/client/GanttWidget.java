@@ -945,13 +945,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     /**
-     * Returns true if the the bar is not a sub bar and the widget is enabled
-     * the steps are movable and the steps are movable between rows.
+     * Returns true if the widget is enabled the steps are movable and the steps
+     * are movable between rows.
      * 
      * @return
      */
     public boolean isMovableStepsBetweenRows(Element bar) {
-        return isMovableStepsBetweenRows() && !isSubBar(bar);
+        return isMovableStepsBetweenRows()/* && !isSubBar(bar) */;
     }
 
     /**
@@ -2039,9 +2039,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private void updateBarYPosition(Element bar, double deltay) {
         int barHeight = getElementHeightWithMargin(bar);
-
-        double barTop = parseSize(bar.getStyle().getTop(), "px");
-        double movementFromTop = capturePointTopPx + deltay;
+        double offsetY = 0; // offset from content top edge
+        if (isSubBar(bar)) {
+            Element stepElement = bar.getParentElement();
+            offsetY = parseSize(stepElement.getStyle().getTop(), "px");
+        }
+        double barTop = parseSize(bar.getStyle().getTop(), "px") + offsetY;
+        double movementFromTop = capturePointTopPx + offsetY + deltay;
         double deltaTop = movementFromTop - barTop;
         double maxDeltaUp = capturePoint.getY() - capturePointAbsTopPx;
         double maxDeltaDown = barHeight - maxDeltaUp;
@@ -2049,11 +2053,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         if (deltaTop <= (-1 * maxDeltaUp)) {
             // move up
             if ((barTop - barHeight) >= 0) {
-                bar.getStyle().setTop(barTop - barHeight, Unit.PX);
+                bar.getStyle().setTop(barTop - barHeight - offsetY, Unit.PX);
             }
         } else if (deltaTop >= maxDeltaDown) {
             // move down
-            bar.getStyle().setTop(barTop + barHeight, Unit.PX);
+            bar.getStyle().setTop(barTop + barHeight - offsetY, Unit.PX);
         }
     }
 

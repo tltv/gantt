@@ -312,6 +312,19 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     /**
+     * Moves sub-step to other step. Does nothing, if either is null, or
+     * sub-step's owner is null or owner is same as target step.
+     */
+    public void moveSubStep(SubStep subStep, Step toStep) {
+        if (subStep == null || toStep == null || subStep.getOwner() == null
+                || subStep.getOwner().equals(toStep)) {
+            return;
+        }
+        subStep.getOwner().removeSubStep(subStep);
+        toStep.addSubStep(subStep);
+    }
+
+    /**
      * Remove {@link Step}.
      * 
      * @param step
@@ -1015,11 +1028,15 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         step.setStartDate(startDate);
         step.setEndDate(endDate);
         int newStepIndex;
-        if (isMovableStepsBetweenRows() && step instanceof Step
-                && newStep instanceof Step) {
-            // move to new row
+        if (isMovableStepsBetweenRows() && newStep instanceof Step) {
             newStepIndex = getStepIndex((Step) newStep);
-            moveStep(newStepIndex, (Step) step);
+            if (step instanceof Step) {
+                // move to new row
+                moveStep(newStepIndex, (Step) step);
+            } else {
+                // move sub-step to new owner
+                moveSubStep((SubStep) step, (Step) newStep);
+            }
         } else {
             newStepIndex = previousStepIndex;
         }
