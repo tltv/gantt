@@ -46,6 +46,7 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
         pattern.appendChild(rect);
 
         path = createSVGElementNS("path");
+        setAttributeNS(path, "shape-rendering", "crispEdges");
         setAttributeNS(path, "fill-opacity", "0");
         setAttributeNS(path, "stroke-width", "1");
         setAttributeNS(path, "stroke", "#cccccc");
@@ -85,8 +86,16 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
         setAttributeNS(pattern, "width", "" + gridBlockWidthPx);
         setAttributeNS(pattern, "height", "" + gridBlockHeightPx);
 
-        setAttributeNS(path, "d", "M0," + gridBlockHeightPx + " h"
-                + gridBlockWidthPx + " v0 h0 v-" + gridBlockHeightPx);
+        double y = gridBlockHeightPx - 1;
+        if (y < 0) {
+            y = 0;
+        }
+        double x = gridBlockWidthPx - 1;
+        if (x < 0) {
+            x = 0;
+        }
+        setAttributeNS(path, "d", "M0," + y + " h" + x + " v0 h0 v-"
+                + gridBlockHeightPx);
     }
 
     @Override
