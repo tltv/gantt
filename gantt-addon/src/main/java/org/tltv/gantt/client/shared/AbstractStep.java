@@ -30,6 +30,7 @@ public abstract class AbstractStep implements Serializable {
     private double progress;
     private boolean showProgress;
     private boolean resizable = true;
+    private boolean movable = true;
 
     private long startDate = -1;
     private long endDate = -1;
@@ -187,6 +188,14 @@ public abstract class AbstractStep implements Serializable {
 
     public void setResizable(boolean resizable) {
         this.resizable = resizable;
+    }
+
+    public boolean isMovable() {
+        return movable;
+    }
+
+    public void setMovable(boolean movable) {
+        this.movable = movable;
     }
 
     public enum CaptionMode {
