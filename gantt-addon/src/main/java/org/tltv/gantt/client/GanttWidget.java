@@ -1479,7 +1479,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 } else {
                     resetBarPosition(bar);
                 }
-            } else if (isMovableSteps()) {
+            } else if (isMovableStep(bar) ) {
                 // moving in progress
                 removeMovingStyles(bar);
                 if (moveInProgress) {
@@ -1552,7 +1552,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             }
             addResizingStyles(bar);
             bar.getStyle().clearBackgroundColor();
-        } else if (isMovableSteps()) {
+        } else if (isMovableStep(bar)) {
             updateMoveInProgressFlag(bar, deltax, deltay);
             updateBarMovingPosition(bar, deltax);
             addMovingStyles(bar);
@@ -1972,6 +1972,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         AbstractStepWidget step = getAbstractStepWidget(bar);
         return step != null && step.getStep() != null
                 && step.getStep().isResizable();
+    }
+
+    private boolean isMovableStep(Element bar) {
+        if (!isMovableSteps()) {
+            return false;
+        }
+        AbstractStepWidget step = getAbstractStepWidget(bar);
+        return step != null && step.getStep() != null
+                && step.getStep().isMovable();
     }
 
     private boolean isResizingLeft(Element bar) {
