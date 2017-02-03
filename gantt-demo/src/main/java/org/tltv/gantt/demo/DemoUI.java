@@ -46,6 +46,7 @@ import com.vaadin.data.util.BeanItem;
 import com.vaadin.data.util.converter.DateToLongConverter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
+import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
 import com.vaadin.shared.ui.combobox.FilteringMode;
 import com.vaadin.shared.ui.datefield.Resolution;
@@ -336,7 +337,7 @@ public class DemoUI extends UI {
                     }
                 }
 
-                Notification.show(message, Type.TRAY_NOTIFICATION);
+                showNotificationWithMousedetails(message, event.getDetails());
             }
         });
 
@@ -349,12 +350,22 @@ public class DemoUI extends UI {
 
                 dateFormat.setTimeZone(gantt.getTimeZone());
 
-                Notification.show("Resized " + event.getStep().getCaption()
-                        + " to Start Date: " + dateFormat.format(start)
-                        + " End Date: " + dateFormat.format(end),
-                        Type.TRAY_NOTIFICATION);
+                showNotificationWithMousedetails(
+                        "Resized " + event.getStep().getCaption()
+                                + " to Start Date: " + dateFormat.format(start)
+                                + " End Date: " + dateFormat.format(end),
+                        event.getDetails());
             }
         });
+    }
+
+    private void showNotificationWithMousedetails(String msg,
+            MouseEventDetails details) {
+        String detailsTxt = "";
+        if (details.isCtrlKey()) {
+            detailsTxt = "(Ctrl down) ";
+        }
+        Notification.show(detailsTxt + msg, Type.TRAY_NOTIFICATION);
     }
 
     private void syncLocaleAndTimezone() {

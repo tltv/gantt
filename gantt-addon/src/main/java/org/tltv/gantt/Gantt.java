@@ -102,13 +102,14 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         @Override
         public void onMove(String stepUid, String newStepUid, long startDate,
-                long endDate) {
-            fireMoveEvent(stepUid, newStepUid, startDate, endDate);
+                long endDate, MouseEventDetails details) {
+            fireMoveEvent(stepUid, newStepUid, startDate, endDate, details);
         }
 
         @Override
-        public void onResize(String stepUid, long startDate, long endDate) {
-            fireResizeEvent(stepUid, startDate, endDate);
+        public void onResize(String stepUid, long startDate, long endDate,
+                MouseEventDetails details) {
+            fireResizeEvent(stepUid, startDate, endDate, details);
         }
 
         @Override
@@ -1018,7 +1019,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     }
 
     protected void fireMoveEvent(String stepUid, String newStepUid,
-            long startDate, long endDate) {
+            long startDate, long endDate, MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
         AbstractStep newStep = getStep(newStepUid);
         int previousStepIndex = (step instanceof Step) ? getStepIndex((Step) step)
@@ -1044,10 +1045,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         adjustDatesByAbstractStep(step);
         fireEvent(new MoveEvent(this, step, step.getStartDate(),
                 step.getEndDate(), newStepIndex, previousStartDate,
-                previousEndDate, previousStepIndex));
+                previousEndDate, previousStepIndex, details));
     }
 
-    protected void fireResizeEvent(String stepUid, long startDate, long endDate) {
+    protected void fireResizeEvent(String stepUid, long startDate,
+            long endDate, MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
         long previousStartDate = step.getStartDate();
         long previousEndDate = step.getEndDate();
@@ -1056,7 +1058,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         resizeDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
         fireEvent(new ResizeEvent(this, step, step.getStartDate(),
-                step.getEndDate(), previousStartDate, previousEndDate));
+                step.getEndDate(), previousStartDate, previousEndDate, details));
     }
 
     protected void firePredecessorChangeEvent(String newPredecessorStepUid,
@@ -1261,10 +1263,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private long previousStartDate;
         private long previousEndDate;
         private int previousStepIndex;
+        private MouseEventDetails details;
 
         public MoveEvent(Gantt source, AbstractStep step, long startDate,
                 long endDate, int stepIndex, long previousStartDate,
-                long previousEndDate, int previousStepIndex) {
+                long previousEndDate, int previousStepIndex,
+                MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -1273,6 +1277,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             this.previousStartDate = previousStartDate;
             this.previousEndDate = previousEndDate;
             this.previousStepIndex = previousStepIndex;
+            this.details = details;
         }
 
         /**
@@ -1331,6 +1336,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         public int getPreviousStepIndex() {
             return previousStepIndex;
         }
+
+        public MouseEventDetails getDetails() {
+            return details;
+        }
     }
 
     public class ResizeEvent extends Component.Event {
@@ -1340,15 +1349,18 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private long endDate;
         private long previousStartDate;
         private long previousEndDate;
+        private MouseEventDetails details;
 
         public ResizeEvent(Gantt source, AbstractStep step, long startDate,
-                long endDate, long previousStartDate, long previousEndDate) {
+                long endDate, long previousStartDate, long previousEndDate,
+                MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
             this.endDate = endDate;
             this.previousStartDate = previousStartDate;
             this.previousEndDate = previousEndDate;
+            this.details = details;
         }
 
         /**
@@ -1398,6 +1410,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         public long getPreviousEndDate() {
             return previousEndDate;
+        }
+
+        public MouseEventDetails getDetails() {
+            return details;
         }
     }
 

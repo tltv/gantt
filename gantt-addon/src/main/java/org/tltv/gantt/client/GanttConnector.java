@@ -292,13 +292,18 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         @Override
         public void onMove(String stepUid, String newStepUid, long startDate,
-                long endDate) {
-            rpc.onMove(stepUid, newStepUid, startDate, endDate);
+                long endDate, NativeEvent event, Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder
+                    .buildMouseEventDetails(event, relativeToElement);
+            rpc.onMove(stepUid, newStepUid, startDate, endDate, details);
         }
 
         @Override
-        public void onResize(String stepUid, long startDate, long endDate) {
-            rpc.onResize(stepUid, startDate, endDate);
+        public void onResize(String stepUid, long startDate, long endDate,
+                NativeEvent event, Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder
+                    .buildMouseEventDetails(event, relativeToElement);
+            rpc.onResize(stepUid, startDate, endDate, details);
         }
 
         @Override
@@ -672,7 +677,6 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     public void onConnectorHierarchyChange(
             ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
 
-        // StepConnector handles adding new step.
         // Here we handle removing and other necessary changed related
         // hierarchy.
         Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
@@ -686,6 +690,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
+        // Sync steps with changed hierarchy; add new ones and move existing
+        // ones.
         int stepIndex = 0;
         for (ComponentConnector c : getChildComponents()) {
             StepWidget stepWidget = ((StepConnector) c).getWidget();

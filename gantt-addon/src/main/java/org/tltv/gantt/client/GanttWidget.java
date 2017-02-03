@@ -1394,7 +1394,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      *            Moved Bar element
      * @param y
      */
-    protected void moveCompleted(Element bar, int y) {
+    protected void moveCompleted(Element bar, int y, NativeEvent event) {
         double deltay = y - capturePoint.getY();
         GWT.log("Position delta y: " + deltay + "px" + " capture point y is "
                 + capturePoint.getY());
@@ -1402,7 +1402,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         Element newPosition = findStepElement(bar, (int) capturePointAbsTopPx,
                 (int) (capturePointAbsTopPx + getElementHeightWithMargin(bar)),
                 y, deltay);
-        internalMoveOrResizeCompleted(bar, newPosition, true);
+        internalMoveOrResizeCompleted(bar, newPosition, true, event);
     }
 
     /**
@@ -1412,8 +1412,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * @param bar
      *            Resized Bar element
      */
-    protected void resizingCompleted(Element bar) {
-        internalMoveOrResizeCompleted(bar, null, false);
+    protected void resizingCompleted(Element bar, NativeEvent event) {
+        internalMoveOrResizeCompleted(bar, null, false, event);
     }
 
     protected void onTouchOrMouseDown(NativeEvent event) {
@@ -1475,15 +1475,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             if (resizing) {
                 removeResizingStyles(bar);
                 if (resizingInProgress) {
-                    resizingCompleted(bar);
+                    resizingCompleted(bar, event);
                 } else {
                     resetBarPosition(bar);
                 }
-            } else if (isMovableStep(bar) ) {
+            } else if (isMovableStep(bar)) {
                 // moving in progress
                 removeMovingStyles(bar);
                 if (moveInProgress) {
-                    moveCompleted(bar, getTouchOrMouseClientY(event));
+                    moveCompleted(bar, getTouchOrMouseClientY(event), event);
                 } else {
                     resetBarPosition(bar);
                 }
@@ -1864,7 +1864,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private void internalMoveOrResizeCompleted(Element bar,
-            Element newPosition, boolean move) {
+            Element newPosition, boolean move, NativeEvent event) {
         String stepUid = getStepUid(bar);
         String newStepUid = stepUid;
         if (newPosition != null && bar != newPosition) {
@@ -1898,9 +1898,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             if (isMovableStepsBetweenRows() && stepUid == newStepUid) {
                 resetBarYPosition(bar);
             }
-            getRpc().onMove(stepUid, newStepUid, startDate, endDate);
+            getRpc().onMove(stepUid, newStepUid, startDate, endDate, event, bar);
         } else {
-            getRpc().onResize(stepUid, startDate, endDate);
+            getRpc().onResize(stepUid, startDate, endDate, event, bar);
         }
     }
 
