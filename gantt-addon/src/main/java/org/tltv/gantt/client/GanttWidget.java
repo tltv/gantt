@@ -40,6 +40,8 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
 import com.google.gwt.event.dom.client.ContextMenuHandler;
+import com.google.gwt.event.dom.client.DoubleClickEvent;
+import com.google.gwt.event.dom.client.DoubleClickHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
@@ -121,6 +123,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private static final int RESIZE_WIDTH = 10;
     private static final int BAR_MIN_WIDTH = RESIZE_WIDTH;
     private static final int CLICK_INTERVAL = 250;
+    /*
+     * Time mouse-up is ignored after mouse-down to detect double-click.
+     */
+    private static final int DOUBLECLICK_DETECTION_INTERVAL = 250;
     private static final int POINTER_TOUCH_DETECTION_INTERVAL = 100;
 
     private static final String STYLE_GANTT = "gantt";
@@ -142,8 +148,9 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private HandlerRegistration scrollHandlerRegistration;
     private HandlerRegistration mouseMoveHandlerRegistration;
-    private HandlerRegistration mouseDownHandlerHandlerRegistration;
-    private HandlerRegistration mouseUpHandlerHandlerRegistration;
+    private HandlerRegistration mouseDownHandlerRegistration;
+    private HandlerRegistration mouseUpHandlerRegistration;
+    private HandlerRegistration mouseDblClickHandlerRegistration;
 
     private HandlerRegistration contextMenuHandlerRegistration;
 
@@ -182,6 +189,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     protected boolean clickOnNextMouseUp = true;
     protected boolean secondaryClickOnNextMouseUp = true;
+    protected boolean insideDoubleClickDetectionInterval = false;
+    protected int numberOfMouseClicksDetected = 0;
+    protected NativeEvent previousMouseUpEvent;
+    protected Element previousMouseUpBarElement;
     protected Point movePoint;
     protected boolean resizing = false;
     protected boolean resizingFromLeft = false;
@@ -223,6 +234,31 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
     };
 
+    /*
+     * When this timer is started, all clicks (mouse down+up) will be postponed
+     * until timer executes, but only if double-click event is not fired during
+     * that time. This also means that with very slow double-click speeds double
+     * clicks are never registered.
+     */
+    private Timer doubleClickDetectionMaxTimer = new Timer() {
+
+        @Override
+        public void run() {
+            GWT.log("doubleClickDetectionMaxTimer.run()");
+
+            boolean doFireClick = numberOfMouseClicksDetected > 0
+                    && previousMouseUpEvent != null
+                    && previousMouseUpBarElement != null
+                    && !isMoveOrResizingInProgress();
+            NativeEvent targetEvent = previousMouseUpEvent;
+            Element targetElement = previousMouseUpBarElement;
+            cancelDoubleClickDetection();
+            if (doFireClick) {
+                fireClickRpc(targetElement, targetEvent);
+            }
+        }
+    };
+
     private NativeEvent pendingPointerDownEvent;
     private Timer pointerTouchStartedTimer = new Timer() {
 
@@ -242,6 +278,30 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 return;
             }
             timeline.setScrollLeft(container.getScrollLeft());
+        }
+    };
+
+    private DoubleClickHandler doubleClickHandler = new DoubleClickHandler() {
+
+        @Override
+        public void onDoubleClick(DoubleClickEvent event) {
+            GWT.log("onDoubleClick(DoubleClickEvent)");
+            if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+                doubleClickDetectionMaxTimer.cancel();
+                if (!insideDoubleClickDetectionInterval
+                        && numberOfMouseClicksDetected < 2) {
+                    return; // ignore double-click
+                }
+                if (targetBarElement != null) {
+                    disableClickOnNextMouseUp();
+                    targetBarElement = null;
+                }
+                Element bar = getBar(event.getNativeEvent());
+                if (bar != null && numberOfMouseClicksDetected > 1) {
+                    fireClickRpc(bar, event.getNativeEvent());
+                }
+                cancelDoubleClickDetection();
+            }
         }
     };
 
@@ -270,6 +330,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         @Override
         public void onMouseUp(MouseUpEvent event) {
+            GWT.log("onMouseUp(MouseUpEvent)");
             if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
                 GanttWidget.this.onTouchOrMouseUp(event.getNativeEvent());
 
@@ -837,13 +898,17 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             }
 
         } else {
-            if (mouseDownHandlerHandlerRegistration == null) {
-                mouseDownHandlerHandlerRegistration = addDomHandler(
-                        mouseDownHandler, MouseDownEvent.getType());
+            if (mouseDblClickHandlerRegistration == null) {
+                mouseDblClickHandlerRegistration = addDomHandler(
+                        doubleClickHandler, DoubleClickEvent.getType());
             }
-            if (mouseUpHandlerHandlerRegistration == null) {
-                mouseUpHandlerHandlerRegistration = addDomHandler(
-                        mouseUpHandler, MouseUpEvent.getType());
+            if (mouseDownHandlerRegistration == null) {
+                mouseDownHandlerRegistration = addDomHandler(mouseDownHandler,
+                        MouseDownEvent.getType());
+            }
+            if (mouseUpHandlerRegistration == null) {
+                mouseUpHandlerRegistration = addDomHandler(mouseUpHandler,
+                        MouseUpEvent.getType());
             }
             if (isMovableSteps() || isResizableSteps()) {
                 if (mouseMoveHandlerRegistration == null) {
@@ -1417,7 +1482,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     protected void onTouchOrMouseDown(NativeEvent event) {
-        if (targetBarElement != null && (moveInProgress || resizingInProgress)) {
+        if (targetBarElement != null && isMoveOrResizingInProgress()) {
             // discard previous 'operation'.
             resetBarPosition(targetBarElement);
             stopDrag(event);
@@ -1450,6 +1515,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         disallowClickTimer.schedule(CLICK_INTERVAL);
+        insideDoubleClickDetectionInterval = true;
+        doubleClickDetectionMaxTimer.schedule(DOUBLECLICK_DETECTION_INTERVAL);
 
         event.stopPropagation();
     }
@@ -1464,8 +1531,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         if (bar == targetBarElement && isClickOnNextMouseup()) {
             clickOnNextMouseUp = true;
-            if (isEnabled()) {
-                getRpc().stepClicked(getStepUid(bar), event, bar);
+            if (insideDoubleClickDetectionInterval) {
+                numberOfMouseClicksDetected++;
+                previousMouseUpEvent = event;
+                previousMouseUpBarElement = bar;
+                // event handling postponed until doubleClickDetectionTimer
+                // runs.
+            } else {
+                fireClickRpc(bar, event);
             }
 
         } else {
@@ -1492,6 +1565,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         stopDrag(event);
+    }
+
+    protected void fireClickRpc(Element bar, NativeEvent event) {
+        if (isEnabled()) {
+            getRpc().stepClicked(getStepUid(bar), event, bar);
+        }
     }
 
     protected void stopDrag(NativeEvent event) {
@@ -1534,8 +1613,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
         bar = targetBarElement;
 
+        doubleClickDetectionMaxTimer.cancel();
         disallowClickTimer.cancel();
         clickOnNextMouseUp = false;
+        cancelDoubleClickDetection();
 
         // calculate delta x and y by original position and the current one.
         double deltax = getTouchOrMouseClientX(event) - capturePoint.getX();
@@ -1965,6 +2046,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 && (isResizingLeft(bar) || isResizingRight(bar));
     }
 
+    private boolean isMoveOrResizingInProgress() {
+        return moveInProgress || resizingInProgress;
+    }
+
     private boolean isResizableStep(Element bar) {
         if (!isResizableSteps()) {
             return false;
@@ -2084,6 +2169,13 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     private void disableClickOnNextMouseUp() {
         clickOnNextMouseUp = false;
+    }
+
+    private void cancelDoubleClickDetection() {
+        insideDoubleClickDetectionInterval = false;
+        numberOfMouseClicksDetected = 0;
+        previousMouseUpEvent = null;
+        previousMouseUpBarElement = null;
     }
 
     private boolean isClickOnNextMouseup() {

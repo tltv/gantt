@@ -303,6 +303,11 @@ public class DemoUI extends UI {
 
             @Override
             public void onGanttClick(org.tltv.gantt.Gantt.ClickEvent event) {
+                if (event.getDetails().isDoubleClick()) {
+                    Notification.show(String.format("Double Click on Step %s",
+                            event.getStep().getCaption()),
+                            Type.TRAY_NOTIFICATION);
+                }
                 if (MouseButton.RIGHT.equals(event.getDetails().getButton())) {
                     Notification.show(String.format("Right Click on Step %s",
                             event.getStep().getCaption()),
