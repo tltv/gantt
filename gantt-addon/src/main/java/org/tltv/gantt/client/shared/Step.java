@@ -64,7 +64,7 @@ public class Step extends AbstractStep {
      * <p>
      * Visual look of the arrow can be customized by implementing GWT widget
      * which implements {@link ArrowElement} interface.
-     * 
+     *
      * @param predecessor
      *            Predecesor step
      */

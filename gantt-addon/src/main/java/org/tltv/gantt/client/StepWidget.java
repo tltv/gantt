@@ -30,9 +30,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Widget representing a one Step in the Gantt chart.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 public class StepWidget extends AbstractStepWidget {
 
@@ -45,14 +45,11 @@ public class StepWidget extends AbstractStepWidget {
     private ArrowChangeHandler arrowChangeHandler = new ArrowChangeHandler() {
 
         @Override
-        public boolean onArrowChanged(boolean startingPointChanged,
-                NativeEvent event) {
-            Element target = GanttUtil.getElementFromPoint(
-                    GanttUtil.getTouchOrMouseClientX(event),
+        public boolean onArrowChanged(boolean startingPointChanged, NativeEvent event) {
+            Element target = GanttUtil.getElementFromPoint(GanttUtil.getTouchOrMouseClientX(event),
                     GanttUtil.getTouchOrMouseClientY(event));
             if (target != null) {
-                return gantt.getRpc().onStepRelationSelected(StepWidget.this,
-                        startingPointChanged, target);
+                return gantt.getRpc().onStepRelationSelected(StepWidget.this, startingPointChanged, target);
             }
             return false;
         }
@@ -90,8 +87,7 @@ public class StepWidget extends AbstractStepWidget {
             return;
         }
 
-        ArrowPositionData data = new ArrowPositionData(
-                getPredecessorStepWidget().getElement(), getElement());
+        ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(), getElement());
 
         predecessorArrow.setWidth(data.getWidth());
         predecessorArrow.setHeight(data.getHeight());
@@ -115,8 +111,7 @@ public class StepWidget extends AbstractStepWidget {
         } else {
             if (predecessorArrow == null) {
                 predecessorArrow = createArrowWidget();
-                predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(),
-                        gantt.isMsTouchSupported());
+                predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(), gantt.isMsTouchSupported());
                 predecessorArrow.setArrowChangeHandler(arrowChangeHandler);
             }
             gantt.registerContentElement((Widget) predecessorArrow);
@@ -161,8 +156,7 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public SubStepWidget getSubStepWidgetByElement(Element element) {
-        Widget w = getWidget(DOM.getChildIndex(getElement(), element)
-                - countNonSubStepChilds());
+        Widget w = getWidget(DOM.getChildIndex(getElement(), element) - countNonSubStepChilds());
         if (w instanceof SubStepWidget) {
             return (SubStepWidget) w;
         }

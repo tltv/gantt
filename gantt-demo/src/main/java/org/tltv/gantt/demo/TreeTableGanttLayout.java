@@ -7,17 +7,16 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.Step;
 
-import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Tree.CollapseEvent;
-import com.vaadin.ui.Tree.CollapseListener;
-import com.vaadin.ui.Tree.ExpandEvent;
-import com.vaadin.ui.Tree.ExpandListener;
-import com.vaadin.ui.TreeTable;
+import com.vaadin.v7.ui.Tree.CollapseEvent;
+import com.vaadin.v7.ui.Tree.CollapseListener;
+import com.vaadin.v7.ui.Tree.ExpandEvent;
+import com.vaadin.v7.ui.Tree.ExpandListener;
+import com.vaadin.v7.ui.TreeTable;
 import com.vaadin.ui.UI;
 
-public class TreeTableGanttLayout extends HorizontalLayout implements
-        GanttListener {
+public class TreeTableGanttLayout extends HorizontalLayout implements GanttListener {
 
     Gantt gantt;
     TreeTable ganttTable;
@@ -30,13 +29,8 @@ public class TreeTableGanttLayout extends HorizontalLayout implements
         setMargin(false);
         setSpacing(false);
 
-        UI.getCurrent()
-                .getPage()
-                .getStyles()
-                .add(".v-table-table tr td.v-table-cell-content { height: 36px; }");
-        UI.getCurrent()
-                .getPage()
-                .getStyles()
+        UI.getCurrent().getPage().getStyles().add(".v-table-table tr td.v-table-cell-content { height: 36px; }");
+        UI.getCurrent().getPage().getStyles()
                 .add(".v-table-table tr:first-child td.v-table-cell-content { height: 37px; }");
 
         ganttTable = createTreeTableForGantt();
@@ -72,8 +66,7 @@ public class TreeTableGanttLayout extends HorizontalLayout implements
 
             @Override
             public void nodeExpand(ExpandEvent event) {
-                addChildStepRecursively(table, event.getItemId(),
-                        new MutableInt());
+                addChildStepRecursively(table, event.getItemId(), new MutableInt());
             }
         });
 
@@ -85,8 +78,7 @@ public class TreeTableGanttLayout extends HorizontalLayout implements
     /**
      * Add all child steps directed by the TreeTable's hierarchical data source.
      */
-    private void addChildStepRecursively(TreeTable table, Object itemId,
-            MutableInt index) {
+    private void addChildStepRecursively(TreeTable table, Object itemId, MutableInt index) {
         if (!table.hasChildren(itemId)) {
             return;
         }

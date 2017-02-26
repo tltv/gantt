@@ -99,8 +99,7 @@ public abstract class AbstractStep implements Serializable {
     }
 
     public void setBackgroundColor(String backgroundColor) {
-        if (backgroundColor != null && !backgroundColor.trim().isEmpty()
-                && !backgroundColor.trim().startsWith("#")) {
+        if (backgroundColor != null && !backgroundColor.trim().isEmpty() && !backgroundColor.trim().startsWith("#")) {
             backgroundColor = "#" + backgroundColor;
         }
         this.backgroundColor = backgroundColor;

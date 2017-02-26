@@ -38,42 +38,42 @@ import org.tltv.gantt.demo.util.Util;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
-import com.vaadin.data.fieldgroup.FieldGroup;
-import com.vaadin.data.fieldgroup.FieldGroup.CommitException;
-import com.vaadin.data.util.BeanItem;
-import com.vaadin.data.util.converter.DateToLongConverter;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
-import com.vaadin.shared.ui.combobox.FilteringMode;
-import com.vaadin.shared.ui.datefield.Resolution;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
-import com.vaadin.ui.CheckBox;
-import com.vaadin.ui.ColorPicker;
-import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.DateField;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
-import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
-import com.vaadin.ui.Slider;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.ui.components.colorpicker.ColorChangeEvent;
-import com.vaadin.ui.components.colorpicker.ColorChangeListener;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.data.fieldgroup.FieldGroup;
+import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitException;
+import com.vaadin.v7.data.util.BeanItem;
+import com.vaadin.v7.data.util.converter.DateToLongConverter;
+import com.vaadin.v7.shared.ui.combobox.FilteringMode;
+import com.vaadin.v7.shared.ui.datefield.Resolution;
+import com.vaadin.v7.ui.CheckBox;
+import com.vaadin.v7.ui.ColorPicker;
+import com.vaadin.v7.ui.ComboBox;
+import com.vaadin.v7.ui.DateField;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.NativeSelect;
+import com.vaadin.v7.ui.Slider;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
+import com.vaadin.v7.ui.components.colorpicker.ColorChangeEvent;
+import com.vaadin.v7.ui.components.colorpicker.ColorChangeListener;
 
 @Theme("demo")
 @Title("Gantt Add-on Demo")
@@ -95,8 +95,7 @@ public class DemoUI extends UI {
     private DateField start;
     private DateField end;
 
-    private SimpleDateFormat dateFormat = new SimpleDateFormat(
-            "MMM dd HH:mm:ss zzz yyyy");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy");
 
     private HorizontalLayout controls;
     private HorizontalLayout subControls;
@@ -144,8 +143,8 @@ public class DemoUI extends UI {
 
         @Override
         public void valueChange(ValueChangeEvent event) {
-            org.tltv.gantt.client.shared.Resolution res = (org.tltv.gantt.client.shared.Resolution) event
-                    .getProperty().getValue();
+            org.tltv.gantt.client.shared.Resolution res = (org.tltv.gantt.client.shared.Resolution) event.getProperty()
+                    .getValue();
             if (validateResolutionChange(res)) {
                 gantt.setResolution(res);
             }
@@ -185,8 +184,8 @@ public class DemoUI extends UI {
         MenuBar menu = controlsMenuBar();
         Panel controls = createControls();
 
-        Component wrapper = UriFragmentWrapperFactory.wrapByUriFragment(UI
-                .getCurrent().getPage().getUriFragment(), gantt);
+        Component wrapper = UriFragmentWrapperFactory.wrapByUriFragment(UI.getCurrent().getPage().getUriFragment(),
+                gantt);
         if (wrapper instanceof GanttListener) {
             ganttListener = (GanttListener) wrapper;
         }
@@ -286,8 +285,7 @@ public class DemoUI extends UI {
         gantt.addStep(step4);
         gantt.addStep(stepWithSubSteps);
 
-        String[] colors = new String[] { "11FF11", "33FF33", "55FF55",
-                "77FF77", "99FF99", "BBFFBB", "DDFFDD" };
+        String[] colors = new String[] { "11FF11", "33FF33", "55FF55", "77FF77", "99FF99", "BBFFBB", "DDFFDD" };
 
         cal.setTime(new Date());
         for (int i = 0; i < 10; i++) {
@@ -304,13 +302,11 @@ public class DemoUI extends UI {
             @Override
             public void onGanttClick(org.tltv.gantt.Gantt.ClickEvent event) {
                 if (event.getDetails().isDoubleClick()) {
-                    Notification.show(String.format("Double Click on Step %s",
-                            event.getStep().getCaption()),
+                    Notification.show(String.format("Double Click on Step %s", event.getStep().getCaption()),
                             Type.TRAY_NOTIFICATION);
                 }
                 if (MouseButton.RIGHT.equals(event.getDetails().getButton())) {
-                    Notification.show(String.format("Right Click on Step %s",
-                            event.getStep().getCaption()),
+                    Notification.show(String.format("Right Click on Step %s", event.getStep().getCaption()),
                             Type.TRAY_NOTIFICATION);
                 } else {
                     openStepEditor(event.getStep());
@@ -327,17 +323,14 @@ public class DemoUI extends UI {
 
                 dateFormat.setTimeZone(gantt.getTimeZone());
 
-                String message = "Moved " + event.getStep().getCaption()
-                        + " to Start Date: " + dateFormat.format(start)
+                String message = "Moved " + event.getStep().getCaption() + " to Start Date: " + dateFormat.format(start)
                         + " End Date: " + dateFormat.format(end);
 
-                if (gantt.isMovableStepsBetweenRows()
-                        && event.getStepIndex() != event.getPreviousStepIndex()) {
+                if (gantt.isMovableStepsBetweenRows() && event.getStepIndex() != event.getPreviousStepIndex()) {
                     message += " New Step index: " + event.getStepIndex();
 
                     if (ganttListener != null) {
-                        ganttListener.stepMoved((Step) event.getStep(),
-                                event.getStepIndex(),
+                        ganttListener.stepMoved((Step) event.getStep(), event.getStepIndex(),
                                 event.getPreviousStepIndex());
                     }
                 }
@@ -355,17 +348,13 @@ public class DemoUI extends UI {
 
                 dateFormat.setTimeZone(gantt.getTimeZone());
 
-                showNotificationWithMousedetails(
-                        "Resized " + event.getStep().getCaption()
-                                + " to Start Date: " + dateFormat.format(start)
-                                + " End Date: " + dateFormat.format(end),
-                        event.getDetails());
+                showNotificationWithMousedetails("Resized " + event.getStep().getCaption() + " to Start Date: "
+                        + dateFormat.format(start) + " End Date: " + dateFormat.format(end), event.getDetails());
             }
         });
     }
 
-    private void showNotificationWithMousedetails(String msg,
-            MouseEventDetails details) {
+    private void showNotificationWithMousedetails(String msg, MouseEventDetails details) {
         String detailsTxt = "";
         if (details.isCtrlKey()) {
             detailsTxt = "(Ctrl down) ";
@@ -387,8 +376,7 @@ public class DemoUI extends UI {
             start.addValueChangeListener(startDateValueChangeListener);
             end.addValueChangeListener(endDateValueChangeListener);
         }
-        dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy",
-                gantt.getLocale());
+        dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy", gantt.getLocale());
     }
 
     private Panel createControls() {
@@ -407,15 +395,12 @@ public class DemoUI extends UI {
         start = createStartDateField();
         end = createEndDateField();
 
-        Button createStep = new Button("Create New Step...",
-                createStepClickListener);
+        Button createStep = new Button("Create New Step...", createStepClickListener);
 
-        HorizontalLayout heightAndUnit = new HorizontalLayout(
-                Util.createHeightEditor(gantt),
+        HorizontalLayout heightAndUnit = new HorizontalLayout(Util.createHeightEditor(gantt),
                 Util.createHeightUnitEditor(gantt));
 
-        HorizontalLayout widthAndUnit = new HorizontalLayout(
-                Util.createWidthEditor(gantt),
+        HorizontalLayout widthAndUnit = new HorizontalLayout(Util.createWidthEditor(gantt),
                 Util.createWidthUnitEditor(gantt));
 
         reso = new NativeSelect("Resolution");
@@ -450,13 +435,12 @@ public class DemoUI extends UI {
         timezoneSelect.setFilteringMode(FilteringMode.CONTAINS);
         timezoneSelect.setNullSelectionAllowed(false);
         timezoneSelect.addItem("Default");
-        timezoneSelect.setItemCaption("Default", "Default ("
-                + getDefaultTimeZone().getDisplayName() + ")");
+        timezoneSelect.setItemCaption("Default", "Default (" + getDefaultTimeZone().getDisplayName() + ")");
         for (String timezoneId : Util.getSupportedTimeZoneIDs()) {
             TimeZone tz = TimeZone.getTimeZone(timezoneId);
             timezoneSelect.addItem(timezoneId);
-            timezoneSelect.setItemCaption(timezoneId, tz.getID()
-                    + " (raw offset " + (tz.getRawOffset() / 60000) + "m)");
+            timezoneSelect.setItemCaption(timezoneId,
+                    tz.getID() + " (raw offset " + (tz.getRawOffset() / 60000) + "m)");
         }
         timezoneSelect.setValue("Default");
         timezoneSelect.setImmediate(true);
@@ -469,8 +453,7 @@ public class DemoUI extends UI {
             @Override
             public void buttonClick(ClickEvent event) {
                 subControls.setVisible(!subControls.isVisible());
-                toggleSubControlsBtn.setCaption(subControls.isVisible() ? "Less Settings..."
-                        : "More Settings...");
+                toggleSubControlsBtn.setCaption(subControls.isVisible() ? "Less Settings..." : "More Settings...");
             }
         });
 
@@ -479,8 +462,7 @@ public class DemoUI extends UI {
         controls.addComponent(reso);
         controls.addComponent(subControls);
         controls.addComponent(toggleSubControlsBtn);
-        controls.setComponentAlignment(toggleSubControlsBtn,
-                Alignment.BOTTOM_CENTER);
+        controls.setComponentAlignment(toggleSubControlsBtn, Alignment.BOTTOM_CENTER);
 
         subControls.addComponent(localeSelect);
         subControls.addComponent(timezoneSelect);
@@ -508,12 +490,10 @@ public class DemoUI extends UI {
         return f;
     }
 
-    private boolean validateResolutionChange(
-            final org.tltv.gantt.client.shared.Resolution res) {
+    private boolean validateResolutionChange(final org.tltv.gantt.client.shared.Resolution res) {
         long max = 5 * 12 * 4 * 7 * 24 * 3600000L;
         if (res == org.tltv.gantt.client.shared.Resolution.Hour
-                && (gantt.getEndDate().getTime() - gantt.getStartDate()
-                        .getTime()) > max) {
+                && (gantt.getEndDate().getTime() - gantt.getStartDate().getTime()) > max) {
 
             // revert to previous resolution
             setResolution(gantt.getResolution());
@@ -535,8 +515,7 @@ public class DemoUI extends UI {
         return true;
     }
 
-    private void setResolution(
-            org.tltv.gantt.client.shared.Resolution resolution) {
+    private void setResolution(org.tltv.gantt.client.shared.Resolution resolution) {
         reso.removeValueChangeListener(resolutionValueChangeListener);
         try {
             reso.setValue(resolution);
@@ -589,8 +568,7 @@ public class DemoUI extends UI {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                gantt.setMovableStepsBetweenRows(!gantt
-                        .isMovableStepsBetweenRows());
+                gantt.setMovableStepsBetweenRows(!gantt.isMovableStepsBetweenRows());
                 selectedItem.setChecked(gantt.isMovableStepsBetweenRows());
             }
         });
@@ -612,8 +590,7 @@ public class DemoUI extends UI {
 
             @Override
             public void menuSelected(MenuItem selectedItem) {
-                gantt.setDefaultContextMenuEnabled(!gantt
-                        .isDefaultContextMenuEnabled());
+                gantt.setDefaultContextMenuEnabled(!gantt.isDefaultContextMenuEnabled());
                 selectedItem.setChecked(!gantt.isDefaultContextMenuEnabled());
             }
         });
@@ -643,14 +620,13 @@ public class DemoUI extends UI {
                 gantt.setTimelineMonthFormat("MMMM");
             }
         });
-        item = formatItem.addItem("Set 'yyyy MMMM' month format",
-                new Command() {
+        item = formatItem.addItem("Set 'yyyy MMMM' month format", new Command() {
 
-                    @Override
-                    public void menuSelected(MenuItem selectedItem) {
-                        gantt.setTimelineMonthFormat("yyyy MMMM");
-                    }
-                });
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineMonthFormat("yyyy MMMM");
+            }
+        });
         item = formatItem.addItem("Set 'dd.' week format", new Command() {
 
             @Override
@@ -665,14 +641,13 @@ public class DemoUI extends UI {
                 gantt.setTimelineWeekFormat(null);
             }
         });
-        item = formatItem.addItem(
-                "Set 'dd. EEEE' day format for Hour resolution", new Command() {
+        item = formatItem.addItem("Set 'dd. EEEE' day format for Hour resolution", new Command() {
 
-                    @Override
-                    public void menuSelected(MenuItem selectedItem) {
-                        gantt.setTimelineDayFormat("dd. EEEE");
-                    }
-                });
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineDayFormat("dd. EEEE");
+            }
+        });
 
         item = viewItem.addItem("Show Control Panel", new Command() {
 
@@ -810,8 +785,7 @@ public class DemoUI extends UI {
 
         final ColorPicker bgColorPicker = new ColorPicker();
         bgColorPicker.setPosition(300, 100);
-        bgColorPicker.setColor(new CssColorToColorPickerConverter()
-                .convertToModel(step.getBackgroundColor()));
+        bgColorPicker.setColor(new CssColorToColorPickerConverter().convertToModel(step.getBackgroundColor()));
         bgColorPicker.addColorChangeListener(new ColorChangeListener() {
             @Override
             public void colorChanged(ColorChangeEvent event) {
@@ -902,8 +876,7 @@ public class DemoUI extends UI {
         getUI().addWindow(win);
     }
 
-    private void fillPredecessorCanditatesToSelect(AbstractStep step,
-            final NativeSelect predecessorSelect) {
+    private void fillPredecessorCanditatesToSelect(AbstractStep step, final NativeSelect predecessorSelect) {
         for (Step stepCanditate : gantt.getSteps()) {
             if (!stepCanditate.equals(step) && stepCanditate instanceof Step) {
                 addItemToSelect(predecessorSelect, stepCanditate);
@@ -911,8 +884,7 @@ public class DemoUI extends UI {
         }
     }
 
-    private void fillParentStepCanditatesToSelect(AbstractStep step,
-            final NativeSelect parentStepSelect) {
+    private void fillParentStepCanditatesToSelect(AbstractStep step, final NativeSelect parentStepSelect) {
         if (!gantt.getSteps().contains(step)) {
             // new step
             parentStepSelect.setEnabled(true);
@@ -935,15 +907,12 @@ public class DemoUI extends UI {
     }
 
     @SuppressWarnings("unchecked")
-    private void commit(final Window win, final FieldGroup group,
-            final NativeSelect parentStepSelect) {
+    private void commit(final Window win, final FieldGroup group, final NativeSelect parentStepSelect) {
         try {
             group.commit();
-            AbstractStep step = ((BeanItem<AbstractStep>) group
-                    .getItemDataSource()).getBean();
+            AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource()).getBean();
             gantt.markStepDirty(step);
-            if (parentStepSelect.isEnabled()
-                    && parentStepSelect.getValue() != null) {
+            if (parentStepSelect.isEnabled() && parentStepSelect.getValue() != null) {
                 SubStep subStep = addSubStep(parentStepSelect, step);
                 step = subStep;
             }
@@ -955,8 +924,7 @@ public class DemoUI extends UI {
             }
             win.close();
         } catch (CommitException e) {
-            Notification.show("Commit failed", e.getMessage(),
-                    Type.ERROR_MESSAGE);
+            Notification.show("Commit failed", e.getMessage(), Type.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -968,8 +936,7 @@ public class DemoUI extends UI {
 
     @SuppressWarnings("unchecked")
     private void delete(final Window win, final FieldGroup group) {
-        AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource())
-                .getBean();
+        AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource()).getBean();
         if (step instanceof SubStep) {
             SubStep substep = (SubStep) step;
             substep.getOwner().removeSubStep(substep);
@@ -982,8 +949,7 @@ public class DemoUI extends UI {
         win.close();
     }
 
-    private SubStep addSubStep(final NativeSelect parentStepSelect,
-            AbstractStep dataSource) {
+    private SubStep addSubStep(final NativeSelect parentStepSelect, AbstractStep dataSource) {
         SubStep subStep = new SubStep();
         subStep.setCaption(dataSource.getCaption());
         subStep.setCaptionMode(dataSource.getCaptionMode());

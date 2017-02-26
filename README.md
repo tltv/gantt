@@ -1,27 +1,27 @@
-# Gantt Chart Add-on for Vaadin 7
+# Gantt Chart Add-on for Vaadin 8
 
-Gantt is an UI component add-on for Vaadin 7.
+Gantt is an UI component add-on for Vaadin 8.
 
 You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
 
 Download latest release jar from http://vaadin.com/directory#addon/gantt
 
-Please use version 0.3.0 or later with Vaadin Framework 7.2+. Version 0.3.0 is not backward compatible with earlier Vaadin Framework versions. 
-Version 0.2.2 is the last version for Vaadin Framework 7.0-7.1.
+Please use version 0.9.5 with Vaadin Framework 7.
 
 List of features that are supported:
 * Server side API allows to modify timeline options and step options like start/end date, caption, color and adding/removing steps
 * adjustable timeline range
 * timeline supports Hour, Day and Week resolutions 
 * modify step's start date and end date by dragging and moving the step (move and resize events)
+* reorder steps by drag and dropping 
 * scrolling enabled horizontally and vertically for a large chart content
 * scales the small timeline and content width up to fit in the space available
 * Vaadin Table can be used as a row header, vertical scrolling is mirrored to the table and vice versa
-* background grid (except for IE8)
-* dynamically modifiable predecessor relations between steps (Browser has to support SVG)
+* background grid
+* dynamically modifiable predecessor relations between steps
 * sub-steps
 * tooltips for steps
-* touch support (experimental)
+* touch support
 * supports Valo theme
 
 Technical details:
@@ -36,7 +36,8 @@ Technical details:
 	* SvgArrowWidget
 
 Tested to work with following browsers: 
-* IE 8, 9, 10, 11
+* IE 11
+* Edge
 * Firefox
 * Chrome
 * Safari

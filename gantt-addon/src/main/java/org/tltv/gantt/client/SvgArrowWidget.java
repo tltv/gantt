@@ -100,7 +100,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         }
     };
 
-    protected PointerDownHandler msPointerDownHandler = new PointerDownHandler() {
+    protected PointerDownHandler pointerDownHandler = new PointerDownHandler() {
 
         @Override
         public void onPointerDown(PointerDownEvent event) {
@@ -119,7 +119,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         }
     };
 
-    protected PointerUpHandler msPointerUpHandler = new PointerUpHandler() {
+    protected PointerUpHandler pointerUpHandler = new PointerUpHandler() {
 
         @Override
         public void onPointerUp(PointerUpEvent event) {
@@ -161,7 +161,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         }
     };
 
-    protected PointerMoveHandler msPointerMoveHandler = new PointerMoveHandler() {
+    protected PointerMoveHandler pointerMoveHandler = new PointerMoveHandler() {
 
         @Override
         public void onPointerMove(PointerMoveEvent event) {
@@ -179,7 +179,7 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         }
     };
 
-    protected PointerCancelHandler msPointerCancelHandler = new PointerCancelHandler() {
+    protected PointerCancelHandler pointerCancelHandler = new PointerCancelHandler() {
 
         @Override
         public void onPointerCancel(PointerCancelEvent event) {
@@ -215,8 +215,8 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
         this.touchSupported = touchSupported;
         this.msTouchSupported = msTouchSupported;
         if (msTouchSupported) {
-            addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
-            addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
+            addDomHandler(pointerDownHandler, PointerDownEvent.getType());
+            addDomHandler(pointerUpHandler, PointerUpEvent.getType());
         } else if (touchSupported) {
             addDomHandler(touchStartHandler, TouchStartEvent.getType());
         } else {
@@ -445,9 +445,9 @@ public class SvgArrowWidget extends Widget implements ArrowElement {
 
     protected void addMoveHandler() {
         if (msTouchSupported) {
-            moveRegisteration = addDomHandler(msPointerMoveHandler,
+            moveRegisteration = addDomHandler(pointerMoveHandler,
                     PointerMoveEvent.getType());
-            touchCancelRegisteration = addDomHandler(msPointerCancelHandler,
+            touchCancelRegisteration = addDomHandler(pointerCancelHandler,
                     PointerCancelEvent.getType());
         } else if (touchSupported) {
             moveRegisteration = addDomHandler(touchMoveHandler,

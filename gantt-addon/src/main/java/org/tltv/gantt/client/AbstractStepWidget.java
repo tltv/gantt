@@ -25,7 +25,7 @@ public class AbstractStepWidget extends ComplexPanel {
     protected long end = -1;
 
     protected ProgressElement progressElement;
-    protected AbstractStep step;
+    protected AbstractStep step = null;
 
     protected GanttWidget gantt;
     protected LocaleDataProvider localeDataProvider;
@@ -48,8 +48,7 @@ public class AbstractStepWidget extends ComplexPanel {
         bar.getStyle().setVisibility(Visibility.HIDDEN);
     }
 
-    public void setGantt(GanttWidget gantt,
-            LocaleDataProvider localeDataProvider) {
+    public void setGantt(GanttWidget gantt, LocaleDataProvider localeDataProvider) {
         this.gantt = gantt;
         setLocaleDataProvider(localeDataProvider);
     }
@@ -65,7 +64,7 @@ public class AbstractStepWidget extends ComplexPanel {
     /**
      * Set data source for this widget. Called when {@linkplain StepState} is
      * changed.
-     * 
+     *
      * @param step
      */
     public void setStep(AbstractStep step) {
@@ -115,8 +114,7 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     protected void updatePositionAndWidth() {
-        gantt.updateBarPercentagePosition(step.getStartDate(),
-                step.getEndDate(), getElement());
+        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getElement());
     }
 
     protected void updateProgress() {
@@ -158,8 +156,7 @@ public class AbstractStepWidget extends ComplexPanel {
         if (start != step.getStartDate() || end != step.getEndDate()) {
 
             // sanity check
-            if (step.getStartDate() < 0 || step.getEndDate() < 0
-                    || step.getEndDate() <= step.getStartDate()) {
+            if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
                 getElement().addClassName(STYLE_INVALID);
             } else {
                 updatePositionAndWidth();
@@ -182,7 +179,6 @@ public class AbstractStepWidget extends ComplexPanel {
 
     protected int countNonSubStepChilds() {
         return ((caption != null && caption.hasParentElement()) ? 1 : 0)
-                + ((progressElement != null && progressElement.getElement()
-                        .hasParentElement()) ? 1 : 0);
+                + ((progressElement != null && progressElement.getElement().hasParentElement()) ? 1 : 0);
     }
 }

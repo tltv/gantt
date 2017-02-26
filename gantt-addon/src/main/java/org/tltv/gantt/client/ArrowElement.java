@@ -27,7 +27,7 @@ public interface ArrowElement {
     public interface ArrowChangeHandler {
         /**
          * Arrow source/target has changed.
-         * 
+         *
          * @param startingPointChanged
          *            True when arrow's starting point has changed. False when
          *            ending point has changed.

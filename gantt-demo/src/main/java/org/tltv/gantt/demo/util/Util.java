@@ -13,26 +13,26 @@ import java.util.regex.Pattern;
 
 import org.tltv.gantt.Gantt;
 
-import com.vaadin.data.Property.ValueChangeEvent;
-import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Label;
-import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
-import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
+import com.vaadin.v7.data.Property.ValueChangeEvent;
+import com.vaadin.v7.data.Property.ValueChangeListener;
+import com.vaadin.v7.ui.HorizontalLayout;
+import com.vaadin.v7.ui.Label;
+import com.vaadin.v7.ui.NativeSelect;
+import com.vaadin.v7.ui.TextField;
+import com.vaadin.v7.ui.VerticalLayout;
 
 public class Util {
 
-    public static TextField createNumberEditor(String caption, float value,
-            final Component component, final NumberValueChange valueChange) {
+    public static TextField createNumberEditor(String caption, float value, final Component component,
+            final NumberValueChange valueChange) {
         TextField field = new TextField(caption);
         field.setColumns(5);
         field.setValue("" + value);
@@ -46,16 +46,15 @@ public class Util {
                     float f = Float.parseFloat("" + v);
                     valueChange.onValueChange(f);
                 } catch (NumberFormatException e) {
-                    Notification
-                            .show("Invalid floating number! Format is 123.345");
+                    Notification.show("Invalid floating number! Format is 123.345");
                 }
             }
         });
         return field;
     }
 
-    public static TextField createTextEditor(String caption, String value,
-            final Component component, final TextValueChange valueChange) {
+    public static TextField createTextEditor(String caption, String value, final Component component,
+            final TextValueChange valueChange) {
         TextField field = new TextField(caption);
         field.setValue("" + value);
         field.setImmediate(true);
@@ -71,30 +70,27 @@ public class Util {
     }
 
     public static TextField createHeightEditor(final Component component) {
-        return createNumberEditor("Height", component.getHeight(), component,
-                new NumberValueChange() {
+        return createNumberEditor("Height", component.getHeight(), component, new NumberValueChange() {
 
-                    @Override
-                    public void onValueChange(float number) {
-                        component.setHeight(number, component.getHeightUnits());
-                    }
-                });
+            @Override
+            public void onValueChange(float number) {
+                component.setHeight(number, component.getHeightUnits());
+            }
+        });
     }
 
     public static TextField createWidthEditor(final Component component) {
-        return createNumberEditor("Width", component.getWidth(), component,
-                new NumberValueChange() {
+        return createNumberEditor("Width", component.getWidth(), component, new NumberValueChange() {
 
-                    @Override
-                    public void onValueChange(float number) {
-                        component.setWidth(number, component.getWidthUnits());
-                    }
-                });
+            @Override
+            public void onValueChange(float number) {
+                component.setWidth(number, component.getWidthUnits());
+            }
+        });
     }
 
     public static NativeSelect createHeightUnitEditor(final Component component) {
-        return createNativeSelectEditor("Height Unit",
-                component.getHeightUnits(), Arrays.asList(Unit.values()),
+        return createNativeSelectEditor("Height Unit", component.getHeightUnits(), Arrays.asList(Unit.values()),
                 new SelectValueChange() {
 
                     @Override
@@ -105,8 +101,7 @@ public class Util {
     }
 
     public static NativeSelect createWidthUnitEditor(final Component component) {
-        return createNativeSelectEditor("Width Unit",
-                component.getWidthUnits(), Arrays.asList(Unit.values()),
+        return createNativeSelectEditor("Width Unit", component.getWidthUnits(), Arrays.asList(Unit.values()),
                 new SelectValueChange() {
 
                     @Override
@@ -116,8 +111,7 @@ public class Util {
                 });
     }
 
-    public static NativeSelect createNativeSelectEditor(String caption,
-            Object value, Collection<?> items,
+    public static NativeSelect createNativeSelectEditor(String caption, Object value, Collection<?> items,
             final SelectValueChange valueChange) {
         NativeSelect s = new NativeSelect(caption);
         for (Object i : items) {
@@ -197,8 +191,7 @@ public class Util {
         try {
             try {
                 for (String line; (line = reader.readLine()) != null;) {
-                    Pattern pattern = Pattern
-                            .compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
+                    Pattern pattern = Pattern.compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
                     Matcher matcher = pattern.matcher(line);
                     if (matcher.matches()) {
                         zones.add(matcher.group(2));
@@ -206,8 +199,7 @@ public class Util {
                 }
                 return zones;
             } catch (IOException e) {
-                throw new RuntimeException(String.format(
-                        "Failed to read time zones from %s", properties), e);
+                throw new RuntimeException(String.format("Failed to read time zones from %s", properties), e);
             }
         } finally {
             try {

@@ -2,20 +2,18 @@ package org.tltv.gantt.demo.util;
 
 import java.util.Locale;
 
-import com.vaadin.data.util.converter.Converter;
-import com.vaadin.shared.ui.colorpicker.Color;
+import com.vaadin.v7.data.util.converter.Converter;
+import com.vaadin.v7.shared.ui.colorpicker.Color;
 
 public class CssColorToColorPickerConverter implements Converter<String, Color> {
 
-    public Color convertToModel(String value)
-            throws com.vaadin.data.util.converter.Converter.ConversionException {
+    public Color convertToModel(String value) throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
         return convertToModel(value, getModelType(), null);
     }
 
     @Override
-    public Color convertToModel(String value,
-            Class<? extends Color> targetType, Locale locale)
-            throws com.vaadin.data.util.converter.Converter.ConversionException {
+    public Color convertToModel(String value, Class<? extends Color> targetType, Locale locale)
+            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
         if (value == null || value.trim().isEmpty()) {
             return Color.WHITE;
         }
@@ -25,8 +23,7 @@ public class CssColorToColorPickerConverter implements Converter<String, Color> 
         }
         try {
             java.awt.Color c = java.awt.Color.decode(value);
-            return new Color(c.getRed(), c.getGreen(), c.getBlue(),
-                    c.getAlpha());
+            return new Color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha());
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
@@ -34,9 +31,8 @@ public class CssColorToColorPickerConverter implements Converter<String, Color> 
     }
 
     @Override
-    public String convertToPresentation(Color value,
-            Class<? extends String> targetType, Locale locale)
-            throws com.vaadin.data.util.converter.Converter.ConversionException {
+    public String convertToPresentation(Color value, Class<? extends String> targetType, Locale locale)
+            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
         if (value != null) {
             return value.getCSS();
         }

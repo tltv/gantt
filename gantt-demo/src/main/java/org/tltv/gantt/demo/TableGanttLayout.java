@@ -3,9 +3,9 @@ package org.tltv.gantt.demo;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.Step;
 
-import com.vaadin.data.util.BeanItemContainer;
+import com.vaadin.v7.data.util.BeanItemContainer;
 import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.Table;
+import com.vaadin.v7.ui.Table;
 import com.vaadin.ui.UI;
 
 public class TableGanttLayout extends HorizontalLayout implements GanttListener {
@@ -20,13 +20,8 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
         setMargin(false);
         setSpacing(false);
 
-        UI.getCurrent()
-                .getPage()
-                .getStyles()
-                .add(".v-table-table tr td.v-table-cell-content { height: 36px; }");
-        UI.getCurrent()
-                .getPage()
-                .getStyles()
+        UI.getCurrent().getPage().getStyles().add(".v-table-table tr td.v-table-cell-content { height: 36px; }");
+        UI.getCurrent().getPage().getStyles()
                 .add(".v-table-table tr:first-child td.v-table-cell-content { height: 37px; }");
 
         ganttTable = createTableForGantt();
@@ -36,8 +31,7 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
     }
 
     private Table createTableForGantt() {
-        BeanItemContainer<Step> container = new BeanItemContainer<Step>(
-                Step.class);
+        BeanItemContainer<Step> container = new BeanItemContainer<Step>(Step.class);
 
         Table table = new Table(null, container);
         table.setSortEnabled(false);
@@ -55,8 +49,7 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
     @Override
     public void stepModified(Step step) {
         if (!ganttTable.containsId(step)) {
-            ((BeanItemContainer<Step>) ganttTable.getContainerDataSource())
-                    .addBean(step);
+            ((BeanItemContainer<Step>) ganttTable.getContainerDataSource()).addBean(step);
         } else {
             ganttTable.refreshRowCache();
         }
@@ -73,7 +66,6 @@ public class TableGanttLayout extends HorizontalLayout implements GanttListener 
             newStepIndex--;
         }
         ganttTable.removeItem(step);
-        ((BeanItemContainer<Step>) ganttTable.getContainerDataSource())
-                .addItemAt(newStepIndex, step);
+        ((BeanItemContainer<Step>) ganttTable.getContainerDataSource()).addItemAt(newStepIndex, step);
     }
 }

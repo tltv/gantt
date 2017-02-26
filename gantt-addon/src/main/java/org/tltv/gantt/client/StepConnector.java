@@ -33,12 +33,13 @@ import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractHasComponentsConnector;
 import com.vaadin.shared.ui.Connect;
+import com.vaadin.shared.ui.ContentMode;
 
 /**
  * Connector between GWT StepWidget and Vaadin StepComponent.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 @Connect(StepComponent.class)
 public class StepConnector extends AbstractHasComponentsConnector {
@@ -92,8 +93,8 @@ public class StepConnector extends AbstractHasComponentsConnector {
             public void execute() {
                 getWidget().updatePredecessor();
                 GanttConnector ganttConnector = getGanttConnector();
-                for (StepWidget stepWidget : ganttConnector.findRelatedSteps(
-                        getState().step, ganttConnector.getChildComponents())) {
+                for (StepWidget stepWidget : ganttConnector.findRelatedSteps(getState().step,
+                        ganttConnector.getChildComponents())) {
                     stepWidget.updatePredecessor();
                 }
             }
@@ -116,8 +117,7 @@ public class StepConnector extends AbstractHasComponentsConnector {
 
         if ((predecessor == null && oldPredecessor != null)
                 || (predecessor != null && !predecessor.equals(oldPredecessor))) {
-            getWidget().setPredecessorStepWidget(
-                    ((GanttConnector) getParent()).getStepWidget(predecessor));
+            getWidget().setPredecessorStepWidget(((GanttConnector) getParent()).getStepWidget(predecessor));
         }
     }
 
@@ -132,16 +132,14 @@ public class StepConnector extends AbstractHasComponentsConnector {
     }
 
     @Override
-    public void onConnectorHierarchyChange(
-            ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+    public void onConnectorHierarchyChange(ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
 
         // SubStepConnector handles adding new sub-step.
         // Here we handle removing and other necessary changed related
         // hierarchy.
         Set<SubStepWidget> removed = new HashSet<SubStepWidget>();
         // remove old sub-steps
-        for (ComponentConnector c : connectorHierarchyChangeEvent
-                .getOldChildren()) {
+        for (ComponentConnector c : connectorHierarchyChangeEvent.getOldChildren()) {
             if (!getChildComponents().contains(c)) {
                 SubStepWidget stepWidget = ((SubStepConnector) c).getWidget();
                 getWidget().remove(stepWidget);
@@ -164,16 +162,14 @@ public class StepConnector extends AbstractHasComponentsConnector {
 
     @Override
     public TooltipInfo getTooltipInfo(Element element) {
-        return new TooltipInfo(getState().step.getDescription(),
-                getState().errorMessage);
+        return new TooltipInfo(getState().step.getDescription(), ContentMode.HTML, getState().errorMessage);
     }
 
     @Override
     public boolean hasTooltip() {
         // Normally, there is a tooltip if description or errorMessage is set
         StepState state = getState();
-        if (state.description != null
-                && !state.step.getDescription().equals("")) {
+        if (state.step != null && state.step.getDescription() != null && !state.step.getDescription().equals("")) {
             return true;
         } else if (state.errorMessage != null && !state.errorMessage.equals("")) {
             return true;

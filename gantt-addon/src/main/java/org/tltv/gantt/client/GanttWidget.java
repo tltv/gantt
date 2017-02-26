@@ -90,7 +90,8 @@ import com.vaadin.client.event.PointerUpHandler;
  * <p>
  * Timeline's localization is handled via {@link LocaleDataProvider}.
  * <p>
- * Here are few steps that need to be notified when taking this widget in use. <br>
+ * Here are few steps that need to be notified when taking this widget in use.
+ * <br>
  * First of all, after constructing this widget, you need to initialize it by
  * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
  * that, make sure to call
@@ -100,11 +101,10 @@ import com.vaadin.client.event.PointerUpHandler;
  * method before initWidget.
  * <p>
  * Sample code snippet:
- * 
+ *
  * <pre>
  * GanttWidget widget = new GanttWidget();
- * widget.setBrowserInfo(isIe(), isChrome(), isSafari(), isWebkit(),
- *         getMajorBrowserVersion());
+ * widget.setBrowserInfo(isIe(), isChrome(), isSafari(), isWebkit(), getMajorBrowserVersion());
  * widget.setTouchSupportted(isTouchDevice());
  * widget.initWidget(ganttRpc, localeDataProvider);
  * </pre>
@@ -114,9 +114,9 @@ import com.vaadin.client.event.PointerUpHandler;
  * {@link #notifyHeightChanged(int)} or {@link #notifyWidthChanged(int)} methods
  * to do that. This needs to be done explicitly for example when widget's width
  * is 100%, and the parent's width changes due to browser window's resize event.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets {
 
@@ -136,10 +136,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private static final String STYLE_RESIZING = "resizing";
     private static final String STYLE_MOVE_ELEMENT = "mv-el";
 
-    private HandlerRegistration msPointerDownHandlerRegistration;
-    private HandlerRegistration msPointerUpHandlerRegistration;
-    private HandlerRegistration msPointerMoveHandlerRegistration;
-    private HandlerRegistration msPointerCancelHandlerRegistration;
+    private HandlerRegistration pointerDownHandlerRegistration;
+    private HandlerRegistration pointerUpHandlerRegistration;
+    private HandlerRegistration pointerMoveHandlerRegistration;
+    private HandlerRegistration pointerCancelHandlerRegistration;
 
     private HandlerRegistration touchStartHandlerRegistration;
     private HandlerRegistration touchEndHandlerRegistration;
@@ -246,10 +246,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         public void run() {
             GWT.log("doubleClickDetectionMaxTimer.run()");
 
-            boolean doFireClick = numberOfMouseClicksDetected > 0
-                    && previousMouseUpEvent != null
-                    && previousMouseUpBarElement != null
-                    && !isMoveOrResizingInProgress();
+            boolean doFireClick = numberOfMouseClicksDetected > 0 && previousMouseUpEvent != null
+                    && previousMouseUpBarElement != null && !isMoveOrResizingInProgress();
             NativeEvent targetEvent = previousMouseUpEvent;
             Element targetElement = previousMouseUpBarElement;
             cancelDoubleClickDetection();
@@ -288,8 +286,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             GWT.log("onDoubleClick(DoubleClickEvent)");
             if (event.getNativeButton() == NativeEvent.BUTTON_LEFT) {
                 doubleClickDetectionMaxTimer.cancel();
-                if (!insideDoubleClickDetectionInterval
-                        && numberOfMouseClicksDetected < 2) {
+                if (!insideDoubleClickDetectionInterval && numberOfMouseClicksDetected < 2) {
                     return; // ignore double-click
                 }
                 if (targetBarElement != null) {
@@ -338,8 +335,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 if (secondaryClickOnNextMouseUp) {
                     Element bar = getBar(event.getNativeEvent());
                     if (bar != null && isEnabled()) {
-                        getRpc().stepClicked(getStepUid(bar),
-                                event.getNativeEvent(), bar);
+                        getRpc().stepClicked(getStepUid(bar), event.getNativeEvent(), bar);
                     }
                 }
                 secondaryClickOnNextMouseUp = true;
@@ -379,8 +375,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 return; // multi-touch not supported
             }
             pendingPointerDownEvent = event.getNativeEvent();
-            capturePoint = new Point(
-                    getTouchOrMouseClientX(event.getNativeEvent()),
+            capturePoint = new Point(getTouchOrMouseClientX(event.getNativeEvent()),
                     getTouchOrMouseClientY(event.getNativeEvent()));
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
             event.preventDefault();
@@ -406,13 +401,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             if (capturePoint == null) {
                 return;
             }
-            movePoint = new Point(
-                    getTouchOrMouseClientX(event.getNativeEvent()),
+            movePoint = new Point(getTouchOrMouseClientX(event.getNativeEvent()),
                     getTouchOrMouseClientY(event.getNativeEvent()));
 
             // do nothing, if touch position has not changed
-            if (!(capturePoint.getX() == movePoint.getX() && capturePoint
-                    .getY() == movePoint.getY())) {
+            if (!(capturePoint.getX() == movePoint.getX() && capturePoint.getY() == movePoint.getY())) {
                 GanttWidget.this.onTouchOrMouseMove(event.getNativeEvent());
             }
         }
@@ -433,23 +426,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         @Override
         public void onTouchStart(TouchStartEvent event) {
             if (event.getTargetTouches().length() == 1) {
-                JavaScriptObject target = event.getNativeEvent()
-                        .getEventTarget().cast();
+                JavaScriptObject target = event.getNativeEvent().getEventTarget().cast();
                 containerScrollStartPosY = -1;
                 containerScrollStartPosX = -1;
 
-                if (target == container || target == content
-                        || (!isMovableSteps())) {
+                if (target == container || target == content || (!isMovableSteps())) {
                     boolean preventDefaultAndReturn = false;
                     // store x,y position for 'manual' vertical scrolling
                     if (isContentOverflowingVertically()) {
-                        containerScrollStartPosY = container.getScrollTop()
-                                + event.getTouches().get(0).getPageY();
+                        containerScrollStartPosY = container.getScrollTop() + event.getTouches().get(0).getPageY();
                         preventDefaultAndReturn = true;
                     }
                     if (isContentOverflowingHorizontally()) {
-                        containerScrollStartPosX = container.getScrollLeft()
-                                + event.getTouches().get(0).getPageX();
+                        containerScrollStartPosX = container.getScrollLeft() + event.getTouches().get(0).getPageX();
                         preventDefaultAndReturn = true;
                     }
                     if (preventDefaultAndReturn) {
@@ -482,13 +471,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 // did we intend to scroll the container?
                 // apply 'manual' vertical scrolling
                 if (containerScrollStartPosY != -1) {
-                    container.setScrollTop(containerScrollStartPosY
-                            - event.getChangedTouches().get(0).getPageY());
+                    container.setScrollTop(containerScrollStartPosY - event.getChangedTouches().get(0).getPageY());
                     preventDefaultAndReturn = true;
                 }
                 if (containerScrollStartPosX != -1) {
-                    container.setScrollLeft(containerScrollStartPosX
-                            - event.getChangedTouches().get(0).getPageX());
+                    container.setScrollLeft(containerScrollStartPosX - event.getChangedTouches().get(0).getPageX());
                     preventDefaultAndReturn = true;
                 }
                 if (preventDefaultAndReturn) {
@@ -513,7 +500,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
     };
 
-    private boolean ie, ie8, chrome, safari, webkit;
+    private boolean ie, chrome, safari, webkit;
 
     public GanttWidget() {
 
@@ -536,8 +523,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         content.appendChild(moveElement);
 
         scrollbarSpacer = DivElement.as(DOM.createDiv());
-        scrollbarSpacer.getStyle().setHeight(
-                AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
+        scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
         scrollbarSpacer.getStyle().setDisplay(Display.NONE);
 
         getElement().appendChild(timeline.getElement());
@@ -545,8 +531,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         getElement().appendChild(scrollbarSpacer);
     }
 
-    public void initWidget(GanttRpc ganttRpc,
-            LocaleDataProvider localeDataProvider) {
+    public void initWidget(GanttRpc ganttRpc, LocaleDataProvider localeDataProvider) {
         setRpc(ganttRpc);
         setLocaleDataProvider(localeDataProvider);
         resetListeners();
@@ -554,7 +539,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Add new StepWidget into content area.
-     * 
+     *
      * @param stepIndex
      *            Index of step (0 based) (not element index in container)
      * @param widget
@@ -562,8 +547,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      *            Updates position of affected steps. Usually it means steps
      *            below the target.
      */
-    public void addStep(int stepIndex, StepWidget stepWidget,
-            boolean updateAffectedSteps) {
+    public void addStep(int stepIndex, StepWidget stepWidget, boolean updateAffectedSteps) {
         DivElement bar = DivElement.as(stepWidget.getElement());
 
         boolean newStep = !bar.hasParentElement();
@@ -575,10 +559,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         // Update top
-        int stepsInContainer = getChildren().size()
-                - getAdditionalWidgetContentElementCount();
-        int indexInWidgetContainer = stepIndex
-                + getAdditionalWidgetContentElementCount();
+        int stepsInContainer = getChildren().size() - getAdditionalWidgetContentElementCount();
+        int indexInWidgetContainer = stepIndex + getAdditionalWidgetContentElementCount();
         // bar height should be defined in css
         int height = getElementHeightWithMargin(bar);
 
@@ -598,8 +580,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
                 bar.getStyle().setTop(top, Unit.PX);
 
                 if (updateAffectedSteps) {
-                    updateTopForAllStepsBelow(indexInWidgetContainer + 1,
-                            height);
+                    updateTopForAllStepsBelow(indexInWidgetContainer + 1, height);
                 }
             }
         }
@@ -615,7 +596,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Remove Widget from the content area.
-     * 
+     *
      * @param widget
      */
     public void removeStep(Widget widget) {
@@ -625,41 +606,36 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Update Gantt chart's timeline and content for the given steps. This won't
      * add any steps, but will update the content widths and heights.
-     * 
+     *
      * @param steps
      */
     public void update(List<StepWidget> steps) {
         if (startDate < 0 || endDate < 0 || startDate >= endDate) {
-            GWT.log("Invalid start and end dates. Gantt chart can't be rendered. Start: "
-                    + startDate + ", End: " + endDate);
+            GWT.log("Invalid start and end dates. Gantt chart can't be rendered. Start: " + startDate + ", End: "
+                    + endDate);
             return;
         }
 
         content.getStyle().setHeight(contentHeight, Unit.PX);
 
-        GWT.log("GanttWidget's active TimeZone: "
-                + getLocaleDataProvider().getTimeZone().getID()
-                + " (raw offset: "
-                + getLocaleDataProvider().getTimeZone().getStandardOffset()
-                + ")");
+        GWT.log("GanttWidget's active TimeZone: " + getLocaleDataProvider().getTimeZone().getID() + " (raw offset: "
+                + getLocaleDataProvider().getTimeZone().getStandardOffset() + ")");
 
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
-        timeline.update(resolution, startDate, endDate, firstDayOfRange,
-                firstHourOfRange, localeDataProvider);
+        timeline.update(resolution, startDate, endDate, firstDayOfRange, firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
         updateContainerStyle();
         updateContentWidth();
 
         updateStepWidths(steps);
 
-        wasTimelineOverflowingHorizontally = timeline
-                .isTimelineOverflowingHorizontally();
+        wasTimelineOverflowingHorizontally = timeline.isTimelineOverflowingHorizontally();
     }
 
     /**
      * Set minimum width for the content element.
-     * 
+     *
      * @param minWidth
      *            Minimum width in pixels.
      */
@@ -670,7 +646,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Return minimal width of the content.
-     * 
+     *
      * @return Minimum width in pixels.
      */
     public int getMinWidth() {
@@ -679,7 +655,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Get current currently active timeline {@link Resolution}.
-     * 
+     *
      * @return resolution enum
      */
     public Resolution getResolution() {
@@ -688,7 +664,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Set Gantt's timeline resolution.
-     * 
+     *
      * @param resolution
      *            New timeline resolution.
      */
@@ -699,7 +675,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Get timeline's start date. Date value should follow specification in
      * {@link Date#getTime()}.
-     * 
+     *
      * @return Start date in milliseconds.
      */
     public long getStartDate() {
@@ -709,7 +685,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Set timeline's start date. Date value should follow specification in
      * {@link Date#getTime()}.
-     * 
+     *
      * @param startDate
      *            New start date in milliseconds.
      */
@@ -720,7 +696,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Get timeline's end date. Date value should follow specification in
      * {@link Date#getTime()}.
-     * 
+     *
      * @return End date in milliseconds.
      */
     public long getEndDate() {
@@ -730,7 +706,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Set timeline's end date. Date value should follow specification in
      * {@link Date#getTime()}.
-     * 
+     *
      * @param endDate
      *            New end date in milliseconds.
      */
@@ -741,7 +717,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Set first day of timeline's date range. Value is between 1-7, where 1 is
      * SUNDAY.
-     * 
+     *
      * @param firstDayOfRange
      *            Value between 1-7.
      */
@@ -756,18 +732,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Notify Gantt widget that height has changed. Delegates necessary changes
      * to child elements.
-     * 
+     *
      * @param height
      *            New height in pixels
      */
     public void notifyHeightChanged(int height) {
         if (container != null && timeline != null) {
             if (!"".equals(getElement().getStyle().getHeight())) {
-                container.getStyle()
-                        .setHeight(
-                                height - getTimelineHeight()
-                                        - getHorizontalScrollbarSpacerHeight(),
-                                Unit.PX);
+                container.getStyle().setHeight(height - getTimelineHeight() - getHorizontalScrollbarSpacerHeight(),
+                        Unit.PX);
             } else {
                 // if the component has undefined height also set undefined
                 // height to the container
@@ -787,7 +760,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Get Timeline widget height.
-     * 
+     *
      * @return
      */
     public int getTimelineHeight() {
@@ -800,7 +773,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Notify Gantt widget that width has changed. Delegates necessary changes
      * to child elements.
-     * 
+     *
      * @param width
      *            New width in pixels
      */
@@ -808,8 +781,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         if (timeline != null) {
 
             boolean overflow = timeline.checkTimelineOverflowingHorizontally();
-            if (timeline.isAlwaysCalculatePixelWidths()
-                    || wasTimelineOverflowingHorizontally != overflow) {
+            if (timeline.isAlwaysCalculatePixelWidths() || wasTimelineOverflowingHorizontally != overflow) {
                 // scrollbar has just appeared/disappeared
                 wasTimelineOverflowingHorizontally = overflow;
                 if (!wasTimelineOverflowingHorizontally) {
@@ -828,7 +800,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Set RPC implementation that is used to communicate with the server.
-     * 
+     *
      * @param ganttRpc
      *            GanttRpc
      */
@@ -838,7 +810,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Get RPC implementation that is used to communicate with the server.
-     * 
+     *
      * @return GanttRpc
      */
     public GanttRpc getRpc() {
@@ -852,68 +824,54 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         Event.sinkEvents(container, Event.ONSCROLL | Event.ONCONTEXTMENU);
 
         if (contextMenuHandlerRegistration == null) {
-            contextMenuHandlerRegistration = addDomHandler(contextMenuHandler,
-                    ContextMenuEvent.getType());
+            contextMenuHandlerRegistration = addDomHandler(contextMenuHandler, ContextMenuEvent.getType());
         }
 
         if (scrollHandlerRegistration == null) {
-            scrollHandlerRegistration = addHandler(scrollHandler,
-                    ScrollEvent.getType());
+            scrollHandlerRegistration = addHandler(scrollHandler, ScrollEvent.getType());
         }
         if (isMsTouchSupported()) {
             // IE10 pointer events (ms-prefixed events)
-            if (msPointerDownHandlerRegistration == null) {
-                msPointerDownHandlerRegistration = addDomHandler(
-                        msPointerDownHandler, PointerDownEvent.getType());
+            if (pointerDownHandlerRegistration == null) {
+                pointerDownHandlerRegistration = addDomHandler(msPointerDownHandler, PointerDownEvent.getType());
             }
-            if (msPointerUpHandlerRegistration == null) {
-                msPointerUpHandlerRegistration = addDomHandler(
-                        msPointerUpHandler, PointerUpEvent.getType());
+            if (pointerUpHandlerRegistration == null) {
+                pointerUpHandlerRegistration = addDomHandler(msPointerUpHandler, PointerUpEvent.getType());
             }
-            if (msPointerMoveHandlerRegistration == null) {
-                msPointerMoveHandlerRegistration = addDomHandler(
-                        msPointerMoveHandler, PointerMoveEvent.getType());
+            if (pointerMoveHandlerRegistration == null) {
+                pointerMoveHandlerRegistration = addDomHandler(msPointerMoveHandler, PointerMoveEvent.getType());
             }
-            if (msPointerCancelHandlerRegistration == null) {
-                msPointerCancelHandlerRegistration = addHandler(
-                        msPointerCancelHandler, PointerCancelEvent.getType());
+            if (pointerCancelHandlerRegistration == null) {
+                pointerCancelHandlerRegistration = addHandler(msPointerCancelHandler, PointerCancelEvent.getType());
             }
         } else if (touchSupported) {
             // touch events replaces mouse events
             if (touchStartHandlerRegistration == null) {
-                touchStartHandlerRegistration = addDomHandler(
-                        touchStartHandler, TouchStartEvent.getType());
+                touchStartHandlerRegistration = addDomHandler(touchStartHandler, TouchStartEvent.getType());
             }
             if (touchEndHandlerRegistration == null) {
-                touchEndHandlerRegistration = addDomHandler(touchEndHandler,
-                        TouchEndEvent.getType());
+                touchEndHandlerRegistration = addDomHandler(touchEndHandler, TouchEndEvent.getType());
             }
             if (touchMoveHandlerRegistration == null) {
-                touchMoveHandlerRegistration = addDomHandler(touchMoveHandler,
-                        TouchMoveEvent.getType());
+                touchMoveHandlerRegistration = addDomHandler(touchMoveHandler, TouchMoveEvent.getType());
             }
             if (touchCancelHandlerRegistration == null) {
-                touchCancelHandlerRegistration = addHandler(touchCancelHandler,
-                        TouchCancelEvent.getType());
+                touchCancelHandlerRegistration = addHandler(touchCancelHandler, TouchCancelEvent.getType());
             }
 
         } else {
             if (mouseDblClickHandlerRegistration == null) {
-                mouseDblClickHandlerRegistration = addDomHandler(
-                        doubleClickHandler, DoubleClickEvent.getType());
+                mouseDblClickHandlerRegistration = addDomHandler(doubleClickHandler, DoubleClickEvent.getType());
             }
             if (mouseDownHandlerRegistration == null) {
-                mouseDownHandlerRegistration = addDomHandler(mouseDownHandler,
-                        MouseDownEvent.getType());
+                mouseDownHandlerRegistration = addDomHandler(mouseDownHandler, MouseDownEvent.getType());
             }
             if (mouseUpHandlerRegistration == null) {
-                mouseUpHandlerRegistration = addDomHandler(mouseUpHandler,
-                        MouseUpEvent.getType());
+                mouseUpHandlerRegistration = addDomHandler(mouseUpHandler, MouseUpEvent.getType());
             }
             if (isMovableSteps() || isResizableSteps()) {
                 if (mouseMoveHandlerRegistration == null) {
-                    mouseMoveHandlerRegistration = addDomHandler(
-                            mouseMoveHandler, MouseMoveEvent.getType());
+                    mouseMoveHandlerRegistration = addDomHandler(mouseMoveHandler, MouseMoveEvent.getType());
                 }
             } else if (mouseMoveHandlerRegistration != null) {
                 mouseMoveHandlerRegistration.removeHandler();
@@ -924,7 +882,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Return true if background grid is enabled.
-     * 
+     *
      * @return True if background grid is enabled.
      */
     public boolean isBackgroundGridEnabled() {
@@ -934,7 +892,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Set background grid enabled. Next time the widget is painted, the grid is
      * shown on the background of the container.
-     * 
+     *
      * @param backgroundGridEnabled
      *            True sets background grid enabled.
      */
@@ -944,7 +902,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Enable or disable touch support.
-     * 
+     *
      * @param touchSupported
      *            True enables touch support.
      */
@@ -954,7 +912,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Are touch events supported.
-     * 
+     *
      * @return True if touch events are supported.
      */
     public boolean isTouchSupported() {
@@ -963,7 +921,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Enable or disable resizable steps.
-     * 
+     *
      * @param resizableSteps
      *            True enables step resizing.
      */
@@ -973,7 +931,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Returns true if widget is enabled and steps are resizable.
-     * 
+     *
      * @return
      */
     public boolean isResizableSteps() {
@@ -982,7 +940,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Enable or disable movable step's -feature.
-     * 
+     *
      * @param movableSteps
      *            True makes steps movable.
      */
@@ -992,7 +950,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Returns true if widget is enabled and steps are movable.
-     * 
+     *
      * @return
      */
     public boolean isMovableSteps() {
@@ -1002,7 +960,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Returns true if the widget is enabled the steps are movable and the steps
      * are movable between rows.
-     * 
+     *
      * @return
      */
     public boolean isMovableStepsBetweenRows() {
@@ -1012,7 +970,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Returns true if the widget is enabled the steps are movable and the steps
      * are movable between rows.
-     * 
+     *
      * @return
      */
     public boolean isMovableStepsBetweenRows(Element bar) {
@@ -1021,7 +979,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Enable or disable movable steps between lines feature
-     * 
+     *
      * @param movableStepsBetweenRows
      *            True makes steps movable between lines
      */
@@ -1080,7 +1038,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Set LocaleDataProvider that is used to provide translations of months and
      * weekdays.
-     * 
+     *
      * @param localeDataProvider
      */
     public void setLocaleDataProvider(LocaleDataProvider localeDataProvider) {
@@ -1094,21 +1052,19 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Notify which browser this widget should optimize to. Usually just one
      * argument is true.
-     * 
+     *
      * @param ie
      * @param chrome
      * @param safari
      * @param webkit
      * @param majorVersion
      */
-    public void setBrowserInfo(boolean ie, boolean chrome, boolean safari,
-            boolean webkit, int majorVersion) {
+    public void setBrowserInfo(boolean ie, boolean chrome, boolean safari, boolean webkit, int majorVersion) {
         this.ie = ie;
-        ie8 = ie && majorVersion == 8;
         this.chrome = chrome;
         this.safari = safari;
         this.webkit = webkit;
-        timeline.setBrowserInfo(ie, ie8, majorVersion);
+        timeline.setBrowserInfo(ie, majorVersion);
     }
 
     /**
@@ -1149,13 +1105,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Get height of the scroll container. Includes the horizontal scrollbar
      * spacer.
-     * 
+     *
      * @return
      */
     public int getScrollContainerHeight() {
         if (scrollbarSpacer.getStyle().getDisplay().isEmpty()) {
-            return getScrollContainer().getClientHeight()
-                    + scrollbarSpacer.getClientHeight();
+            return getScrollContainer().getClientHeight() + scrollbarSpacer.getClientHeight();
         }
         return getScrollContainer().getClientHeight();
     }
@@ -1163,7 +1118,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Return true, if content is overflowing vertically. This means also that
      * vertical scroll bar is visible.
-     * 
+     *
      * @return
      */
     public boolean isContentOverflowingVertically() {
@@ -1176,7 +1131,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Return true, if content is overflowing horizontally. This means also that
      * horizontal scroll bar is visible.
-     * 
+     *
      * @return
      */
     public boolean isContentOverflowingHorizontally() {
@@ -1207,28 +1162,23 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
     }
 
-    public void updateBarPercentagePosition(long startDate, long endDate,
-            long ownerStartDate, long ownerEndDate, Element bar) {
-        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(bar
-                .getParentElement());
-        String sLeft = timeline.getLeftPositionPercentageStringForDate(
-                startDate, ownerStepWidth, ownerStartDate, ownerEndDate);
+    public void updateBarPercentagePosition(long startDate, long endDate, long ownerStartDate, long ownerEndDate,
+            Element bar) {
+        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(bar.getParentElement());
+        String sLeft = timeline.getLeftPositionPercentageStringForDate(startDate, ownerStepWidth, ownerStartDate,
+                ownerEndDate);
         bar.getStyle().setProperty("left", sLeft);
 
         double range = ownerEndDate - ownerStartDate;
-        String sWidth = timeline.getWidthPercentageStringForDateInterval(
-                endDate - startDate, range);
+        String sWidth = timeline.getWidthPercentageStringForDateInterval(endDate - startDate, range);
         bar.getStyle().setProperty("width", sWidth);
     }
 
-    public void updateBarPercentagePosition(long startDate, long endDate,
-            Element bar) {
-        String sLeft = timeline.getLeftPositionPercentageStringForDate(
-                startDate, getContentWidth());
+    public void updateBarPercentagePosition(long startDate, long endDate, Element bar) {
+        String sLeft = timeline.getLeftPositionPercentageStringForDate(startDate, getContentWidth());
         bar.getStyle().setProperty("left", sLeft);
 
-        String sWidth = timeline
-                .getWidthPercentageStringForDateInterval(endDate - startDate);
+        String sWidth = timeline.getWidthPercentageStringForDateInterval(endDate - startDate);
         bar.getStyle().setProperty("width", sWidth);
     }
 
@@ -1253,7 +1203,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     public native boolean isMsTouchSupported()
     /*-{
-       return !!navigator.msMaxTouchPoints;
+       return !!(navigator.maxTouchPoints > 0);
     }-*/;
 
     /**
@@ -1282,22 +1232,17 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      *            Target index of element in DOM.
      * @param domInsert
      *            true: Insert at specific position. false: append at the end.
-     * */
+     */
     @Override
-    protected void insert(Widget child, Element container, int beforeIndex,
-            boolean domInsert) {
-        GWT.log("Count content elements: "
-                + content.getChildCount()
-                + " ("
-                + getAdditionalNonWidgetContentElementCount()
-                + " non-widget non-step elements, "
+    protected void insert(Widget child, Element container, int beforeIndex, boolean domInsert) {
+        GWT.log("Count content elements: " + content.getChildCount() + " ("
+                + getAdditionalNonWidgetContentElementCount() + " non-widget non-step elements, "
                 + (getAdditonalContentElementCount() - getAdditionalNonWidgetContentElementCount())
                 + " non-step widgets.)");
 
         // Validate index; adjust if the widget is already a child of this
         // panel.
-        int adjustedBeforeStepIndex = adjustIndex(child, beforeIndex
-                - getAdditionalNonWidgetContentElementCount())
+        int adjustedBeforeStepIndex = adjustIndex(child, beforeIndex - getAdditionalNonWidgetContentElementCount())
                 - getAdditionalWidgetContentElementCount();
 
         // Detach new child. Might also remove additional widgets like
@@ -1305,15 +1250,11 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         child.removeFromParent();
 
         // Logical attach.
-        getChildren().insert(
-                child,
-                adjustedBeforeStepIndex
-                        + getAdditionalWidgetContentElementCount());
+        getChildren().insert(child, adjustedBeforeStepIndex + getAdditionalWidgetContentElementCount());
 
         // Physical attach.
         if (domInsert) {
-            DOM.insertChild(container, child.getElement(),
-                    adjustedBeforeStepIndex + getAdditonalContentElementCount());
+            DOM.insertChild(container, child.getElement(), adjustedBeforeStepIndex + getAdditonalContentElementCount());
         } else {
             DOM.appendChild(container, child.getElement());
         }
@@ -1385,7 +1326,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * Update step widths based on the timeline. Timeline's width have to be
      * final at this point.
-     * 
+     *
      * @param steps
      */
     protected void updateStepWidths(Collection<StepWidget> steps) {
@@ -1400,8 +1341,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return null;
         }
         Element parent = element;
-        while (parent.getParentElement() != null
-                && parent.getParentElement() != content && !isBar(parent)) {
+        while (parent.getParentElement() != null && parent.getParentElement() != content && !isBar(parent)) {
             parent = parent.getParentElement();
         }
         if (isBar(parent)) {
@@ -1454,26 +1394,24 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     /**
      * This is called when target bar element is moved successfully. Element's
      * CSS attributes 'left' and 'width' are updated (unit in pixels).
-     * 
+     *
      * @param bar
      *            Moved Bar element
      * @param y
      */
     protected void moveCompleted(Element bar, int y, NativeEvent event) {
         double deltay = y - capturePoint.getY();
-        GWT.log("Position delta y: " + deltay + "px" + " capture point y is "
-                + capturePoint.getY());
+        GWT.log("Position delta y: " + deltay + "px" + " capture point y is " + capturePoint.getY());
 
         Element newPosition = findStepElement(bar, (int) capturePointAbsTopPx,
-                (int) (capturePointAbsTopPx + getElementHeightWithMargin(bar)),
-                y, deltay);
+                (int) (capturePointAbsTopPx + getElementHeightWithMargin(bar)), y, deltay);
         internalMoveOrResizeCompleted(bar, newPosition, true, event);
     }
 
     /**
      * This is called when target bar is resized successfully. Element's CSS
      * attributes 'left' and 'width' are updated (unit in pixels).
-     * 
+     *
      * @param bar
      *            Resized Bar element
      */
@@ -1494,10 +1432,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
 
         targetBarElement = bar;
-        capturePoint = new Point(getTouchOrMouseClientX(event),
-                getTouchOrMouseClientY(event));
-        movePoint = new Point(getTouchOrMouseClientX(event),
-                getTouchOrMouseClientY(event));
+        capturePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
+        movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
 
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
@@ -1595,7 +1531,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     /**
      * Handle step's move event.
-     * 
+     *
      * @param event
      *            NativeEvent
      * @return True, if this event was handled and had effect on step.
@@ -1603,8 +1539,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     protected boolean onTouchOrMouseMove(NativeEvent event) {
         Element bar = getBar(event);
         if (bar != null) {
-            movePoint = new Point(getTouchOrMouseClientX(event),
-                    getTouchOrMouseClientY(event));
+            movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
             showResizingPointer(bar, detectResizing(bar));
         }
 
@@ -1647,17 +1582,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         return true;
     }
 
-    protected void updateMoveInProgressFlag(Element bar, double deltax,
-            double deltay) {
-        moveInProgress = deltax != 0.0
-                || (isMovableStepsBetweenRows(bar) && Math.abs(deltay) > 3);
+    protected void updateMoveInProgressFlag(Element bar, double deltax, double deltay) {
+        moveInProgress = deltax != 0.0 || (isMovableStepsBetweenRows(bar) && Math.abs(deltay) > 3);
     }
 
     /**
      * Helper method to find Step element by given starting point and y-position
      * and delta-y. Starting point is there to optimize performance a bit as
      * there's no need to iterate through every single step element.
-     * 
+     *
      * @param startFromBar
      *            Starting point element
      * @param newY
@@ -1667,16 +1600,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
      * @return Step element at y-axis position. May be same element as given
      *         startFromBar element.
      */
-    protected Element findStepElement(Element startFromBar, int startTopY,
-            int startBottomY, int newY, double deltay) {
+    protected Element findStepElement(Element startFromBar, int startTopY, int startBottomY, int newY, double deltay) {
         boolean subStep = isSubBar(startFromBar);
         if (subStep) {
             startFromBar = startFromBar.getParentElement();
         }
 
         if (isBetween(newY, startTopY, startBottomY)) {
-            GWT.log("findStepElement returns same: Y " + newY + " between "
-                    + startTopY + "-" + startBottomY);
+            GWT.log("findStepElement returns same: Y " + newY + " between " + startTopY + "-" + startBottomY);
             return startFromBar;
         }
         int startIndex = getChildIndex(content, startFromBar);
@@ -1686,8 +1617,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             i++;
             for (; i < content.getChildCount(); i++) {
                 barCanditate = Element.as(content.getChild(i));
-                if (isBetween(newY, barCanditate.getAbsoluteTop(),
-                        barCanditate.getAbsoluteBottom())) {
+                if (isBetween(newY, barCanditate.getAbsoluteTop(), barCanditate.getAbsoluteBottom())) {
                     if (!subStep && i == (startIndex + 1)) {
                         // moving directly over the following step will be
                         // ignored (if not sub-step).
@@ -1700,8 +1630,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             i--;
             for (; i >= getAdditonalContentElementCount(); i--) {
                 barCanditate = Element.as(content.getChild(i));
-                if (isBetween(newY, barCanditate.getAbsoluteTop(),
-                        barCanditate.getAbsoluteBottom())) {
+                if (isBetween(newY, barCanditate.getAbsoluteTop(), barCanditate.getAbsoluteBottom())) {
                     return barCanditate;
                 }
             }
@@ -1745,8 +1674,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     protected StepWidget getStepWidget(Element stepElement) {
-        Widget widget = getWidget(getChildIndex(content, stepElement)
-                - getAdditionalNonWidgetContentElementCount());
+        Widget widget = getWidget(getChildIndex(content, stepElement) - getAdditionalNonWidgetContentElementCount());
         if (widget instanceof StepWidget) {
             return (StepWidget) widget;
         }
@@ -1769,8 +1697,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private void updateTopForAllStepsBelow(int startIndex, int delta) {
-        GWT.log("Updating top for all steps below index " + startIndex
-                + ". Delta y: " + delta + "px");
+        GWT.log("Updating top for all steps below index " + startIndex + ". Delta y: " + delta + "px");
         // update top for all elements below
         Element elementBelow;
         for (int i = startIndex; i < getChildren().size(); i++) {
@@ -1805,23 +1732,20 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return;
         }
         Element secondResolutionBlock = null;
-        Double firstResolutionBlockWidth = timeline
-                .getFirstResolutionElementWidth();
+        Double firstResolutionBlockWidth = timeline.getFirstResolutionElementWidth();
         if (firstResolutionBlockWidth == null) {
             return;
         }
         Double secondResolutionBlockWidth = null;
         if (resDivElementCount > 2) {
-            secondResolutionBlock = Element.as(timeline.getResolutionDiv()
-                    .getChild(1));
+            secondResolutionBlock = Element.as(timeline.getResolutionDiv().getChild(1));
             secondResolutionBlockWidth = getBoundingClientRectWidth(secondResolutionBlock);
         }
 
         boolean contentOverflowingHorizontally = isContentOverflowingHorizontally();
 
         boolean adjustBgPosition = secondResolutionBlockWidth != null
-                && !firstResolutionBlockWidth
-                        .equals(secondResolutionBlockWidth);
+                && !firstResolutionBlockWidth.equals(secondResolutionBlockWidth);
         double gridBlockWidthPx = 0.0;
         if (!adjustBgPosition) {
             gridBlockWidthPx = firstResolutionBlockWidth;
@@ -1829,49 +1753,38 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             gridBlockWidthPx = secondResolutionBlockWidth;
         }
 
-        updateContainerBackgroundSize(contentOverflowingHorizontally,
-                gridBlockWidthPx);
+        updateContainerBackgroundSize(contentOverflowingHorizontally, gridBlockWidthPx);
 
-        updateContainerBackgroundPosition(firstResolutionBlockWidth,
-                contentOverflowingHorizontally, gridBlockWidthPx,
+        updateContainerBackgroundPosition(firstResolutionBlockWidth, contentOverflowingHorizontally, gridBlockWidthPx,
                 adjustBgPosition);
     }
 
-    private void updateContainerBackgroundSize(
-            boolean contentOverflowingHorizontally, double gridBlockWidthPx) {
+    private void updateContainerBackgroundSize(boolean contentOverflowingHorizontally, double gridBlockWidthPx) {
         String gridBlockWidth = null;
         if (contentOverflowingHorizontally || useAlwaysPxSizeInBackground()) {
-            gridBlockWidth = timeline.toCssCalcOrNumberString(gridBlockWidthPx,
-                    "px");
+            gridBlockWidth = timeline.toCssCalcOrNumberString(gridBlockWidthPx, "px");
         } else {
             double contentWidth = getBoundingClientRectWidth(content);
-            gridBlockWidth = timeline.toCssCalcOrNumberString(
-                    (100.0 / contentWidth) * gridBlockWidthPx, "%");
+            gridBlockWidth = timeline.toCssCalcOrNumberString((100.0 / contentWidth) * gridBlockWidthPx, "%");
         }
 
         int gridBlockHeightPx = getBgGridCellHeight();
-        bgGrid.setBackgroundSize(gridBlockWidth, gridBlockWidthPx,
-                gridBlockHeightPx);
+        bgGrid.setBackgroundSize(gridBlockWidth, gridBlockWidthPx, gridBlockHeightPx);
     }
 
-    private void updateContainerBackgroundPosition(
-            double firstResolutionBlockWidth,
-            boolean contentOverflowingHorizontally, double gridBlockWidthPx,
-            boolean adjustBgPosition) {
+    private void updateContainerBackgroundPosition(double firstResolutionBlockWidth,
+            boolean contentOverflowingHorizontally, double gridBlockWidthPx, boolean adjustBgPosition) {
         if (adjustBgPosition) {
             double realBgPosXPx = firstResolutionBlockWidth - 1.0;
 
             if (useAlwaysPxSizeInBackground() || contentOverflowingHorizontally) {
-                bgGrid.setBackgroundPosition(
-                        timeline.toCssCalcOrNumberString(realBgPosXPx, "px"),
-                        "0px", realBgPosXPx, 0);
+                bgGrid.setBackgroundPosition(timeline.toCssCalcOrNumberString(realBgPosXPx, "px"), "0px", realBgPosXPx,
+                        0);
             } else {
                 double timelineWidth = calculateBackgroundGridWidth();
                 double relativeBgAreaWidth = timelineWidth - gridBlockWidthPx;
                 double bgPosX = (100.0 / relativeBgAreaWidth) * realBgPosXPx;
-                bgGrid.setBackgroundPosition(
-                        timeline.toCssCalcOrNumberString(bgPosX, "%"), "0px",
-                        realBgPosXPx, 0);
+                bgGrid.setBackgroundPosition(timeline.toCssCalcOrNumberString(bgPosX, "%"), "0px", realBgPosXPx, 0);
             }
         } else {
             bgGrid.setBackgroundPosition("-1px", "0", -1, 0);
@@ -1906,9 +1819,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private int getElementHeightWithMargin(Element div) {
         int height = div.getClientHeight();
         double marginHeight = 0;
-        if (!ie8) {
-            marginHeight = getMarginByComputedStyle(div);
-        }
+        marginHeight = getMarginByComputedStyle(div);
         return height + (int) Math.round(marginHeight);
     }
 
@@ -1925,8 +1836,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         String styleLeft = target.getStyle().getLeft();
         // user capturePointLeftPx as default
         double left = capturePointLeftPx;
-        if (styleLeft != null && styleLeft.length() > 2
-                && styleLeft.endsWith("px")) {
+        if (styleLeft != null && styleLeft.length() > 2 && styleLeft.endsWith("px")) {
             // if target's 'left' is pixel value like '123px', use that.
             // When target is already moved, then it's using pixel values. If
             // it's not moved yet, it may use percentage value.
@@ -1936,16 +1846,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             left += target.getParentElement().getOffsetLeft();
         }
         moveElement.getStyle().setProperty("left", left + "px");
-        moveElement.getStyle().setProperty("width",
-                target.getClientWidth() + "px");
+        moveElement.getStyle().setProperty("width", target.getClientWidth() + "px");
     }
 
     private void hideMoveElement() {
         moveElement.getStyle().setDisplay(Display.NONE);
     }
 
-    private void internalMoveOrResizeCompleted(Element bar,
-            Element newPosition, boolean move, NativeEvent event) {
+    private void internalMoveOrResizeCompleted(Element bar, Element newPosition, boolean move, NativeEvent event) {
         String stepUid = getStepUid(bar);
         String newStepUid = stepUid;
         if (newPosition != null && bar != newPosition) {
@@ -1960,8 +1868,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             double ownerLeft = bar.getParentElement().getOffsetLeft();
             left += ownerLeft;
             ownerStartDate = timeline.getDateForLeftPosition(ownerLeft);
-            ownerLeft += GanttUtil.getBoundingClientRectWidth(bar
-                    .getParentElement());
+            ownerLeft += GanttUtil.getBoundingClientRectWidth(bar.getParentElement());
             ownerEndDate = timeline.getDateForLeftPosition(ownerLeft);
         }
         long startDate = timeline.getDateForLeftPosition(left);
@@ -1969,8 +1876,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         long endDate = timeline.getDateForLeftPosition(left);
         // update left-position to percentage (so that it scales again)
         if (subBar) {
-            updateBarPercentagePosition(startDate, endDate, ownerStartDate,
-                    ownerEndDate, bar);
+            updateBarPercentagePosition(startDate, endDate, ownerStartDate, ownerEndDate, bar);
         } else {
             updateBarPercentagePosition(startDate, endDate, bar);
         }
@@ -1986,8 +1892,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private void registerBarEventListener(final DivElement bar) {
-        Event.sinkEvents(bar, Event.ONSCROLL | Event.MOUSEEVENTS
-                | Event.TOUCHEVENTS);
+        Event.sinkEvents(bar, Event.ONSCROLL | Event.MOUSEEVENTS | Event.TOUCHEVENTS);
     }
 
     private boolean isBar(NativeEvent event) {
@@ -1996,12 +1901,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private double parseSize(String size, String suffix) {
-        if (size == null || size.length() == 0 || "0".equals(size)
-                || "0.0".equals(size)) {
+        if (size == null || size.length() == 0 || "0".equals(size) || "0.0".equals(size)) {
             return 0;
         }
-        return Double.parseDouble(size.substring(0,
-                size.length() - suffix.length()));
+        return Double.parseDouble(size.substring(0, size.length() - suffix.length()));
     }
 
     private int getStepIndex(Element parent, Element child) {
@@ -2012,8 +1915,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private int getAdditonalContentElementCount() {
         // moveElement and background element inside the content is noticed.
         // extraContentElements are also noticed.
-        return getAdditionalNonWidgetContentElementCount()
-                + extraContentElements.size();
+        return getAdditionalNonWidgetContentElementCount() + extraContentElements.size();
     }
 
     private int isMoveElementAttached() {
@@ -2042,8 +1944,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private boolean detectResizing(Element bar) {
-        return isResizableStep(bar) && !hasSubBars(bar)
-                && (isResizingLeft(bar) || isResizingRight(bar));
+        return isResizableStep(bar) && !hasSubBars(bar) && (isResizingLeft(bar) || isResizingRight(bar));
     }
 
     private boolean isMoveOrResizingInProgress() {
@@ -2055,8 +1956,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return false;
         }
         AbstractStepWidget step = getAbstractStepWidget(bar);
-        return step != null && step.getStep() != null
-                && step.getStep().isResizable();
+        return step != null && step.getStep() != null && step.getStep().isResizable();
     }
 
     private boolean isMovableStep(Element bar) {
@@ -2064,8 +1964,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             return false;
         }
         AbstractStepWidget step = getAbstractStepWidget(bar);
-        return step != null && step.getStep() != null
-                && step.getStep().isMovable();
+        return step != null && step.getStep() != null && step.getStep().isMovable();
     }
 
     private boolean isResizingLeft(Element bar) {
@@ -2194,10 +2093,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     }
 
     private double getContentWidth() {
-        if (!ie8) {
-            return getBoundingClientRectWidth(content);
-        }
-        return content.getClientWidth();
+        return getBoundingClientRectWidth(content);
     }
 
 }

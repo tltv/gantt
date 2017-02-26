@@ -52,15 +52,15 @@ import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
-import com.vaadin.ui.Table;
-import com.vaadin.ui.Table.ColumnResizeEvent;
-import com.vaadin.ui.Table.ColumnResizeListener;
-import com.vaadin.ui.Tree.CollapseEvent;
-import com.vaadin.ui.Tree.CollapseListener;
-import com.vaadin.ui.Tree.ExpandEvent;
-import com.vaadin.ui.Tree.ExpandListener;
-import com.vaadin.ui.TreeTable;
 import com.vaadin.util.ReflectTools;
+import com.vaadin.v7.ui.Table;
+import com.vaadin.v7.ui.Table.ColumnResizeEvent;
+import com.vaadin.v7.ui.Table.ColumnResizeListener;
+import com.vaadin.v7.ui.Tree.CollapseEvent;
+import com.vaadin.v7.ui.Tree.CollapseListener;
+import com.vaadin.v7.ui.Tree.ExpandEvent;
+import com.vaadin.v7.ui.Tree.ExpandListener;
+import com.vaadin.v7.ui.TreeTable;
 
 /**
  * Gantt Chart server side component.
@@ -76,12 +76,11 @@ import com.vaadin.util.ReflectTools;
  * With a resolution {@link Resolution#Week} and {@link Resolution#Day} timeline
  * range's time is adjusted internally to start from minimum 00:00:00.000 and
  * end to maximum 23:59:59:999 (for 24h locale, 12H is also noticed).
- * 
+ *
  * @author Tltv
- * 
+ *
  */
-public class Gantt extends com.vaadin.ui.AbstractComponent implements
-        HasComponents {
+public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements HasComponents {
 
     private Date startDate;
     private Date endDate;
@@ -101,25 +100,22 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
 
         @Override
-        public void onMove(String stepUid, String newStepUid, long startDate,
-                long endDate, MouseEventDetails details) {
+        public void onMove(String stepUid, String newStepUid, long startDate, long endDate, MouseEventDetails details) {
             fireMoveEvent(stepUid, newStepUid, startDate, endDate, details);
         }
 
         @Override
-        public void onResize(String stepUid, long startDate, long endDate,
-                MouseEventDetails details) {
+        public void onResize(String stepUid, long startDate, long endDate, MouseEventDetails details) {
             fireResizeEvent(stepUid, startDate, endDate, details);
         }
 
         @Override
-        public void onPredecessorChanged(String newPredecessorStepUid,
-                String forTargetStepUid, String clearPredecessorForStepUid) {
+        public void onPredecessorChanged(String newPredecessorStepUid, String forTargetStepUid,
+                String clearPredecessorForStepUid) {
             if (newPredecessorStepUid == forTargetStepUid) {
                 return;
             }
-            firePredecessorChangeEvent(newPredecessorStepUid, forTargetStepUid,
-                    clearPredecessorForStepUid);
+            firePredecessorChangeEvent(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid);
         }
     };
 
@@ -177,13 +173,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * <p>
      * For {@link Resolution#Hour}, given date is adjusted like this: 1/1/2010
      * 12:12:12 &rarr; 1/1/2010 12:00:00.
-     * 
+     *
      * @param date
      */
     public void setStartDate(Date date) {
         if (date == null) {
-            throw new UnsupportedOperationException(
-                    "Setting a null start date for the Gantt is not allowed.");
+            throw new UnsupportedOperationException("Setting a null start date for the Gantt is not allowed.");
         }
         setInternalStartDate(date);
         updateTimelineStartTimeDetails();
@@ -194,13 +189,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
      * to a maximum possible for the given date (1/1/2010 12:12:12 &rarr;
      * 1/1/20120 23:59:59).
-     * 
+     *
      * @param date
      */
     public void setEndDate(Date date) {
         if (date == null) {
-            throw new UnsupportedOperationException(
-                    "Setting a null end date for the Gantt is not allowed.");
+            throw new UnsupportedOperationException("Setting a null end date for the Gantt is not allowed.");
         }
         setInternalEndDate(date);
         updateTimelineStartTimeDetails();
@@ -208,7 +202,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Get start date of the Gantt chart's timeline.
-     * 
+     *
      * @return Start Date
      */
     public Date getStartDate() {
@@ -217,7 +211,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Get end date of the Gantt chart's timeline.
-     * 
+     *
      * @return End Date
      */
     public Date getEndDate() {
@@ -228,7 +222,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Set new timeline resolution. Allowed resolutions are
      * {@link Resolution#Hour}, {@link Resolution#Day} and
      * {@link Resolution#Week}.
-     * 
+     *
      * @param resolution
      */
     public void setResolution(Resolution resolution) {
@@ -247,7 +241,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Get current timeline resolution.
-     * 
+     *
      * @return
      */
     public Resolution getResolution() {
@@ -256,7 +250,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Add new {@link Step}.
-     * 
+     *
      * @param step
      *            New Step object
      */
@@ -271,10 +265,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Add new {@link Step} at a specific index and shifts the current object at
      * that index and any subsequent objects forward.
-     * 
+     *
      * @param step
      *            New Step object
-     * 
+     *
      * @throws IndexOutOfBoundsException
      *             if the index is out of range (index < 0 || index >=
      *             getState().steps.size())
@@ -292,7 +286,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Move existing step at a specific index and shifts the current object at
      * that index and any subsequent objects forward.
-     * 
+     *
      * @throws IndexOutOfBoundsException
      *             if the index is out of range (index < 0 || index >=
      *             getState().steps.size())
@@ -317,8 +311,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * sub-step's owner is null or owner is same as target step.
      */
     public void moveSubStep(SubStep subStep, Step toStep) {
-        if (subStep == null || toStep == null || subStep.getOwner() == null
-                || subStep.getOwner().equals(toStep)) {
+        if (subStep == null || toStep == null || subStep.getOwner() == null || subStep.getOwner().equals(toStep)) {
             return;
         }
         subStep.getOwner().removeSubStep(subStep);
@@ -327,7 +320,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Remove {@link Step}.
-     * 
+     *
      * @param step
      *            Target Step
      * @return true when removed successfully.
@@ -353,7 +346,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return a step at a specific index in list of steps. Returns null if index
      * is out of bounds.
-     * 
+     *
      * @param index
      *            Index of Step.
      * @return Step
@@ -367,7 +360,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Get Step by UID.
-     * 
+     *
      * @param uid
      *            Unique Identifier of Step
      * @return Step with given UID or null if step doesn't exist.
@@ -394,7 +387,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Returns a unmodifiable List of steps.
-     * 
+     *
      * @return List of steps
      */
     public List<Step> getSteps() {
@@ -417,7 +410,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Returns true if user can resize the step length. Default is true.
-     * 
+     *
      * @return true if rezisable
      */
     public boolean isResizableSteps() {
@@ -426,7 +419,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Enable or disable step resizing -feature. Enabled by default.
-     * 
+     *
      * @param resizable
      *            True enables step resizing.
      */
@@ -437,7 +430,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return true if user can move the step position in the time line. Default
      * is true.
-     * 
+     *
      * @return true if movable
      */
     public boolean isMovable() {
@@ -446,7 +439,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Enable or disable step moving -feature. Enabled by default.
-     * 
+     *
      * @param movable
      *            True enables step moving.
      */
@@ -456,7 +449,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Return true if user can move the step between rows. Default is false.
-     * 
+     *
      * @return true if movable
      */
     public boolean isMovableStepsBetweenRows() {
@@ -465,7 +458,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Enable or disable step moving between rows -feature. Disabled by default.
-     * 
+     *
      * @param movable
      *            True enables step moving vertically.
      */
@@ -476,7 +469,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return true if years should be shown in a row in the time line. Default
      * is true.
-     * 
+     *
      * @return
      */
     public boolean isYearsVisible() {
@@ -485,7 +478,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Set time line's year row visible or hidden.
-     * 
+     *
      * @param visible
      */
     public void setYearsVisible(boolean visible) {
@@ -495,7 +488,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return true if months should be shown in a row in the time line. Default
      * is true.
-     * 
+     *
      * @return
      */
     public boolean isMonthsVisible() {
@@ -504,7 +497,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Set time line's month row visible or hidden.
-     * 
+     *
      * @param visible
      */
     public void setMonthsVisible(boolean visible) {
@@ -513,7 +506,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Set timeline's year row's year format. Default is just year number.
-     * 
+     *
      * @param format
      *            Format string like 'dd yyyy MMM' or 'MMMM'
      */
@@ -523,7 +516,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Set timeline's month row's year format. Default is full month name.
-     * 
+     *
      * @param format
      *            Format string like 'dd yyyy MMM' or 'MMMM'
      */
@@ -533,7 +526,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Timeline's year row's year format.
-     * 
+     *
      * @return
      */
     public String getTimelineYearFormat() {
@@ -542,7 +535,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Timeline's month row's month format.
-     * 
+     *
      * @return
      */
     public String getTimelineMonthFormat() {
@@ -552,7 +545,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set timeline's week row's week format for {@link Resolution#Week}
      * resolution. Default is week number.
-     * 
+     *
      * @param weekFormat
      *            Format string like 'dd'
      */
@@ -562,7 +555,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Timeline's week row's week format for {@link Resolution#Week} resolution.
-     * 
+     *
      * @return
      */
     public String getTimelineWeekFormat() {
@@ -572,7 +565,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Set timeline's day row's format for {@link Resolution#Hour} resolution.
      * Default is number of day in month.
-     * 
+     *
      * @param dayFormat
      *            Format string like 'dd'
      */
@@ -582,7 +575,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Timeline's day row's day format for {@link Resolution#Hour} resolution.
-     * 
+     *
      * @return
      */
     public String getTimelineDayFormat() {
@@ -603,7 +596,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.vaadin.ui.AbstractComponent#setLocale(java.util.Locale)
      */
     @Override
@@ -618,7 +611,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see com.vaadin.ui.AbstractComponent#getLocale()
      */
     @Override
@@ -632,7 +625,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Get currently active {@link TimeZone}.
-     * 
+     *
      * @return Component's active Timezone
      */
     public TimeZone getTimeZone() {
@@ -644,7 +637,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     /**
      * Set component's active {@link TimeZone}.
-     * 
+     *
      * @param zone
      *            Timezone
      */
@@ -727,7 +720,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * <p>
      * Table's internal column reordering and sorting are not listened by Gantt
      * and can be handled explicitly via Table's server side event listeners.
-     * 
+     *
      * @param table
      *            Target Table component.
      */
@@ -735,8 +728,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         if (table != null) {
             table.setHeight(getHeight(), getHeightUnits());
         }
-        if (getState().verticalScrollDelegateTarget != null
-                && getState().verticalScrollDelegateTarget != table) {
+        if (getState().verticalScrollDelegateTarget != null && getState().verticalScrollDelegateTarget != table) {
             // target has changed. Remove value change listener from the old
             // target.
             cleanScrollDelegateTargetListeners();
@@ -755,10 +747,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     protected void addScrollDelegateTargetListeners(Table table) {
         table.addColumnResizeListener(scrollDelegateTargetColumnResizeListener);
         if (table instanceof TreeTable) {
-            ((TreeTable) table)
-                    .addExpandListener(scrollDelegateTargetExpandListener);
-            ((TreeTable) table)
-                    .addCollapseListener(scrollDelegateTargetCollapseListener);
+            ((TreeTable) table).addExpandListener(scrollDelegateTargetExpandListener);
+            ((TreeTable) table).addCollapseListener(scrollDelegateTargetCollapseListener);
         }
     }
 
@@ -777,8 +767,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     public void setHeight(float height, Unit unit) {
         super.setHeight(height, unit);
         if (getState().verticalScrollDelegateTarget != null) {
-            ((Component) getState().verticalScrollDelegateTarget).setHeight(
-                    getHeight(), getHeightUnits());
+            ((Component) getState().verticalScrollDelegateTarget).setHeight(getHeight(), getHeightUnits());
         }
     }
 
@@ -935,18 +924,15 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         return null;
     }
 
-    private BufferedReader createTimeZonePropertiesReader(
-            InputStream inputStream) {
+    private BufferedReader createTimeZonePropertiesReader(InputStream inputStream) {
         InputStreamReader isr = new InputStreamReader(inputStream);
         return new BufferedReader(isr);
     }
 
-    private String readTimeZoneJson(String id, String properties,
-            BufferedReader reader) {
+    private String readTimeZoneJson(String id, String properties, BufferedReader reader) {
         try {
             for (String line; (line = reader.readLine()) != null;) {
-                Pattern pattern = Pattern
-                        .compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
+                Pattern pattern = Pattern.compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.matches()) {
                     if (id.equals(matcher.group(2))) {
@@ -957,14 +943,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(String.format(
-                    "Failed to read time zone from %s", properties), e);
+            throw new RuntimeException(String.format("Failed to read time zone from %s", properties), e);
         }
         return null;
     }
 
-    protected InputStream createTimeZonePropertiesInputStream(
-            String propertiesFileName) {
+    protected InputStream createTimeZonePropertiesInputStream(String propertiesFileName) {
         // read time zone json from TimeZoneConstants.properties.
         return Gantt.class.getResourceAsStream(propertiesFileName);
     }
@@ -982,11 +966,9 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
             if (json != null) {
                 return json;
             }
-            throw new IllegalArgumentException(String.format(
-                    "Time zone %s not found in %s", id, propertiesFileName));
+            throw new IllegalArgumentException(String.format("Time zone %s not found in %s", id, propertiesFileName));
         } finally {
-            closeReader("Failed to close time-zone resource stream reader.",
-                    reader);
+            closeReader("Failed to close time-zone resource stream reader.", reader);
             closeStream("Failed to close time-zone resource stream.", is);
         }
     }
@@ -994,7 +976,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Localized display names for week days starting from sunday. Returned
      * array's length is always 7.
-     * 
+     *
      * @return Array of localized weekday names.
      */
     protected String[] getDayNames() {
@@ -1005,7 +987,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Localized display names for months starting from January. Returned
      * array's length is always 12.
-     * 
+     *
      * @return Array of localized month names.
      */
     protected String[] getMonthNames() {
@@ -1018,8 +1000,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         fireEvent(new ClickEvent(this, step, details));
     }
 
-    protected void fireMoveEvent(String stepUid, String newStepUid,
-            long startDate, long endDate, MouseEventDetails details) {
+    protected void fireMoveEvent(String stepUid, String newStepUid, long startDate, long endDate,
+            MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
         AbstractStep newStep = getStep(newStepUid);
         int previousStepIndex = (step instanceof Step) ? getStepIndex((Step) step)
@@ -1043,13 +1025,11 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
         moveDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
-        fireEvent(new MoveEvent(this, step, step.getStartDate(),
-                step.getEndDate(), newStepIndex, previousStartDate,
+        fireEvent(new MoveEvent(this, step, step.getStartDate(), step.getEndDate(), newStepIndex, previousStartDate,
                 previousEndDate, previousStepIndex, details));
     }
 
-    protected void fireResizeEvent(String stepUid, long startDate,
-            long endDate, MouseEventDetails details) {
+    protected void fireResizeEvent(String stepUid, long startDate, long endDate, MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
         long previousStartDate = step.getStartDate();
         long previousEndDate = step.getEndDate();
@@ -1057,12 +1037,12 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         step.setEndDate(endDate);
         resizeDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
-        fireEvent(new ResizeEvent(this, step, step.getStartDate(),
-                step.getEndDate(), previousStartDate, previousEndDate, details));
+        fireEvent(new ResizeEvent(this, step, step.getStartDate(), step.getEndDate(), previousStartDate,
+                previousEndDate, details));
     }
 
-    protected void firePredecessorChangeEvent(String newPredecessorStepUid,
-            String forTargetStepUid, String clearPredecessorForStepUid) {
+    protected void firePredecessorChangeEvent(String newPredecessorStepUid, String forTargetStepUid,
+            String clearPredecessorForStepUid) {
         Step newPredecessorStep = (Step) getStep(newPredecessorStepUid);
         Step forTargetStep = (Step) getStep(forTargetStepUid);
         Step clearPredecessorForStep = (Step) getStep(clearPredecessorForStepUid);
@@ -1078,8 +1058,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
     }
 
-    protected void moveDatesByOwnerStep(AbstractStep step,
-            long previousStartDate, long previousEndDate) {
+    protected void moveDatesByOwnerStep(AbstractStep step, long previousStartDate, long previousEndDate) {
         if (!(step instanceof Step)) {
             return;
         }
@@ -1100,8 +1079,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         }
     }
 
-    protected void resizeDatesByOwnerStep(AbstractStep step,
-            long previousStartDate, long previousEndDate) {
+    protected void resizeDatesByOwnerStep(AbstractStep step, long previousStartDate, long previousEndDate) {
         // may be overridden to handle resizing parent step
     }
 
@@ -1117,14 +1095,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         if (owner != null) {
             // adjust owner start/end dates to fit with all sub-steps.
             if (!owner.getSubSteps().isEmpty()) {
-                if (owner.isStartDateUndefined()
-                        || owner.getMinStartDateBySubSteps() != owner
-                                .getStartDate()) {
+                if (owner.isStartDateUndefined() || owner.getMinStartDateBySubSteps() != owner.getStartDate()) {
                     owner.setStartDate(owner.getMinStartDateBySubSteps());
                 }
-                if (owner.isEndDateUndefined()
-                        || owner.getMaxEndDateBySubSteps() != owner
-                                .getEndDate()) {
+                if (owner.isEndDateUndefined() || owner.getMaxEndDateBySubSteps() != owner.getEndDate()) {
                     owner.setEndDate(owner.getMaxEndDateBySubSteps());
                 }
             }
@@ -1139,12 +1113,10 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         SubStep subStep = ((SubStep) step);
         Step owner = subStep.getOwner();
         // Cut owner step's start/end date to fit sub-steps in.
-        if (owner.isStartDateUndefined()
-                || subStep.getStartDate() < owner.getStartDate()) {
+        if (owner.isStartDateUndefined() || subStep.getStartDate() < owner.getStartDate()) {
             owner.setStartDate(subStep.getStartDate());
         }
-        if (owner.isEndDateUndefined()
-                || subStep.getEndDate() > owner.getEndDate()) {
+        if (owner.isEndDateUndefined() || subStep.getEndDate() > owner.getEndDate()) {
             owner.setEndDate(subStep.getEndDate());
         }
         return owner;
@@ -1153,7 +1125,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
     /**
      * Return Date which will be used to detect timezone offset and daylight
      * saving offset. Returns new Date() by default.
-     * 
+     *
      * @deprecated All time-zone specific information is in
      *             {@link GanttState#timeZoneJson}.
      */
@@ -1174,8 +1146,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Add {@link ClickListener} to listen clicks on steps.
      */
     public void addClickListener(ClickListener listener) {
-        addListener(ClickEvent.class, listener,
-                ClickListener.GANTT_CLICK_METHOD);
+        addListener(ClickEvent.class, listener, ClickListener.GANTT_CLICK_METHOD);
     }
 
     /**
@@ -1189,36 +1160,30 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
      * Add {@link ResizeListener} to listen step's resize events.
      */
     public void addResizeListener(ResizeListener listener) {
-        addListener(ResizeEvent.class, listener,
-                ResizeListener.GANTT_RESIZE_METHOD);
+        addListener(ResizeEvent.class, listener, ResizeListener.GANTT_RESIZE_METHOD);
     }
 
     /**
      * Add {@link PredecessorChangeListener} to listen step's predecessor step
      * change events.
-     * */
+     */
     public void addPredecessorChangeListener(PredecessorChangeListener listener) {
-        addListener(PredecessorChangeEvent.class, listener,
-                PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
+        addListener(PredecessorChangeEvent.class, listener, PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
     }
 
     public void removeClickListener(ClickListener listener) {
-        removeListener(ClickEvent.class, listener,
-                ClickListener.GANTT_CLICK_METHOD);
+        removeListener(ClickEvent.class, listener, ClickListener.GANTT_CLICK_METHOD);
     }
 
     public void removeMoveListener(MoveListener listener) {
-        removeListener(MoveEvent.class, listener,
-                MoveListener.GANTT_MOVE_METHOD);
+        removeListener(MoveEvent.class, listener, MoveListener.GANTT_MOVE_METHOD);
     }
 
     public void removeResizeListener(ResizeListener listener) {
-        removeListener(ResizeEvent.class, listener,
-                ResizeListener.GANTT_RESIZE_METHOD);
+        removeListener(ResizeEvent.class, listener, ResizeListener.GANTT_RESIZE_METHOD);
     }
 
-    public void removePredecessorChangeListener(
-            PredecessorChangeListener listener) {
+    public void removePredecessorChangeListener(PredecessorChangeListener listener) {
         removeListener(PredecessorChangeEvent.class, listener,
                 PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
     }
@@ -1228,8 +1193,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private AbstractStep step;
         private MouseEventDetails details;
 
-        public ClickEvent(Gantt source, AbstractStep step,
-                MouseEventDetails details) {
+        public ClickEvent(Gantt source, AbstractStep step, MouseEventDetails details) {
             super(source);
             this.step = step;
             this.details = details;
@@ -1237,7 +1201,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         /**
          * Get target Step.
-         * 
+         *
          * @return
          */
         public AbstractStep getStep() {
@@ -1265,10 +1229,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private int previousStepIndex;
         private MouseEventDetails details;
 
-        public MoveEvent(Gantt source, AbstractStep step, long startDate,
-                long endDate, int stepIndex, long previousStartDate,
-                long previousEndDate, int previousStepIndex,
-                MouseEventDetails details) {
+        public MoveEvent(Gantt source, AbstractStep step, long startDate, long endDate, int stepIndex,
+                long previousStartDate, long previousEndDate, int previousStepIndex, MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -1282,7 +1244,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         /**
          * Get target Step.
-         * 
+         *
          * @return
          */
         public AbstractStep getStep() {
@@ -1296,7 +1258,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         /**
          * Get new start date. Value follows specifications of
          * {@link Date#getTime()}.
-         * 
+         *
          * @return New start date in milliseconds.
          */
         public long getStartDate() {
@@ -1310,7 +1272,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         /**
          * Get new end date. Value follows specifications of
          * {@link Date#getTime()}.
-         * 
+         *
          * @return New end date in milliseconds.
          */
         public long getEndDate() {
@@ -1351,9 +1313,8 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         private long previousEndDate;
         private MouseEventDetails details;
 
-        public ResizeEvent(Gantt source, AbstractStep step, long startDate,
-                long endDate, long previousStartDate, long previousEndDate,
-                MouseEventDetails details) {
+        public ResizeEvent(Gantt source, AbstractStep step, long startDate, long endDate, long previousStartDate,
+                long previousEndDate, MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -1365,7 +1326,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
         /**
          * Get target Step.
-         * 
+         *
          * @return
          */
         public AbstractStep getStep() {
@@ -1379,7 +1340,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         /**
          * Get new start date. Value follows specifications of
          * {@link Date#getTime()}.
-         * 
+         *
          * @return New start date in milliseconds.
          */
         public long getStartDate() {
@@ -1393,7 +1354,7 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
         /**
          * Get new end date. Value follows specifications of
          * {@link Date#getTime()}.
-         * 
+         *
          * @return New end date in milliseconds.
          */
         public long getEndDate() {
@@ -1445,34 +1406,31 @@ public class Gantt extends com.vaadin.ui.AbstractComponent implements
 
     public interface ClickListener extends Serializable {
 
-        public static final Method GANTT_CLICK_METHOD = ReflectTools
-                .findMethod(ClickListener.class, "onGanttClick",
-                        ClickEvent.class);
+        public static final Method GANTT_CLICK_METHOD = ReflectTools.findMethod(ClickListener.class, "onGanttClick",
+                ClickEvent.class);
 
         public void onGanttClick(ClickEvent event);
     }
 
     public interface MoveListener extends Serializable {
 
-        public static final Method GANTT_MOVE_METHOD = ReflectTools.findMethod(
-                MoveListener.class, "onGanttMove", MoveEvent.class);
+        public static final Method GANTT_MOVE_METHOD = ReflectTools.findMethod(MoveListener.class, "onGanttMove",
+                MoveEvent.class);
 
         public void onGanttMove(MoveEvent event);
     }
 
     public interface ResizeListener extends Serializable {
 
-        public static final Method GANTT_RESIZE_METHOD = ReflectTools
-                .findMethod(ResizeListener.class, "onGanttResize",
-                        ResizeEvent.class);
+        public static final Method GANTT_RESIZE_METHOD = ReflectTools.findMethod(ResizeListener.class, "onGanttResize",
+                ResizeEvent.class);
 
         public void onGanttResize(ResizeEvent event);
     }
 
     public interface PredecessorChangeListener extends Serializable {
         public static final Method GANTT_PERDECESSORCHANGE_METHOD = ReflectTools
-                .findMethod(PredecessorChangeListener.class,
-                        "onPredecessorChange", PredecessorChangeEvent.class);
+                .findMethod(PredecessorChangeListener.class, "onPredecessorChange", PredecessorChangeEvent.class);
 
         public void onPredecessorChange(PredecessorChangeEvent event);
     }

@@ -5,8 +5,9 @@ import java.util.List;
 
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.annotations.DelegateToWidget;
+import com.vaadin.v7.shared.AbstractLegacyComponentState;
 
-public class GanttState extends com.vaadin.shared.AbstractComponentState {
+public class GanttState extends AbstractLegacyComponentState {
 
     public String locale;
 

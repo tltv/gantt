@@ -1,8 +1,6 @@
 // switch the color theme in valo by uncommentting and changing the $v-background-color value
 //$v-background-color: hsl(300, 10%, 50%);
 
-//@import "../reindeer/reindeer.scss";
-
 @import "../valo/valo";
 @import "addons.scss";
 
@@ -12,8 +10,6 @@
 
 .demo {
 
-	//@include reindeer;
-	
 	@include valo;
 	@include addons;
 	

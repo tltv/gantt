@@ -55,20 +55,20 @@ import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.communication.StateChangeEvent.StateChangeHandler;
 import com.vaadin.client.ui.AbstractHasComponentsConnector;
 import com.vaadin.client.ui.FocusableScrollPanel;
-import com.vaadin.client.ui.VScrollTable;
 import com.vaadin.client.ui.layout.ElementResizeEvent;
 import com.vaadin.client.ui.layout.ElementResizeListener;
-import com.vaadin.client.ui.table.TableConnector;
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.ui.Connect;
+import com.vaadin.v7.client.ui.VScrollTable;
+import com.vaadin.v7.client.ui.table.TableConnector;
 
 /**
  * Connector for client side GWT {@link GanttWidget} and server side
  * {@link Gantt} Vaadin component.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 @Connect(Gantt.class)
 public class GanttConnector extends AbstractHasComponentsConnector {
@@ -197,8 +197,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 GWT.log(e.getMessage(), e);
             }
             // return default
-            return new String[] { "sunday", "monday", "tuesday", "wednesday",
-                    "thursday", "friday", "saturday" };
+            return new String[] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
         }
 
         @Override
@@ -209,9 +208,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 GWT.log(e.getMessage(), e);
             }
             // return default
-            return new String[] { "January", "February", "March", "April",
-                    "May", "June", "July", "August", "September", "October",
-                    "November", "December" };
+            return new String[] { "January", "February", "March", "April", "May", "June", "July", "August", "September",
+                    "October", "November", "December" };
         }
 
         @Override
@@ -233,13 +231,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 try {
                     dateTimeService = new GanttDateTimeService(getLocale());
                 } catch (LocaleNotLoadedException e) {
-                    GWT.log("Could not create DateTimeService for the locale "
-                            + getLocale(), e);
+                    GWT.log("Could not create DateTimeService for the locale " + getLocale(), e);
                     return "";
                 }
             }
-            return dateTimeService.formatDate(zonedDate, formatStr,
-                    getTimeZone());
+            return dateTimeService.formatDate(zonedDate, formatStr, getTimeZone());
         }
 
         @Override
@@ -283,32 +279,28 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     GanttRpc ganttRpc = new GanttRpc() {
 
         @Override
-        public void stepClicked(String stepUid, NativeEvent event,
-                Element relativeToElement) {
-            MouseEventDetails details = MouseEventDetailsBuilder
-                    .buildMouseEventDetails(event, relativeToElement);
+        public void stepClicked(String stepUid, NativeEvent event, Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder.buildMouseEventDetails(event, relativeToElement);
             rpc.stepClicked(stepUid, details);
         }
 
         @Override
-        public void onMove(String stepUid, String newStepUid, long startDate,
-                long endDate, NativeEvent event, Element relativeToElement) {
-            MouseEventDetails details = MouseEventDetailsBuilder
-                    .buildMouseEventDetails(event, relativeToElement);
+        public void onMove(String stepUid, String newStepUid, long startDate, long endDate, NativeEvent event,
+                Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder.buildMouseEventDetails(event, relativeToElement);
             rpc.onMove(stepUid, newStepUid, startDate, endDate, details);
         }
 
         @Override
-        public void onResize(String stepUid, long startDate, long endDate,
-                NativeEvent event, Element relativeToElement) {
-            MouseEventDetails details = MouseEventDetailsBuilder
-                    .buildMouseEventDetails(event, relativeToElement);
+        public void onResize(String stepUid, long startDate, long endDate, NativeEvent event,
+                Element relativeToElement) {
+            MouseEventDetails details = MouseEventDetailsBuilder.buildMouseEventDetails(event, relativeToElement);
             rpc.onResize(stepUid, startDate, endDate, details);
         }
 
         @Override
-        public boolean onStepRelationSelected(StepWidget source,
-                boolean startingPointChanged, Element newRelationStepElement) {
+        public boolean onStepRelationSelected(StepWidget source, boolean startingPointChanged,
+                Element newRelationStepElement) {
             StepWidget sw = findStepWidgetByElement(newRelationStepElement);
             if (sw == null) {
                 return false;
@@ -322,39 +314,31 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     return false;
                 } else if (sw.getStep().equals(source.getStep())) {
                     // remove predecessor
-                    rpc.onPredecessorChanged(null, source.getStep().getUid(),
-                            source.getStep().getUid());
+                    rpc.onPredecessorChanged(null, source.getStep().getUid(), source.getStep().getUid());
                     return true;
                 }
-                rpc.onPredecessorChanged(sw.getStep().getUid(), source
-                        .getStep().getUid(), null);
+                rpc.onPredecessorChanged(sw.getStep().getUid(), source.getStep().getUid(), null);
             } else {
                 // source is original target (sw is new target)
 
                 if (sw.getStep().equals(source.getStep())) {
                     return false;
-                } else if (sw.getStep().equals(
-                        source.getStep().getPredecessor())) {
+                } else if (sw.getStep().equals(source.getStep().getPredecessor())) {
                     // remove predecessor
-                    rpc.onPredecessorChanged(null, source.getStep().getUid(),
-                            source.getStep().getUid());
+                    rpc.onPredecessorChanged(null, source.getStep().getUid(), source.getStep().getUid());
                     return true;
                 }
 
                 if (source.getStep().getPredecessor() != null) {
-                    StepWidget w = getStepWidget(source.getStep()
-                            .getPredecessor());
-                    if (w.getStep() != null
-                            && w.getStep().getPredecessor() != null
-                            && w.getStep().getPredecessor()
-                                    .equals(sw.getStep())) {
+                    StepWidget w = getStepWidget(source.getStep().getPredecessor());
+                    if (w.getStep() != null && w.getStep().getPredecessor() != null
+                            && w.getStep().getPredecessor().equals(sw.getStep())) {
                         // there's relation already, with different direction.
                         return false;
                     }
                 }
-                rpc.onPredecessorChanged(source.getStep().getPredecessor()
-                        .getUid(), sw.getStep().getUid(), source.getStep()
-                        .getUid());
+                rpc.onPredecessorChanged(source.getStep().getPredecessor().getUid(), sw.getStep().getUid(),
+                        source.getStep().getUid());
             }
             return true;
         }
@@ -412,25 +396,18 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     protected void init() {
         super.init();
         BrowserInfo info = BrowserInfo.get();
-        getWidget()
-                .setBrowserInfo(info.isIE(), info.isChrome(), info.isSafari(),
-                        info.isWebkit(), info.getBrowserMajorVersion());
-        // If background grid is not needed, ie9 works without
-        // setting alwaysCalculatePixelWidths flag to true.
-        getWidget().setAlwaysCalculatePixelWidths(
-                info.isSafari() || info.isOpera() || info.isIE8()
-                        || info.isIE9());
+        getWidget().setBrowserInfo(info.isIE(), info.isChrome(), info.isSafari(), info.isWebkit(),
+                info.getBrowserMajorVersion());
+        getWidget().setAlwaysCalculatePixelWidths(info.isSafari() || info.isOpera());
         getWidget().setTouchSupported(info.isTouchDevice());
         getWidget().initWidget(ganttRpc, localeDataProvider);
-        getLayoutManager().addElementResizeListener(getWidget().getElement(),
-                widgetResizeListener);
+        getLayoutManager().addElementResizeListener(getWidget().getElement(), widgetResizeListener);
     }
 
     @Override
     public void onUnregister() {
         super.onUnregister();
-        getLayoutManager().removeElementResizeListener(
-                getWidget().getElement(), widgetResizeListener);
+        getLayoutManager().removeElementResizeListener(getWidget().getElement(), widgetResizeListener);
         unRegisterScrollDelegateHandlers();
     }
 
@@ -466,10 +443,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
-        final boolean changeHasInpactToSteps = stateChangeEvent
-                .hasPropertyChanged("resolution")
-                || stateChangeEvent.hasPropertyChanged("startDate")
-                || stateChangeEvent.hasPropertyChanged("endDate");
+        final boolean changeHasInpactToSteps = stateChangeEvent.hasPropertyChanged("resolution")
+                || stateChangeEvent.hasPropertyChanged("startDate") || stateChangeEvent.hasPropertyChanged("endDate");
 
         if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
                 || stateChangeEvent.hasPropertyChanged("yearRowVisible")
@@ -489,10 +464,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
 
         if (stateChangeEvent.hasPropertyChanged("readOnly")) {
-            getWidget().setMovableSteps(
-                    !getState().readOnly && getState().movableSteps);
-            getWidget().setResizableSteps(
-                    !getState().readOnly && getState().resizableSteps);
+            getWidget().setMovableSteps(!getState().readOnly && getState().movableSteps);
+            getWidget().setResizableSteps(!getState().readOnly && getState().resizableSteps);
             for (StepWidget s : getSteps()) {
                 s.setReadOnly(getState().readOnly);
             }
@@ -572,21 +545,17 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             ganttScrollHandlerRegistration.removeHandler();
         }
         if (delegateScrollConnector != null) {
-            delegateScrollConnector
-                    .removeStateChangeHandler(scrollDelegateTargetStateChangeHandler);
+            delegateScrollConnector.removeStateChangeHandler(scrollDelegateTargetStateChangeHandler);
         }
         if (delegateScrollTableTarget != null) {
-            getLayoutManager().removeElementResizeListener(
-                    delegateScrollTableTarget.getElement(),
+            getLayoutManager().removeElementResizeListener(delegateScrollTableTarget.getElement(),
                     scrollDelegateTargetResizeListener);
         }
     }
 
     void registerScrollDelegateHandlers() {
-        delegateScrollConnector
-                .addStateChangeHandler(scrollDelegateTargetStateChangeHandler);
-        getLayoutManager().addElementResizeListener(
-                delegateScrollTableTarget.getElement(),
+        delegateScrollConnector.addStateChangeHandler(scrollDelegateTargetStateChangeHandler);
+        getLayoutManager().addElementResizeListener(delegateScrollTableTarget.getElement(),
                 scrollDelegateTargetResizeListener);
     }
 
@@ -595,20 +564,17 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             return; // scroll delegation is not set
         }
         // register scroll handler to Gantt widget
-        ganttScrollHandlerRegistration = getWidget().addDomHandler(
-                ganttScrollHandler, ScrollEvent.getType());
+        ganttScrollHandlerRegistration = getWidget().addDomHandler(ganttScrollHandler, ScrollEvent.getType());
 
         // register a scroll handler to 'delegation' scroll panel.
-        scrollDelegateHandlerRegistration = delegateScrollPanelTarget
-                .addScrollHandler(scrollDelegateTargetHandler);
+        scrollDelegateHandlerRegistration = delegateScrollPanelTarget.addScrollHandler(scrollDelegateTargetHandler);
 
         // add detach listener to unregister scroll handler when its detached.
         delegateScrollPanelTarget.addAttachHandler(new Handler() {
 
             @Override
             public void onAttachOrDetach(AttachEvent event) {
-                if (!event.isAttached()
-                        && scrollDelegateHandlerRegistration != null) {
+                if (!event.isAttached() && scrollDelegateHandlerRegistration != null) {
                     scrollDelegateHandlerRegistration.removeHandler();
                 }
             }
@@ -624,29 +590,21 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         if (delegateScrollTableTarget.tHead != null) {
             // update table header height to match the Gantt widget's header
             // height
-            int border = WidgetUtil
-                    .measureVerticalBorder(delegateScrollTableTarget.tHead
-                            .getElement());
+            int border = WidgetUtil.measureVerticalBorder(delegateScrollTableTarget.tHead.getElement());
             headerHeight = getWidget().getTimelineHeight();
 
-            delegateScrollTableTarget.tHead.setHeight(Math.max(0, headerHeight
-                    - border)
-                    + "px");
+            delegateScrollTableTarget.tHead.setHeight(Math.max(0, headerHeight - border) + "px");
         }
 
-        int border = WidgetUtil.measureVerticalBorder(delegateScrollPanelTarget
-                .getElement());
+        int border = WidgetUtil.measureVerticalBorder(delegateScrollPanelTarget.getElement());
         // Adjust table's scroll container height to match the Gantt widget's
         // scroll container height.
-        int newTableScrollContainerHeight = getWidget()
-                .getScrollContainerHeight();
-        boolean tableHorScrollbarVisible = border >= WidgetUtil
-                .getNativeScrollbarSize();
+        int newTableScrollContainerHeight = getWidget().getScrollContainerHeight();
+        boolean tableHorScrollbarVisible = border >= WidgetUtil.getNativeScrollbarSize();
         if (getWidget().isContentOverflowingHorizontally()) {
             getWidget().hideHorizontalScrollbarSpacer();
             if (tableHorScrollbarVisible) {
-                newTableScrollContainerHeight += WidgetUtil
-                        .getNativeScrollbarSize();
+                newTableScrollContainerHeight += WidgetUtil.getNativeScrollbarSize();
             }
         } else {
             if (tableHorScrollbarVisible) {
@@ -656,11 +614,9 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
-        delegateScrollPanelTarget.setHeight(Math.max(0,
-                newTableScrollContainerHeight) + "px");
+        delegateScrollPanelTarget.setHeight(Math.max(0, newTableScrollContainerHeight) + "px");
 
-        getLayoutManager().setNeedsMeasure(
-                (ComponentConnector) getState().verticalScrollDelegateTarget);
+        getLayoutManager().setNeedsMeasure((ComponentConnector) getState().verticalScrollDelegateTarget);
     }
 
     void adjustDelegateTargetHeightLazily() {
@@ -674,15 +630,13 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     }
 
     @Override
-    public void onConnectorHierarchyChange(
-            ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+    public void onConnectorHierarchyChange(ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
 
         // Here we handle removing and other necessary changed related
         // hierarchy.
         Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
         // remove old steps
-        for (ComponentConnector c : connectorHierarchyChangeEvent
-                .getOldChildren()) {
+        for (ComponentConnector c : connectorHierarchyChangeEvent.getOldChildren()) {
             if (!getChildComponents().contains(c)) {
                 StepWidget stepWidget = ((StepConnector) c).getWidget();
                 getWidget().removeStep(stepWidget);
@@ -709,8 +663,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 stepWidget.setGantt(getWidget(), localeDataProvider);
             }
 
-            Step predecessor = ((StepConnector) c).getState().step
-                    .getPredecessor();
+            Step predecessor = ((StepConnector) c).getState().step.getPredecessor();
             if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
                 stepWidget.setPredecessorStepWidget(steps.get(predecessor));
             } else {
@@ -742,8 +695,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
      * Return {@link StepWidget} objects that are related to the given
      * StepWidget. Via {@link Step#getPredecessor()} for example.
      */
-    public Set<StepWidget> findRelatedSteps(Step targetStep,
-            List<ComponentConnector> stepConnectors) {
+    public Set<StepWidget> findRelatedSteps(Step targetStep, List<ComponentConnector> stepConnectors) {
         Set<StepWidget> widgets = new HashSet<StepWidget>();
         for (ComponentConnector con : stepConnectors) {
             StepWidget stepWidget = ((StepConnector) con).getWidget();
