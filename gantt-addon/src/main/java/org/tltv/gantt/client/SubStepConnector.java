@@ -25,6 +25,7 @@ import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractComponentConnector;
 import com.vaadin.shared.ui.Connect;
+import com.vaadin.shared.ui.ContentMode;
 
 @Connect(SubStepComponent.class)
 public class SubStepConnector extends AbstractComponentConnector {
@@ -76,16 +77,17 @@ public class SubStepConnector extends AbstractComponentConnector {
 
     @Override
     public TooltipInfo getTooltipInfo(Element element) {
-        return new TooltipInfo(getState().step.getDescription(),
-                getState().errorMessage);
+        return new TooltipInfo(getState().step.getDescription(), ContentMode.HTML, getState().errorMessage);
     }
 
     @Override
     public boolean hasTooltip() {
         // Normally, there is a tooltip if description or errorMessage is set
         SubStepState state = getState();
-        if (state.description != null
-                && !state.step.getDescription().equals("")) {
+        if (state == null) {
+            return false;
+        }
+        if (state.step != null && state.step.getDescription() != null && !state.step.getDescription().equals("")) {
             return true;
         } else if (state.errorMessage != null && !state.errorMessage.equals("")) {
             return true;

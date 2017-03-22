@@ -169,6 +169,9 @@ public class StepConnector extends AbstractHasComponentsConnector {
     public boolean hasTooltip() {
         // Normally, there is a tooltip if description or errorMessage is set
         StepState state = getState();
+        if (state == null) {
+            return false;
+        }
         if (state.step != null && state.step.getDescription() != null && !state.step.getDescription().equals("")) {
             return true;
         } else if (state.errorMessage != null && !state.errorMessage.equals("")) {
