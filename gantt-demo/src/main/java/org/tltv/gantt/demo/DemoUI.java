@@ -16,11 +16,14 @@
 package org.tltv.gantt.demo;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 
 import javax.servlet.annotation.WebServlet;
@@ -28,7 +31,9 @@ import javax.servlet.annotation.WebServlet;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.Gantt.MoveEvent;
 import org.tltv.gantt.Gantt.ResizeEvent;
+import org.tltv.gantt.GanttTimeUtil;
 import org.tltv.gantt.client.shared.AbstractStep;
+import org.tltv.gantt.client.shared.Resolution;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.demo.util.CssColorToColorPickerConverter;
@@ -38,42 +43,38 @@ import org.tltv.gantt.demo.util.Util;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.VaadinServletConfiguration;
+import com.vaadin.data.Binder;
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.MouseEventDetails.MouseButton;
+import com.vaadin.shared.Registration;
+import com.vaadin.shared.ui.datefield.DateTimeResolution;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
+import com.vaadin.ui.ColorPicker;
+import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.DateTimeField;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.ItemCaptionGenerator;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.MenuBar.Command;
 import com.vaadin.ui.MenuBar.MenuItem;
+import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.Panel;
+import com.vaadin.ui.Slider;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.data.fieldgroup.FieldGroup;
-import com.vaadin.v7.data.fieldgroup.FieldGroup.CommitException;
-import com.vaadin.v7.data.util.BeanItem;
-import com.vaadin.v7.data.util.converter.DateToLongConverter;
-import com.vaadin.v7.shared.ui.combobox.FilteringMode;
-import com.vaadin.v7.shared.ui.datefield.Resolution;
-import com.vaadin.v7.ui.CheckBox;
-import com.vaadin.v7.ui.ColorPicker;
-import com.vaadin.v7.ui.ComboBox;
-import com.vaadin.v7.ui.DateField;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.NativeSelect;
-import com.vaadin.v7.ui.Slider;
-import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
-import com.vaadin.v7.ui.components.colorpicker.ColorChangeEvent;
-import com.vaadin.v7.ui.components.colorpicker.ColorChangeListener;
 
 @Theme("demo")
 @Title("Gantt Add-on Demo")
@@ -89,11 +90,11 @@ public class DemoUI extends UI {
 
     private Gantt gantt;
 
-    private NativeSelect localeSelect;
-    private NativeSelect reso;
+    private NativeSelect<Locale> localeSelect;
+    private NativeSelect<Resolution> reso;
 
-    private DateField start;
-    private DateField end;
+    private DateTimeField start;
+    private DateTimeField end;
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy");
 
@@ -106,7 +107,7 @@ public class DemoUI extends UI {
 
         @Override
         public void attach(AttachEvent event) {
-            syncLocaleAndTimezone();
+            syncLocale();
         }
     };
 
@@ -123,56 +124,57 @@ public class DemoUI extends UI {
 
     };
 
-    private ValueChangeListener startDateValueChangeListener = new ValueChangeListener() {
+    private Optional<Registration> startDateValueChangeRegistration;
+    private ValueChangeListener<LocalDateTime> startDateValueChangeListener = new ValueChangeListener<LocalDateTime>() {
 
         @Override
-        public void valueChange(ValueChangeEvent event) {
-            gantt.setStartDate((Date) event.getProperty().getValue());
+        public void valueChange(ValueChangeEvent<LocalDateTime> event) {
+            gantt.setStartDate(event.getValue());
         }
     };
 
-    private ValueChangeListener endDateValueChangeListener = new ValueChangeListener() {
+    private Optional<Registration> endDateValueChangeRegistration;
+    private ValueChangeListener<LocalDateTime> endDateValueChangeListener = new ValueChangeListener<LocalDateTime>() {
 
         @Override
-        public void valueChange(ValueChangeEvent event) {
-            gantt.setEndDate((Date) event.getProperty().getValue());
+        public void valueChange(ValueChangeEvent<LocalDateTime> event) {
+            gantt.setEndDate(event.getValue());
         }
     };
 
-    private ValueChangeListener resolutionValueChangeListener = new ValueChangeListener() {
+    private Optional<Registration> resolutionValueChangeRegistration;
+    private ValueChangeListener<org.tltv.gantt.client.shared.Resolution> resolutionValueChangeListener = new ValueChangeListener<org.tltv.gantt.client.shared.Resolution>() {
 
         @Override
-        public void valueChange(ValueChangeEvent event) {
-            org.tltv.gantt.client.shared.Resolution res = (org.tltv.gantt.client.shared.Resolution) event.getProperty()
-                    .getValue();
-            if (validateResolutionChange(res)) {
-                gantt.setResolution(res);
+        public void valueChange(ValueChangeEvent<org.tltv.gantt.client.shared.Resolution> event) {
+            if (validateResolutionChange(event.getValue())) {
+                gantt.setResolution(event.getValue());
             }
         }
 
     };
 
-    private ValueChangeListener localeValueChangeListener = new ValueChangeListener() {
+    private ValueChangeListener<Locale> localeValueChangeListener = new ValueChangeListener<Locale>() {
 
         @Override
-        public void valueChange(ValueChangeEvent event) {
-            gantt.setLocale((Locale) event.getProperty().getValue());
+        public void valueChange(ValueChangeEvent<Locale> event) {
+            gantt.setLocale(event.getValue());
 
-            syncLocaleAndTimezone();
+            syncLocale();
         }
     };
 
-    private ValueChangeListener timezoneValueChangeListener = new ValueChangeListener() {
+    private ValueChangeListener<String> timezoneValueChangeListener = new ValueChangeListener<String>() {
 
         @Override
-        public void valueChange(ValueChangeEvent event) {
-            String tzId = (String) event.getProperty().getValue();
+        public void valueChange(ValueChangeEvent<String> event) {
+            String tzId = event.getValue();
             if ("Default".equals(tzId)) {
                 gantt.setTimeZone(getDefaultTimeZone());
             } else {
                 gantt.setTimeZone(TimeZone.getTimeZone(tzId));
             }
-            syncLocaleAndTimezone();
+            syncLocale();
         }
     };
 
@@ -192,6 +194,7 @@ public class DemoUI extends UI {
 
         final VerticalLayout layout = new VerticalLayout();
         layout.setStyleName("demoContentLayout");
+        layout.setMargin(false);
         layout.setSizeFull();
         layout.addComponent(menu);
         layout.addComponent(controls);
@@ -362,19 +365,17 @@ public class DemoUI extends UI {
         Notification.show(detailsTxt + msg, Type.TRAY_NOTIFICATION);
     }
 
-    private void syncLocaleAndTimezone() {
-        start.removeValueChangeListener(startDateValueChangeListener);
-        end.removeValueChangeListener(endDateValueChangeListener);
+    private void syncLocale() {
+        startDateValueChangeRegistration.ifPresent(Registration::remove);
+        endDateValueChangeRegistration.ifPresent(Registration::remove);
         try {
             start.setLocale(gantt.getLocale());
-            start.setTimeZone(gantt.getTimeZone());
-            start.setValue(gantt.getStartDate());
+            start.setValue(gantt.getStartLocalDateTime());
             end.setLocale(gantt.getLocale());
-            end.setTimeZone(gantt.getTimeZone());
-            end.setValue(gantt.getEndDate());
+            end.setValue(gantt.getEndLocalDateTime());
         } finally {
-            start.addValueChangeListener(startDateValueChangeListener);
-            end.addValueChangeListener(endDateValueChangeListener);
+            startDateValueChangeRegistration = Optional.of(start.addValueChangeListener(startDateValueChangeListener));
+            endDateValueChangeRegistration = Optional.of(end.addValueChangeListener(endDateValueChangeListener));
         }
         dateFormat = new SimpleDateFormat("MMM dd HH:mm:ss zzz yyyy", gantt.getLocale());
     }
@@ -403,16 +404,14 @@ public class DemoUI extends UI {
         HorizontalLayout widthAndUnit = new HorizontalLayout(Util.createWidthEditor(gantt),
                 Util.createWidthUnitEditor(gantt));
 
-        reso = new NativeSelect("Resolution");
-        reso.setNullSelectionAllowed(false);
-        reso.addItem(org.tltv.gantt.client.shared.Resolution.Hour);
-        reso.addItem(org.tltv.gantt.client.shared.Resolution.Day);
-        reso.addItem(org.tltv.gantt.client.shared.Resolution.Week);
+        reso = new NativeSelect<Resolution>("Resolution");
+        reso.setEmptySelectionAllowed(false);
+        reso.setItems(org.tltv.gantt.client.shared.Resolution.Hour, org.tltv.gantt.client.shared.Resolution.Day,
+                org.tltv.gantt.client.shared.Resolution.Week);
         reso.setValue(gantt.getResolution());
-        reso.setImmediate(true);
-        reso.addValueChangeListener(resolutionValueChangeListener);
+        resolutionValueChangeRegistration = Optional.of(reso.addValueChangeListener(resolutionValueChangeListener));
 
-        localeSelect = new NativeSelect("Locale") {
+        localeSelect = new NativeSelect<Locale>("Locale") {
             @Override
             public void attach() {
                 super.attach();
@@ -424,26 +423,29 @@ public class DemoUI extends UI {
                 }
             }
         };
-        localeSelect.setNullSelectionAllowed(false);
-        for (Locale l : Locale.getAvailableLocales()) {
-            localeSelect.addItem(l);
-            localeSelect.setItemCaption(l, l.getDisplayName(getLocale()));
-        }
-        localeSelect.setImmediate(true);
+        localeSelect.setEmptySelectionAllowed(false);
+        localeSelect.setItems(Locale.getAvailableLocales());
+        localeSelect.setItemCaptionGenerator((l) -> l.getDisplayName(getLocale()));
 
-        ComboBox timezoneSelect = new ComboBox("Timezone");
-        timezoneSelect.setFilteringMode(FilteringMode.CONTAINS);
-        timezoneSelect.setNullSelectionAllowed(false);
-        timezoneSelect.addItem("Default");
-        timezoneSelect.setItemCaption("Default", "Default (" + getDefaultTimeZone().getDisplayName() + ")");
-        for (String timezoneId : Util.getSupportedTimeZoneIDs()) {
-            TimeZone tz = TimeZone.getTimeZone(timezoneId);
-            timezoneSelect.addItem(timezoneId);
-            timezoneSelect.setItemCaption(timezoneId,
-                    tz.getID() + " (raw offset " + (tz.getRawOffset() / 60000) + "m)");
-        }
+        ComboBox<String> timezoneSelect = new ComboBox<String>("Timezone");
+        timezoneSelect.setWidth(300, Unit.PIXELS);
+        timezoneSelect.setEmptySelectionAllowed(false);
+        timezoneSelect.setItemCaptionGenerator(new ItemCaptionGenerator<String>() {
+
+            @Override
+            public String apply(String item) {
+                if ("Default".equals(item)) {
+                    return "Default (" + getDefaultTimeZone().getDisplayName() + ")";
+                }
+                TimeZone tz = TimeZone.getTimeZone(item);
+                return tz.getID() + " (raw offset " + (tz.getRawOffset() / 60000) + "m)";
+            }
+        });
+        List<String> items = new ArrayList<>();
+        items.add("Default");
+        items.addAll(Util.getSupportedTimeZoneIDs());
+        timezoneSelect.setItems((caption, fltr) -> caption.contains(fltr), items);
         timezoneSelect.setValue("Default");
-        timezoneSelect.setImmediate(true);
         timezoneSelect.addValueChangeListener(timezoneValueChangeListener);
 
         final Button toggleSubControlsBtn = new Button("Show More Settings...");
@@ -474,19 +476,17 @@ public class DemoUI extends UI {
         return panel;
     }
 
-    private DateField createStartDateField() {
-        DateField f = new DateField("Start date");
-        f.setResolution(Resolution.SECOND);
-        f.setImmediate(true);
-        f.addValueChangeListener(startDateValueChangeListener);
+    private DateTimeField createStartDateField() {
+        DateTimeField f = new DateTimeField("Start date");
+        f.setResolution(DateTimeResolution.SECOND);
+        startDateValueChangeRegistration = Optional.of(f.addValueChangeListener(startDateValueChangeListener));
         return f;
     }
 
-    private DateField createEndDateField() {
-        DateField f = new DateField("End date");
-        f.setResolution(Resolution.SECOND);
-        f.setImmediate(true);
-        f.addValueChangeListener(endDateValueChangeListener);
+    private DateTimeField createEndDateField() {
+        DateTimeField f = new DateTimeField("End date");
+        f.setResolution(DateTimeResolution.SECOND);
+        endDateValueChangeRegistration = Optional.of(f.addValueChangeListener(endDateValueChangeListener));
         return f;
     }
 
@@ -516,11 +516,11 @@ public class DemoUI extends UI {
     }
 
     private void setResolution(org.tltv.gantt.client.shared.Resolution resolution) {
-        reso.removeValueChangeListener(resolutionValueChangeListener);
+        resolutionValueChangeRegistration.ifPresent(Registration::remove);
         try {
             reso.setValue(resolution);
         } finally {
-            reso.addValueChangeListener(resolutionValueChangeListener);
+            resolutionValueChangeRegistration = Optional.of(reso.addValueChangeListener(resolutionValueChangeListener));
         }
     }
 
@@ -711,63 +711,59 @@ public class DemoUI extends UI {
         return menu;
     }
 
-    private void openStepEditor(AbstractStep step) {
+    private <T extends AbstractStep> void openStepEditor(T step) {
         final Window win = new Window("Step Editor");
         win.setResizable(false);
         win.center();
 
         final Collection<Component> hidden = new ArrayList<Component>();
-
-        BeanItem<AbstractStep> item = new BeanItem<AbstractStep>(step);
-
-        final FieldGroup group = new FieldGroup(item);
-        group.setBuffered(true);
+        Binder<T> binder = new Binder<T>((Class<T>) step.getClass());
+        binder.setBean(step);
 
         TextField captionField = new TextField("Caption");
-        captionField.setNullRepresentation("");
-        group.bind(captionField, "caption");
+        binder.bind(captionField, "caption");
 
         TextField descriptionField = new TextField("Description");
-        descriptionField.setNullRepresentation("");
-        group.bind(descriptionField, "description");
+        binder.bind(descriptionField, "description");
         descriptionField.setVisible(false);
         hidden.add(descriptionField);
 
-        NativeSelect captionMode = new NativeSelect("Caption Mode");
-        captionMode.addItem(Step.CaptionMode.TEXT);
-        captionMode.addItem(Step.CaptionMode.HTML);
-        group.bind(captionMode, "captionMode");
+        NativeSelect<Step.CaptionMode> captionMode = new NativeSelect<Step.CaptionMode>("Caption Mode");
+        captionMode.setItems(Step.CaptionMode.TEXT, Step.CaptionMode.HTML);
+        binder.bind(captionMode, "captionMode");
         captionMode.setVisible(false);
         hidden.add(captionMode);
 
         CheckBox resizable = new CheckBox("Resizable");
-        group.bind(resizable, "resizable");
+        binder.bind(resizable, "resizable");
         resizable.setVisible(false);
         hidden.add(resizable);
 
         CheckBox showProgress = new CheckBox("Show progress");
-        group.bind(showProgress, "showProgress");
+        binder.bind(showProgress, "showProgress");
         showProgress.setVisible(false);
         hidden.add(showProgress);
 
         Slider progress = new Slider("Progress");
         progress.setWidth(100, Unit.PERCENTAGE);
-        group.bind(progress, "progress");
+        binder.bind(progress, "progress");
         progress.setVisible(false);
         hidden.add(progress);
 
-        NativeSelect predecessorSelect = new NativeSelect("Predecessor Step");
+        NativeSelect<AbstractStep> predecessorSelect = new NativeSelect<AbstractStep>("Predecessor Step");
         predecessorSelect.setWidth(100, Unit.PERCENTAGE);
+        predecessorSelect.setItemCaptionGenerator(i -> i.getCaption());
         fillPredecessorCanditatesToSelect(step, predecessorSelect);
         predecessorSelect.setEnabled(step instanceof Step);
         if (step instanceof Step) {
-            group.bind(predecessorSelect, "predecessor");
+            binder.bind(predecessorSelect, "predecessor");
         }
         predecessorSelect.setVisible(false);
         hidden.add(predecessorSelect);
 
-        final NativeSelect parentStepSelect = new NativeSelect("Parent Step");
+        final NativeSelect<Step> parentStepSelect = new NativeSelect<Step>("Parent Step");
         parentStepSelect.setWidth(100, Unit.PERCENTAGE);
+        parentStepSelect.setItemCaptionGenerator(i -> i.getCaption());
         parentStepSelect.setEnabled(false);
         fillParentStepCanditatesToSelect(step, parentStepSelect);
         parentStepSelect.setVisible(false);
@@ -779,46 +775,37 @@ public class DemoUI extends UI {
         hidden.add(colorLayout);
 
         final TextField bgField = new TextField("Background color");
-        bgField.setNullRepresentation("");
-        group.bind(bgField, "backgroundColor");
+        binder.bind(bgField, "backgroundColor");
         bgField.setEnabled(false);
 
         final ColorPicker bgColorPicker = new ColorPicker();
         bgColorPicker.setPosition(300, 100);
-        bgColorPicker.setColor(new CssColorToColorPickerConverter().convertToModel(step.getBackgroundColor()));
-        bgColorPicker.addColorChangeListener(new ColorChangeListener() {
-            @Override
-            public void colorChanged(ColorChangeEvent event) {
-                bgField.setValue(event.getColor().getCSS());
-            }
-        });
+        bgColorPicker.setValue(new CssColorToColorPickerConverter().convertToModel(step.getBackgroundColor()));
+        bgColorPicker.addValueChangeListener(e -> bgField.setValue(e.getValue().getCSS()));
 
         colorLayout.addComponent(bgField);
         colorLayout.addComponent(bgColorPicker);
         colorLayout.setExpandRatio(bgField, 1);
         colorLayout.setComponentAlignment(bgColorPicker, Alignment.BOTTOM_LEFT);
 
-        DateField startDate = new DateField("Start date");
+        DateTimeField startDate = new DateTimeField("Start date");
         startDate.setLocale(gantt.getLocale());
-        startDate.setTimeZone(gantt.getTimeZone());
-        startDate.setResolution(Resolution.SECOND);
-        startDate.setConverter(new DateToLongConverter());
-        group.bind(startDate, "startDate");
+        startDate.setResolution(DateTimeResolution.SECOND);
+        binder.bind(startDate, (s) -> GanttTimeUtil.getStartLocalDateTime(s),
+                (s, v) -> GanttTimeUtil.setStartDate(s, v));
 
-        DateField endDate = new DateField("End date");
+        DateTimeField endDate = new DateTimeField("End date");
         endDate.setLocale(gantt.getLocale());
-        endDate.setTimeZone(gantt.getTimeZone());
-        endDate.setResolution(Resolution.SECOND);
-        endDate.setConverter(new DateToLongConverter());
-        group.bind(endDate, "endDate");
+        endDate.setResolution(DateTimeResolution.SECOND);
+        binder.bind(endDate, (s) -> GanttTimeUtil.getEndLocalDateTime(s), (s, v) -> GanttTimeUtil.setEndDate(s, v));
 
         CheckBox showMore = new CheckBox("Show all settings");
-        showMore.addValueChangeListener(new ValueChangeListener() {
+        showMore.addValueChangeListener(new ValueChangeListener<Boolean>() {
 
             @Override
-            public void valueChange(ValueChangeEvent event) {
+            public void valueChange(ValueChangeEvent<Boolean> event) {
                 for (Component c : hidden) {
-                    c.setVisible((Boolean) event.getProperty().getValue());
+                    c.setVisible(event.getValue());
                 }
                 win.center();
             }
@@ -849,7 +836,7 @@ public class DemoUI extends UI {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                commit(win, group, parentStepSelect);
+                commit(win, binder, parentStepSelect);
             }
 
         });
@@ -857,14 +844,14 @@ public class DemoUI extends UI {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                cancel(win, group);
+                cancel(win, binder);
             }
         });
         Button delete = new Button("Delete", new ClickListener() {
 
             @Override
             public void buttonClick(ClickEvent event) {
-                delete(win, group);
+                delete(win, binder);
             }
 
         });
@@ -876,20 +863,24 @@ public class DemoUI extends UI {
         getUI().addWindow(win);
     }
 
-    private void fillPredecessorCanditatesToSelect(AbstractStep step, final NativeSelect predecessorSelect) {
+    private void fillPredecessorCanditatesToSelect(AbstractStep step,
+            final NativeSelect<AbstractStep> predecessorSelect) {
+        List<AbstractStep> items = new ArrayList<>();
         for (Step stepCanditate : gantt.getSteps()) {
             if (!stepCanditate.equals(step) && stepCanditate instanceof Step) {
-                addItemToSelect(predecessorSelect, stepCanditate);
+                items.add(stepCanditate);
             }
         }
+        predecessorSelect.setItems(items);
     }
 
-    private void fillParentStepCanditatesToSelect(AbstractStep step, final NativeSelect parentStepSelect) {
+    private void fillParentStepCanditatesToSelect(AbstractStep step, final NativeSelect<Step> parentStepSelect) {
         if (!gantt.getSteps().contains(step)) {
             // new step
             parentStepSelect.setEnabled(true);
+            List<Step> items = new ArrayList<>();
             for (Step parentStepCanditate : gantt.getSteps()) {
-                addItemToSelect(parentStepSelect, parentStepCanditate);
+                items.add(parentStepCanditate);
                 if (step instanceof SubStep) {
                     if (parentStepCanditate.getSubSteps().contains(step)) {
                         parentStepSelect.setValue(parentStepCanditate);
@@ -898,45 +889,33 @@ public class DemoUI extends UI {
                     }
                 }
             }
+            parentStepSelect.setItems(items);
         }
     }
 
-    private void addItemToSelect(NativeSelect select, AbstractStep step) {
-        select.addItem(step);
-        select.setItemCaption(step, step.getCaption());
-    }
-
-    @SuppressWarnings("unchecked")
-    private void commit(final Window win, final FieldGroup group, final NativeSelect parentStepSelect) {
-        try {
-            group.commit();
-            AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource()).getBean();
-            gantt.markStepDirty(step);
-            if (parentStepSelect.isEnabled() && parentStepSelect.getValue() != null) {
-                SubStep subStep = addSubStep(parentStepSelect, step);
-                step = subStep;
-            }
-            if (step instanceof Step && !gantt.getSteps().contains(step)) {
-                gantt.addStep((Step) step);
-            }
-            if (ganttListener != null && step instanceof Step) {
-                ganttListener.stepModified((Step) step);
-            }
-            win.close();
-        } catch (CommitException e) {
-            Notification.show("Commit failed", e.getMessage(), Type.ERROR_MESSAGE);
-            e.printStackTrace();
+    private void commit(final Window win, final Binder<? extends AbstractStep> binder,
+            final NativeSelect<Step> parentStepSelect) {
+        AbstractStep step = binder.getBean();
+        gantt.markStepDirty(step);
+        if (parentStepSelect.isEnabled() && parentStepSelect.getValue() != null) {
+            SubStep subStep = addSubStep(parentStepSelect, step);
+            step = subStep;
         }
-    }
-
-    private void cancel(final Window win, final FieldGroup group) {
-        group.discard();
+        if (step instanceof Step && !gantt.getSteps().contains(step)) {
+            gantt.addStep((Step) step);
+        }
+        if (ganttListener != null && step instanceof Step) {
+            ganttListener.stepModified((Step) step);
+        }
         win.close();
     }
 
-    @SuppressWarnings("unchecked")
-    private void delete(final Window win, final FieldGroup group) {
-        AbstractStep step = ((BeanItem<AbstractStep>) group.getItemDataSource()).getBean();
+    private void cancel(final Window win, final Binder<? extends AbstractStep> binder) {
+        win.close();
+    }
+
+    private void delete(final Window win, final Binder<? extends AbstractStep> binder) {
+        AbstractStep step = binder.getBean();
         if (step instanceof SubStep) {
             SubStep substep = (SubStep) step;
             substep.getOwner().removeSubStep(substep);

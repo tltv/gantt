@@ -1,21 +1,20 @@
 package org.tltv.gantt.demo.util;
 
-import java.util.Locale;
-
-import com.vaadin.v7.data.util.converter.Converter;
-import com.vaadin.v7.shared.ui.colorpicker.Color;
+import com.vaadin.data.Converter;
+import com.vaadin.data.Result;
+import com.vaadin.data.ValueContext;
+import com.vaadin.shared.ui.colorpicker.Color;
 
 public class CssColorToColorPickerConverter implements Converter<String, Color> {
 
-    public Color convertToModel(String value) throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
-        return convertToModel(value, getModelType(), null);
+    public Color convertToModel(String value) {
+        return convertToModel(value, null).getOrThrow((v) -> new RuntimeException("Invalid color value '" + v + "'!"));
     }
 
     @Override
-    public Color convertToModel(String value, Class<? extends Color> targetType, Locale locale)
-            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+    public Result<Color> convertToModel(String value, ValueContext context) {
         if (value == null || value.trim().isEmpty()) {
-            return Color.WHITE;
+            return Result.ok(Color.WHITE);
         }
         value = value.trim();
         if (!value.startsWith("#") && !value.startsWith("0x")) {
@@ -23,30 +22,19 @@ public class CssColorToColorPickerConverter implements Converter<String, Color> 
         }
         try {
             java.awt.Color c = java.awt.Color.decode(value);
-            return new Color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha());
+            return Result.ok(new Color(c.getRed(), c.getGreen(), c.getBlue(), c.getAlpha()));
         } catch (NumberFormatException e) {
             e.printStackTrace();
         }
-        return Color.WHITE;
+        return Result.ok(Color.WHITE);
     }
 
     @Override
-    public String convertToPresentation(Color value, Class<? extends String> targetType, Locale locale)
-            throws com.vaadin.v7.data.util.converter.Converter.ConversionException {
+    public String convertToPresentation(Color value, ValueContext context) {
         if (value != null) {
             return value.getCSS();
         }
         return null;
-    }
-
-    @Override
-    public Class<Color> getModelType() {
-        return Color.class;
-    }
-
-    @Override
-    public Class<String> getPresentationType() {
-        return String.class;
     }
 
 }
