@@ -24,6 +24,10 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.DateFormatSymbols;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -184,6 +188,22 @@ public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements H
         updateTimelineStartTimeDetails();
     }
 
+    public void setStartDate(LocalDate date) {
+        setStartDate((date != null) ? Date.from(date.atStartOfDay(getTimeZone().toZoneId()).toInstant()) : null);
+    }
+
+    public void setStartDate(Instant instant) {
+        setStartDate((instant != null) ? Date.from(instant) : null);
+    }
+
+    public void setStartDate(LocalDateTime dateTime) {
+        setStartDate((dateTime != null) ? Date.from(dateTime.atZone(getTimeZone().toZoneId()).toInstant()) : null);
+    }
+
+    public void setStartDate(ZonedDateTime dateTime) {
+        setStartDate((dateTime != null) ? Date.from(dateTime.toInstant()) : null);
+    }
+
     /**
      * Set end date of the Gantt chart's timeline. When resolution is
      * {@link Resolution#Day} or {@link Resolution#Week}, time will be adjusted
@@ -200,6 +220,22 @@ public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements H
         updateTimelineStartTimeDetails();
     }
 
+    public void setEndDate(LocalDate date) {
+        setEndDate((date != null) ? Date.from(date.atStartOfDay(getTimeZone().toZoneId()).toInstant()) : null);
+    }
+
+    public void setEndDate(Instant instant) {
+        setEndDate((instant != null) ? Date.from(instant) : null);
+    }
+
+    public void setEndDate(LocalDateTime dateTime) {
+        setEndDate((dateTime != null) ? Date.from(dateTime.atZone(getTimeZone().toZoneId()).toInstant()) : null);
+    }
+
+    public void setEndDate(ZonedDateTime dateTime) {
+        setEndDate((dateTime != null) ? Date.from(dateTime.toInstant()) : null);
+    }
+
     /**
      * Get start date of the Gantt chart's timeline.
      *
@@ -209,6 +245,14 @@ public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements H
         return startDate;
     }
 
+    public LocalDateTime getStartLocalDateTime() {
+        return (startDate != null) ? LocalDateTime.ofInstant(startDate.toInstant(), getTimeZone().toZoneId()) : null;
+    }
+
+    public ZonedDateTime getStartZonedDateTime() {
+        return (startDate != null) ? ZonedDateTime.ofInstant(startDate.toInstant(), getTimeZone().toZoneId()) : null;
+    }
+
     /**
      * Get end date of the Gantt chart's timeline.
      *
@@ -216,6 +260,14 @@ public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements H
      */
     public Date getEndDate() {
         return endDate;
+    }
+
+    public LocalDateTime getEndLocalDateTime() {
+        return (endDate != null) ? LocalDateTime.ofInstant(endDate.toInstant(), getTimeZone().toZoneId()) : null;
+    }
+
+    public ZonedDateTime getEndZonedDateTime() {
+        return (endDate != null) ? ZonedDateTime.ofInstant(endDate.toInstant(), getTimeZone().toZoneId()) : null;
     }
 
     /**
