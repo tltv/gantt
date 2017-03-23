@@ -267,6 +267,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         }
     };
 
+    private int previousContainerScrollLeft = 0;
+    private int previousContainerScrollTop = 0;
     private ScrollHandler scrollHandler = new ScrollHandler() {
 
         @Override
@@ -275,7 +277,15 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             if (element != container) {
                 return;
             }
-            timeline.setScrollLeft(container.getScrollLeft());
+            int sl = container.getScrollLeft();
+            int st = container.getScrollTop();
+            if (sl != previousContainerScrollLeft) {
+                timeline.setScrollLeft(sl);
+                previousContainerScrollLeft = sl;
+            }
+            if (st != previousContainerScrollTop) {
+                previousContainerScrollTop = st;
+            }
         }
     };
 
