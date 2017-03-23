@@ -13,35 +13,34 @@ import java.util.regex.Pattern;
 
 import org.tltv.gantt.Gantt;
 
+import com.vaadin.data.HasValue.ValueChangeEvent;
+import com.vaadin.data.HasValue.ValueChangeListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.NativeSelect;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import com.vaadin.v7.data.Property.ValueChangeEvent;
-import com.vaadin.v7.data.Property.ValueChangeListener;
-import com.vaadin.v7.ui.HorizontalLayout;
-import com.vaadin.v7.ui.Label;
-import com.vaadin.v7.ui.NativeSelect;
-import com.vaadin.v7.ui.TextField;
-import com.vaadin.v7.ui.VerticalLayout;
 
 public class Util {
 
     public static TextField createNumberEditor(String caption, float value, final Component component,
             final NumberValueChange valueChange) {
         TextField field = new TextField(caption);
-        field.setColumns(5);
+        field.setMaxLength(5);
         field.setValue("" + value);
-        field.setImmediate(true);
-        field.addValueChangeListener(new ValueChangeListener() {
+        field.addValueChangeListener(new ValueChangeListener<String>() {
 
             @Override
-            public void valueChange(ValueChangeEvent event) {
-                Object v = event.getProperty().getValue();
+            public void valueChange(ValueChangeEvent<String> event) {
+                Object v = event.getValue();
                 try {
                     float f = Float.parseFloat("" + v);
                     valueChange.onValueChange(f);
@@ -57,12 +56,11 @@ public class Util {
             final TextValueChange valueChange) {
         TextField field = new TextField(caption);
         field.setValue("" + value);
-        field.setImmediate(true);
-        field.addValueChangeListener(new ValueChangeListener() {
+        field.addValueChangeListener(new ValueChangeListener<String>() {
 
             @Override
-            public void valueChange(ValueChangeEvent event) {
-                Object v = event.getProperty().getValue();
+            public void valueChange(ValueChangeEvent<String> event) {
+                Object v = event.getValue();
                 valueChange.onValueChange(String.valueOf(v));
             }
         });
@@ -113,19 +111,16 @@ public class Util {
 
     public static NativeSelect createNativeSelectEditor(String caption, Object value, Collection<?> items,
             final SelectValueChange valueChange) {
-        NativeSelect s = new NativeSelect(caption);
-        for (Object i : items) {
-            s.addItem(i);
-            s.setItemCaption(i, String.valueOf(i));
-        }
-        s.setNullSelectionAllowed(false);
+        NativeSelect<Object> s = new NativeSelect<>(caption);
+        s.setItemCaptionGenerator(item -> String.valueOf(item));
+        s.setItems(items);
+        s.setEmptySelectionAllowed(false);
         s.setValue(value);
-        s.setImmediate(true);
-        s.addValueChangeListener(new ValueChangeListener() {
+        s.addValueChangeListener(new ValueChangeListener<Object>() {
 
             @Override
-            public void valueChange(ValueChangeEvent event) {
-                valueChange.onValueChange(event.getProperty().getValue());
+            public void valueChange(ValueChangeEvent<Object> event) {
+                valueChange.onValueChange(event.getValue());
             }
         });
         return s;
