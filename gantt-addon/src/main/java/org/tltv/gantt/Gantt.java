@@ -97,6 +97,9 @@ public class Gantt extends AbstractComponent implements HasComponents {
 
     protected Map<String, String> timezoneJsonCache = new HashMap<String, String>();
 
+    protected static final String TZ_PATTERN = "^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$";
+    protected static Set<String> timezoneIdCache;
+
     private GanttServerRpc rpc = new GanttServerRpc() {
 
         @Override
@@ -992,23 +995,31 @@ public class Gantt extends AbstractComponent implements HasComponents {
         return new BufferedReader(isr);
     }
 
-    private String readTimeZoneJson(String id, String properties, BufferedReader reader) {
-        try {
-            for (String line; (line = reader.readLine()) != null;) {
-                Pattern pattern = Pattern.compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.matches()) {
-                    if (id.equals(matcher.group(2))) {
-                        String json = matcher.group(1);
-                        timezoneJsonCache.put(id, json);
-                        return json;
-                    }
+    private String readTimeZoneJson(String id, BufferedReader reader) throws IOException {
+        for (String line; (line = reader.readLine()) != null;) {
+            Pattern pattern = Pattern.compile(TZ_PATTERN);
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.matches()) {
+                if (id.equals(matcher.group(2))) {
+                    String json = matcher.group(1);
+                    timezoneJsonCache.put(id, json);
+                    return json;
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to read time zone from %s", properties), e);
         }
         return null;
+    }
+
+    private static Set<String> readSupportedTimezones(BufferedReader reader) throws IOException {
+        HashSet<String> ids = new HashSet<>();
+        for (String line; (line = reader.readLine()) != null;) {
+            Pattern pattern = Pattern.compile(TZ_PATTERN);
+            Matcher matcher = pattern.matcher(line);
+            if (matcher.matches()) {
+                ids.add(matcher.group(2));
+            }
+        }
+        return ids;
     }
 
     protected InputStream createTimeZonePropertiesInputStream(String propertiesFileName) {
@@ -1025,14 +1036,48 @@ public class Gantt extends AbstractComponent implements HasComponents {
         InputStream is = createTimeZonePropertiesInputStream(propertiesFileName);
         BufferedReader reader = createTimeZonePropertiesReader(is);
         try {
-            String json = readTimeZoneJson(id, propertiesFileName, reader);
+            String json = readTimeZoneJson(id, reader);
             if (json != null) {
                 return json;
             }
             throw new IllegalArgumentException(String.format("Time zone %s not found in %s", id, propertiesFileName));
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Failed to read time zone from %s", propertiesFileName), e);
         } finally {
             closeReader("Failed to close time-zone resource stream reader.", reader);
             closeStream("Failed to close time-zone resource stream.", is);
+        }
+    }
+
+    /**
+     * Get all supported Time zone identifiers (like "Europe/Rome"). Reads them
+     * by default from TimeZoneConstants.properties. First call will cache
+     * result, and following calls will return cached set.
+     */
+    public static Set<String> getSupportedTimeZoneIDs() {
+        if (timezoneIdCache != null) {
+            return Collections.unmodifiableSet(timezoneIdCache);
+        }
+        timezoneIdCache = new HashSet<>();
+
+        String propertiesFileName = "TimeZoneConstants.properties";
+        // read time zones from TimeZoneConstants.properties.
+        InputStream is = Gantt.class.getResourceAsStream(propertiesFileName);
+        InputStreamReader isr = new InputStreamReader(is);
+        BufferedReader reader = new BufferedReader(isr);
+        try {
+            timezoneIdCache = readSupportedTimezones(reader);
+            return timezoneIdCache;
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Failed to read time zone from %s", propertiesFileName), e);
+        } finally {
+            try {
+                reader.close();
+                isr.close();
+                is.close();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to close open resources.", e);
+            }
         }
     }
 

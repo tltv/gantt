@@ -1,17 +1,7 @@
 package org.tltv.gantt.demo.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.tltv.gantt.Gantt;
 
 import com.vaadin.data.HasValue.ValueChangeEvent;
 import com.vaadin.data.HasValue.ValueChangeListener;
@@ -88,8 +78,8 @@ public class Util {
     }
 
     public static NativeSelect createHeightUnitEditor(final Component component) {
-        return createNativeSelectEditor("Height Unit", component.getHeightUnits(), Arrays.asList(Unit.values()),
-                new SelectValueChange() {
+        return createNativeSelectEditor("Height Unit", component.getHeightUnits(),
+                Arrays.asList(Unit.PERCENTAGE, Unit.PIXELS), new SelectValueChange() {
 
                     @Override
                     public void onValueChange(Object unit) {
@@ -99,8 +89,8 @@ public class Util {
     }
 
     public static NativeSelect createWidthUnitEditor(final Component component) {
-        return createNativeSelectEditor("Width Unit", component.getWidthUnits(), Arrays.asList(Unit.values()),
-                new SelectValueChange() {
+        return createNativeSelectEditor("Width Unit", component.getWidthUnits(),
+                Arrays.asList(Unit.PERCENTAGE, Unit.PIXELS), new SelectValueChange() {
 
                     @Override
                     public void onValueChange(Object unit) {
@@ -109,7 +99,7 @@ public class Util {
                 });
     }
 
-    public static NativeSelect createNativeSelectEditor(String caption, Object value, Collection<?> items,
+    public static NativeSelect createNativeSelectEditor(String caption, Object value, Collection<Object> items,
             final SelectValueChange valueChange) {
         NativeSelect<Object> s = new NativeSelect<>(caption);
         s.setItemCaptionGenerator(item -> String.valueOf(item));
@@ -170,41 +160,6 @@ public class Util {
         window.setContent(content);
 
         UI.getCurrent().addWindow(window);
-    }
-
-    /**
-     * Get all supported Time zone identifiers (like "Europe/Rome"). Reads them
-     * from TimeZoneConstants.properties.
-     */
-    public static Set<String> getSupportedTimeZoneIDs() {
-        Set<String> zones = new HashSet<String>();
-        String properties = "TimeZoneConstants.properties";
-        // read time zones from TimeZoneConstants.properties.
-        InputStream is = Gantt.class.getResourceAsStream(properties);
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader reader = new BufferedReader(isr);
-        try {
-            try {
-                for (String line; (line = reader.readLine()) != null;) {
-                    Pattern pattern = Pattern.compile("^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$");
-                    Matcher matcher = pattern.matcher(line);
-                    if (matcher.matches()) {
-                        zones.add(matcher.group(2));
-                    }
-                }
-                return zones;
-            } catch (IOException e) {
-                throw new RuntimeException(String.format("Failed to read time zones from %s", properties), e);
-            }
-        } finally {
-            try {
-                reader.close();
-                isr.close();
-                is.close();
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to close open resources.", e);
-            }
-        }
     }
 
     public interface TextValueChange {

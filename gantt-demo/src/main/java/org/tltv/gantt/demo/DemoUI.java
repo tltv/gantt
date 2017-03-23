@@ -443,7 +443,7 @@ public class DemoUI extends UI {
         });
         List<String> items = new ArrayList<>();
         items.add("Default");
-        items.addAll(Util.getSupportedTimeZoneIDs());
+        items.addAll(Gantt.getSupportedTimeZoneIDs());
         timezoneSelect.setItems((caption, fltr) -> caption.contains(fltr), items);
         timezoneSelect.setValue("Default");
         timezoneSelect.addValueChangeListener(timezoneValueChangeListener);
@@ -948,7 +948,7 @@ public class DemoUI extends UI {
             return defaultTimeZone;
         }
         TimeZone tz = TimeZone.getDefault();
-        if (Util.getSupportedTimeZoneIDs().contains(tz.getID())) {
+        if (Gantt.getSupportedTimeZoneIDs().contains(tz.getID())) {
             defaultTimeZone = tz;
         } else {
             defaultTimeZone = TimeZone.getTimeZone("Europe/Helsinki");
