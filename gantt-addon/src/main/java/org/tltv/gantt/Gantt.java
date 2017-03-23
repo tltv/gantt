@@ -54,6 +54,7 @@ import org.tltv.gantt.client.shared.SubStep;
 
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.util.ReflectTools;
@@ -84,7 +85,7 @@ import com.vaadin.v7.ui.TreeTable;
  * @author Tltv
  *
  */
-public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements HasComponents {
+public class Gantt extends AbstractComponent implements HasComponents {
 
     private Date startDate;
     private Date endDate;
@@ -167,6 +168,16 @@ public class Gantt extends com.vaadin.v7.ui.AbstractLegacyComponent implements H
     @Override
     protected GanttState getState(boolean markAsDirty) {
         return (GanttState) super.getState(markAsDirty);
+    }
+
+    @Override
+    public void setReadOnly(boolean readOnly) {
+        getState(true).readOnly = readOnly;
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return getState(false).readOnly;
     }
 
     /**

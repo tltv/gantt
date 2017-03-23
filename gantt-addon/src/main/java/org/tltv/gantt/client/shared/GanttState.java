@@ -3,11 +3,13 @@ package org.tltv.gantt.client.shared;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.vaadin.shared.AbstractComponentState;
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.annotations.DelegateToWidget;
-import com.vaadin.v7.shared.AbstractLegacyComponentState;
 
-public class GanttState extends AbstractLegacyComponentState {
+public class GanttState extends AbstractComponentState {
+
+    public boolean readOnly = false;
 
     public String locale;
 
