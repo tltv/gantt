@@ -2,15 +2,17 @@ package org.tltv.gantt.client.shared;
 
 import java.util.Date;
 
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.i18n.client.TimeZone;
+import com.vaadin.client.widgets.Escalator;
 
 public class GanttUtil {
 
     /**
      * Calculate week number for the given date.
-     * 
+     *
      * @param d
      *            Target date
      * @param timezoneOffset
@@ -19,8 +21,7 @@ public class GanttUtil {
      *            First day of week. Integer between 1-7. 1 is Sunday.
      * @return
      */
-    public static int getWeekNumber(Date d, long timezoneOffset,
-            int firstDayOfWeek) {
+    public static int getWeekNumber(Date d, long timezoneOffset, int firstDayOfWeek) {
         /*
          * Thanks to stackoverflow.com for a easy function to calculate week
          * number. See
@@ -36,20 +37,18 @@ public class GanttUtil {
         }
         d.setDate(d.getDate() + daysToTursday);
         Date yearStart = new Date(d.getYear(), 0, 1);
-        double weekNo = Math
-                .ceil((((d.getTime() - yearStart.getTime()) / 86400000.0) + 1.0) / 7.0);
+        double weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000.0) + 1.0) / 7.0);
         return (int) weekNo;
     }
 
     /**
      * Parse computed styles to get precise margin height for the given element.
      * Returns zero if computed styles is not defined.
-     * 
+     *
      * @param elem
      *            Target element to measure
      */
-    public static native double getMarginByComputedStyle(
-            com.google.gwt.dom.client.Element elem)
+    public static native double getMarginByComputedStyle(com.google.gwt.dom.client.Element elem)
     /*-{
         var cs = elem.ownerDocument.defaultView.getComputedStyle(elem);
         if (cs) {
@@ -61,8 +60,7 @@ public class GanttUtil {
         return size;
      }-*/;
 
-    public static native double getBoundingClientRectRight(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectRight(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -75,8 +73,7 @@ public class GanttUtil {
         }
     }-*/;
 
-    public static native double getBoundingClientRectLeft(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectLeft(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -89,8 +86,7 @@ public class GanttUtil {
         }
     }-*/;
 
-    public static native double getBoundingClientRectWidth(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectWidth(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -103,8 +99,7 @@ public class GanttUtil {
         }
     }-*/;
 
-    public static native double getBoundingClientRectHeight(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectHeight(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -117,8 +112,7 @@ public class GanttUtil {
         }
     }-*/;
 
-    public static native double getBoundingClientRectTop(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectTop(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -131,8 +125,7 @@ public class GanttUtil {
         }
     }-*/;
 
-    public static native double getBoundingClientRectBottom(
-            com.google.gwt.dom.client.Element element)
+    public static native double getBoundingClientRectBottom(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
           return 0.0;
@@ -179,14 +172,13 @@ public class GanttUtil {
     /**
      * Returns daylight saving adjustment (in minutes) for normalized date.
      * Normalized date is zoned date without DST.
-     * 
+     *
      * @param normalDate
      *            Date representing target time zone without DST.
      * @param targetTimeZone
      * @return Daylight saving adjustment in minutes
      */
-    public static native int getDaylightAdjustmentForNormalDate(
-            Long normalDate, TimeZone targetTimeZone)
+    public static native int getDaylightAdjustmentForNormalDate(Long normalDate, TimeZone targetTimeZone)
     /*-{
         if (targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints == null) {
             return 0;
@@ -194,10 +186,15 @@ public class GanttUtil {
         var timeInHours = normalDate / 1000 / 3600;
         var index = 0;
         while (index < targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints.length
-                && timeInHours >= (targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints[index] 
+                && timeInHours >= (targetTimeZone.@com.google.gwt.i18n.client.TimeZone::transitionPoints[index]
                 - ( ((index == 0) ? 0 : targetTimeZone.@com.google.gwt.i18n.client.TimeZone::adjustments[index - 1]) / 60) )) {
             ++index;
         }
         return (index == 0) ? 0 : targetTimeZone.@com.google.gwt.i18n.client.TimeZone::adjustments[index - 1];
+    }-*/;
+
+    public static native DivElement getTableWrapper(Escalator escalator)
+    /*-{
+        return escalator.@com.vaadin.client.widgets.Escalator::tableWrapper;
     }-*/;
 }

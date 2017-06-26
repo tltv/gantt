@@ -56,6 +56,7 @@ import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Component;
+import com.vaadin.ui.Grid;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.util.ReflectTools;
 import com.vaadin.v7.ui.Table;
@@ -806,6 +807,38 @@ public class Gantt extends AbstractComponent implements HasComponents {
         }
     }
 
+    /**
+     * Set target Grid component that will scroll vertically with the Gantt
+     * component and vice versa.
+     * <p>
+     * Grid height is maintained by Gantt after this call. Grid header height is
+     * changed to match the Gantt header. Grid rows have to have exactly same
+     * heights as the Gantt steps have.
+     * <p>
+     * Component resize events of the Grid and Gantt widgets are handled by this
+     * component.
+     * <p>
+     * Grid's internal column reordering and sorting are not listened by Gantt
+     * and can be handled explicitly via Grid's server side event listeners.
+     *
+     * @param table
+     *            Target Grid component.
+     */
+    public <T> void setVerticalScrollDelegateTarget(Grid<T> grid) {
+        if (grid != null) {
+            grid.setHeight(getHeight(), getHeightUnits());
+        }
+        if (getState().verticalScrollDelegateTarget != null && getState().verticalScrollDelegateTarget != grid) {
+            // target has changed. Remove value change listener from the old
+            // target.
+            cleanScrollDelegateTargetListeners();
+        }
+        getState().verticalScrollDelegateTarget = grid;
+        if (grid != null) {
+            addScrollDelegateTargetListeners(grid);
+        }
+    }
+
     protected StepComponent createStepComponent(Step step) {
         return new StepComponent(this, step);
     }
@@ -818,9 +851,15 @@ public class Gantt extends AbstractComponent implements HasComponents {
         }
     }
 
+    protected void addScrollDelegateTargetListeners(Grid grid) {
+
+    }
+
     protected void cleanScrollDelegateTargetListeners() {
-        ((Table) getState().verticalScrollDelegateTarget)
-                .removeColumnResizeListener(scrollDelegateTargetColumnResizeListener);
+        if (getState().verticalScrollDelegateTarget instanceof Table) {
+            ((Table) getState().verticalScrollDelegateTarget)
+                    .removeColumnResizeListener(scrollDelegateTargetColumnResizeListener);
+        }
         if (getState().verticalScrollDelegateTarget instanceof TreeTable) {
             ((TreeTable) getState().verticalScrollDelegateTarget)
                     .removeExpandListener(scrollDelegateTargetExpandListener);

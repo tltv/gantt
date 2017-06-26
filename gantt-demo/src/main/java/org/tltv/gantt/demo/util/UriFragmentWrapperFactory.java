@@ -1,6 +1,7 @@
 package org.tltv.gantt.demo.util;
 
 import org.tltv.gantt.Gantt;
+import org.tltv.gantt.demo.GridGanttLayout;
 import org.tltv.gantt.demo.TableGanttLayout;
 import org.tltv.gantt.demo.TreeTableGanttLayout;
 
@@ -17,7 +18,7 @@ public class UriFragmentWrapperFactory {
      * 'tabsheet' wraps it to Tabsheet component.
      * <p>
      * Returns by default the component itself.
-     * 
+     *
      * @param uriragment
      * @param component
      * @return
@@ -38,6 +39,9 @@ public class UriFragmentWrapperFactory {
 
         } else if (uriragment.contains("treetable")) {
             return new TreeTableGanttLayout(gantt);
+
+        } else if (uriragment.startsWith("grid")) {
+            return new GridGanttLayout(gantt);
 
         }
         return gantt;

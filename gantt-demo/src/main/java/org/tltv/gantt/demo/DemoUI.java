@@ -699,6 +699,14 @@ public class DemoUI extends UI {
                 getPage().reload();
             }
         });
+        item = viewItem.addItem("Show Gantt with Grid", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#grid");
+                getPage().reload();
+            }
+        });
         item = viewItem.addItem("Show Gantt alone", new Command() {
 
             @Override
