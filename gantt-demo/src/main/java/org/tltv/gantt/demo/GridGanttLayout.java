@@ -52,6 +52,9 @@ public class GridGanttLayout extends HorizontalLayout implements GanttListener {
 
     @Override
     public void stepModified(Step step) {
+        if (!dataProvider.getItems().contains(step)) {
+            dataProvider.getItems().add(step);
+        }
         dataProvider.refreshItem(step);
     }
 

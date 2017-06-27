@@ -707,6 +707,14 @@ public class DemoUI extends UI {
                 getPage().reload();
             }
         });
+        item = viewItem.addItem("Show Gantt with TreeGrid", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#treegrid");
+                getPage().reload();
+            }
+        });
         item = viewItem.addItem("Show Gantt alone", new Command() {
 
             @Override

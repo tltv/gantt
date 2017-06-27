@@ -390,15 +390,18 @@ public class Gantt extends AbstractComponent implements HasComponents {
      *
      * @param step
      *            Target Step
-     * @return true when removed successfully.
+     * @return true when target step exists and was removed successfully.
      */
     public boolean removeStep(Step step) {
         StepComponent sc = stepComponents.remove(step);
-        for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
-            sc.onRemoveSubStep(subStep);
+        if (sc != null) {
+            for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
+                sc.onRemoveSubStep(subStep);
+            }
+            sc.setParent(null);
+            return getState().steps.remove(sc);
         }
-        sc.setParent(null);
-        return getState().steps.remove(sc);
+        return false;
     }
 
     public int getStepIndex(Step step) {

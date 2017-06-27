@@ -3,6 +3,7 @@ package org.tltv.gantt.demo.util;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.demo.GridGanttLayout;
 import org.tltv.gantt.demo.TableGanttLayout;
+import org.tltv.gantt.demo.TreeGridGanttLayout;
 import org.tltv.gantt.demo.TreeTableGanttLayout;
 
 import com.vaadin.ui.Component;
@@ -43,7 +44,10 @@ public class UriFragmentWrapperFactory {
         } else if (uriragment.startsWith("grid")) {
             return new GridGanttLayout(gantt);
 
+        } else if (uriragment.startsWith("treegrid")) {
+            return new TreeGridGanttLayout(gantt);
         }
+
         return gantt;
     }
 
