@@ -15,11 +15,13 @@
  */
 package org.tltv.gantt.client;
 
+import com.vaadin.polymer.elemental.Function;
+
 /**
  * Widget representing a one Sub-Step in the Gantt chart.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 public class SubStepWidget extends AbstractStepWidget {
 
@@ -29,7 +31,13 @@ public class SubStepWidget extends AbstractStepWidget {
 
     public SubStepWidget() {
         super();
-        getElement().addClassName(STYLE_SUB_BAR);
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object arg) {
+                getBar().addClassName(STYLE_SUB_BAR);
+                return null;
+            }
+        });
     }
 
     public void setOwner(StepWidget stepWidget) {
@@ -45,8 +53,7 @@ public class SubStepWidget extends AbstractStepWidget {
 
     @Override
     protected void updatePositionAndWidth() {
-        gantt.updateBarPercentagePosition(step.getStartDate(),
-                step.getEndDate(), getOwner().getStep().getStartDate(),
-                getOwner().getStep().getEndDate(), getElement());
+        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getOwner().getStep().getStartDate(),
+                getOwner().getStep().getEndDate(), getBar());
     }
 }

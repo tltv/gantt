@@ -23,10 +23,12 @@ import org.tltv.gantt.client.ArrowElement.ArrowChangeHandler;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.polymer.elemental.Function;
 
 /**
  * Widget representing a one Step in the Gantt chart.
@@ -77,29 +79,74 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public void setPredecessorStepWidget(StepWidget predecessorStepWidget) {
-        this.predecessorStepWidget = predecessorStepWidget;
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                StepWidget.this.predecessorStepWidget = predecessorStepWidget;
+                return null;
+            }
+        });
     }
 
-    public void updatePredecessor() {
-        createPredecessorElements();
-
-        if (predecessorStepWidget == null) {
+    public void requestUpdatePredecessor(final Step sourceRelatedStep) {
+        if (getStep() != null) {
+            if (sourceRelatedStep.equals(getStep().getPredecessor())) {
+                updatePredecessor();
+            }
             return;
         }
 
-        ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(), getElement());
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                GWT.log("requestUpdatePredecessor READY");
+                if (sourceRelatedStep.equals(getStep().getPredecessor())) {
+                    updatePredecessor();
+                }
+                return null;
+            }
+        });
+    }
 
-        predecessorArrow.setWidth(data.getWidth());
-        predecessorArrow.setHeight(data.getHeight());
-        predecessorArrow.setTop((int) data.getTop());
-        predecessorArrow.setLeft((int) data.getLeft());
+    public void updatePredecessor() {
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                createPredecessorElements();
 
-        predecessorArrow.draw(data);
+                if (predecessorStepWidget == null) {
+                    return null;
+                }
+
+                predecessorArrow.whenReady(new Function<Object, Object>() {
+                    @Override
+                    public Object call(Object arg) {
+                        ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
+                                getBar());
+
+                        predecessorArrow.setWidth(data.getWidth());
+                        predecessorArrow.setHeight(data.getHeight());
+                        predecessorArrow.setTop((int) data.getTop());
+                        predecessorArrow.setLeft((int) data.getLeft());
+
+                        predecessorArrow.draw(data);
+                        return null;
+                    }
+                });
+                return null;
+            }
+        });
     }
 
     public ArrowElement createArrowWidget() {
         SvgArrowWidget a = new SvgArrowWidget();
-        a.setReadOnly(isReadOnly());
+        a.ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                a.setReadOnly(isReadOnly());
+                return a;
+            }
+        });
         return a;
     }
 
@@ -111,10 +158,23 @@ public class StepWidget extends AbstractStepWidget {
         } else {
             if (predecessorArrow == null) {
                 predecessorArrow = createArrowWidget();
-                predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(), gantt.isMsTouchSupported());
-                predecessorArrow.setArrowChangeHandler(arrowChangeHandler);
+                predecessorArrow.whenReady(new Function<Object, Object>() {
+                    @Override
+                    public Object call(Object arg) {
+                        predecessorArrow.setUpEventHandlers(gantt.isTouchSupported(), gantt.isMsTouchSupported());
+                        predecessorArrow.setArrowChangeHandler(arrowChangeHandler);
+                        return null;
+                    }
+                });
             }
-            gantt.registerContentElement((Widget) predecessorArrow);
+
+            predecessorArrow.whenReady(new Function<Object, Object>() {
+                @Override
+                public Object call(Object arg) {
+                    gantt.registerContentElement((Widget) predecessorArrow);
+                    return null;
+                }
+            });
         }
     }
 
@@ -156,7 +216,7 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public SubStepWidget getSubStepWidgetByElement(Element element) {
-        Widget w = getWidget(DOM.getChildIndex(getElement(), element) - countNonSubStepChilds());
+        Widget w = getWidget(DOM.getChildIndex(getBar(), element) - countNonSubStepChilds());
         if (w instanceof SubStepWidget) {
             return (SubStepWidget) w;
         }
@@ -166,23 +226,37 @@ public class StepWidget extends AbstractStepWidget {
     @Override
     public void updateWidth() {
         super.updateWidth();
-        List<SubStepWidget> subSteps = getSubSteps();
-        updateStylesForSubSteps(!subSteps.isEmpty());
-        for (SubStepWidget subStep : subSteps) {
-            subStep.updateWidth();
-        }
+
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                List<SubStepWidget> subSteps = getSubSteps();
+                updateStylesForSubSteps(!subSteps.isEmpty());
+                for (SubStepWidget subStep : subSteps) {
+                    subStep.updateWidth();
+                }
+                return null;
+            }
+        });
     }
 
     private void updateStylesForSubSteps(boolean hasSubSteps) {
-        if (!hasSubSteps) {
-            getElement().removeClassName(STYLE_HAS_SUB_STEPS);
-        } else {
-            getElement().addClassName(STYLE_HAS_SUB_STEPS);
-        }
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                if (!hasSubSteps) {
+                    getBar().removeClassName(STYLE_HAS_SUB_STEPS);
+                } else {
+                    getBar().addClassName(STYLE_HAS_SUB_STEPS);
+                }
+                return null;
+            }
+        });
     }
 
     public void updateStylesForSubSteps() {
         List<SubStepWidget> subSteps = getSubSteps();
         updateStylesForSubSteps(!subSteps.isEmpty());
     }
+
 }

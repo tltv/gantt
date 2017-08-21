@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.i18n.client.TimeZone;
 import com.vaadin.client.widgets.Escalator;
+import com.vaadin.polymer.elemental.Function;
 
 public class GanttUtil {
 
@@ -196,5 +197,66 @@ public class GanttUtil {
     public static native DivElement getTableWrapper(Escalator escalator)
     /*-{
         return escalator.@com.vaadin.client.widgets.Escalator::tableWrapper;
+    }-*/;
+
+    /**
+     * Executes a function after all imports have been loaded and when the
+     * passed element is ready to use. For browsers not supporting html imports,
+     * it loads the webcomponentsjs polyfill.
+     */
+    public static native void whenReady(Function f, Element e)
+    /*-{
+
+        function nextTimeout(delayms) {
+           setTimeout(function() {
+                if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e)) {
+                  if (f) f(e);
+                } else {
+                    nextTimeout(10);
+                }
+              }, delayms);
+        }
+
+        function registered() {
+          if (e) {
+              nextTimeout(0);
+          } else {
+              if (f) f();
+          }
+        }
+        function done() {
+            $wnd.HTMLImports.whenReady(registered);
+        }
+        function loadPolyfill() {
+            var s = $doc.createElement('script');
+            s.src = @com.vaadin.polymer.Polymer::absoluteHref(*)
+                        ('webcomponentsjs/webcomponents-lite.min.js');
+            s.onreadystatechange = s.onload = done;
+            $doc.head.appendChild(s);
+        }
+        if (!$wnd.HTMLImports) {
+            if (@com.vaadin.polymer.Polymer::hasHtmlImports) {
+                registered();
+            } else {
+                loadPolyfill();
+            }
+        } else {
+           done();
+        }
+    }-*/;
+
+    public static native void deferred(Function f, Function<Boolean, ?> test)
+    /*-{
+
+        function nextTimeout(delayms) {
+           setTimeout(function() {
+                if (test()) {
+                  if (f) f();
+                } else {
+                    nextTimeout(10);
+                }
+              }, delayms);
+        }
+        nextTimeout(0);
     }-*/;
 }

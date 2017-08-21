@@ -1,0 +1,32 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="svg-arrow">
+
+	<template>
+		<svg 
+			class="arrow" 
+			style="position: absolute; z-index: 2; pointer-events: none;" 
+			pointerEvents="none" 
+			height$="[[height]]" 
+			width$="[[width]]">
+			
+			<g stroke="black" stroke-width="1">
+				<path class="curve-line" fill="none"></path>
+				<circle class="start-p" style="pointer-events: visiblepainted;" stroke-width="2" r="7" fill="black"></circle>
+				<circle class="end-p" style="pointer-events: visiblepainted;" stroke-width="2" r="5" fill="black"></circle>
+			</g>
+		</svg>
+	</template>
+	
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'svg-arrow',
+    
+    properties: {
+    	height: String,
+    	width: String
+    }
+  });
+</script>

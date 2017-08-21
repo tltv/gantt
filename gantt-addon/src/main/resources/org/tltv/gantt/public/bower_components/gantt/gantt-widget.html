@@ -1,0 +1,27 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="gantt-widget">
+
+	<template>
+		<div class="gantt" style="height: [[height]]; width: [[width]]">
+			
+			<!-- >div class="timeline"></div-->
+			<div class="gantt-container">
+				<div class="gantt-content"><div class="mv-el" style="display: none;"></div></div>
+			</div>
+			<div style="display: none;"></div>	
+		</div>
+	</template>
+	
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'gantt-widget',
+    
+    properties: {
+    	height: String,
+    	width: String
+    }
+  });
+</script>

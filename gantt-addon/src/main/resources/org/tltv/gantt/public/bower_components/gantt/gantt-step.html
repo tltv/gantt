@@ -1,0 +1,28 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<dom-module id="gantt-step">
+
+	<style>
+      :host {
+      	
+      }
+    </style>
+    
+	<template>
+		<div class="bar-label"></div>
+	</template>
+	
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'gantt-step',
+    
+    properties: {
+    	style: {
+    		reflectToAttribute: true,
+    		value: 'visibility: hidden;'
+    	}
+    }
+  });
+</script>

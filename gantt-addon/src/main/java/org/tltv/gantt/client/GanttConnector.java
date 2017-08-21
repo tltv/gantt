@@ -63,6 +63,7 @@ import com.vaadin.client.ui.layout.ElementResizeEvent;
 import com.vaadin.client.ui.layout.ElementResizeListener;
 import com.vaadin.client.widget.escalator.ScrollbarBundle.Direction;
 import com.vaadin.client.widgets.Grid;
+import com.vaadin.polymer.elemental.Function;
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
 import com.vaadin.shared.ui.Connect;
@@ -378,6 +379,12 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
             return true;
         }
+
+        @Override
+        public void requestLayout() {
+            getLayoutManager().setNeedsMeasure(GanttConnector.this);
+
+        }
     };
 
     GanttClientRpc ganttClientRpc = new GanttClientRpc() {
@@ -430,7 +437,25 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
     @Override
     protected void init() {
+        GWT.log("*************** GanttConnector.init");
         super.init();
+
+        getWidget().ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                GWT.log("************* GanttConnector.init READY");
+                doInit();
+                return null;
+            }
+        });
+    }
+
+    void doInit() {
+        if (getWidget().getLocaleDataProvider() != null) {
+            return; // already initialized
+        }
+        getWidget().doInit();
+
         BrowserInfo info = BrowserInfo.get();
         getWidget().setBrowserInfo(info.isIE(), info.isChrome(), info.isSafari(), info.isWebkit(),
                 info.getBrowserMajorVersion());
@@ -449,7 +474,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
     @Override
     protected Widget createWidget() {
-        return GWT.create(GanttWidget.class);
+        return new GanttWidget();
     }
 
     @Override
@@ -464,66 +489,79 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
     @Override
     public void onStateChanged(StateChangeEvent stateChangeEvent) {
+        GWT.log("************** GanttConnector.onStateChanged");
+
         super.onStateChanged(stateChangeEvent);
 
-        locale = getState().locale;
-        timeZoneId = getState().timeZoneId;
-        if (stateChangeEvent.hasPropertyChanged("locale")) {
-            dateTimeService = null;
-        }
-        if (stateChangeEvent.hasPropertyChanged("timeZoneId")) {
-            if (getState().timeZoneJson != null) {
-                timeZone = TimeZone.createTimeZone(getState().timeZoneJson);
-            } else {
-                timeZone = TimeZone.createTimeZone(0);
-            }
-        }
-
-        final boolean changeHasInpactToSteps = stateChangeEvent.hasPropertyChanged("resolution")
-                || stateChangeEvent.hasPropertyChanged("startDate") || stateChangeEvent.hasPropertyChanged("endDate");
-
-        if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
-                || stateChangeEvent.hasPropertyChanged("yearRowVisible")
-                || stateChangeEvent.hasPropertyChanged("monthFormat")
-                || stateChangeEvent.hasPropertyChanged("yearFormat")
-                || stateChangeEvent.hasPropertyChanged("weekFormat")
-                || stateChangeEvent.hasPropertyChanged("dayFormat")) {
-            notifyHeight = !stateChangeEvent.isInitialStateChange();
-            getWidget().setForceUpdateTimeline();
-        }
-        if (!notifyHeight && stateChangeEvent.hasPropertyChanged("resolution")) {
-            notifyHeight = !stateChangeEvent.isInitialStateChange();
-        }
-        if (stateChangeEvent.hasPropertyChanged("movableSteps")
-                || stateChangeEvent.hasPropertyChanged("resizableSteps")) {
-            getWidget().resetListeners();
-        }
-
-        if (stateChangeEvent.hasPropertyChanged("readOnly")) {
-            getWidget().setMovableSteps(!getState().readOnly && getState().movableSteps);
-            getWidget().setResizableSteps(!getState().readOnly && getState().resizableSteps);
-            for (StepWidget s : getSteps()) {
-                s.setReadOnly(getState().readOnly);
-            }
-        }
-
-        if (stateChangeEvent.hasPropertyChanged("verticalScrollDelegateTarget")) {
-            handleVerticalScrollDelegateTargetChange();
-        }
-
-        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-
+        getWidget().ready(new Function<Object, Object>() {
             @Override
-            public void execute() {
-                getWidget().update(getSteps());
-                if (notifyHeight) {
-                    getWidget().notifyHeightChanged(previousHeight);
+            public Object call(Object args) {
+                GWT.log("************* GanttConnector.onStateChanged READY");
+                doInit();
+
+                locale = getState().locale;
+                timeZoneId = getState().timeZoneId;
+                if (stateChangeEvent.hasPropertyChanged("locale")) {
+                    dateTimeService = null;
                 }
-                if (changeHasInpactToSteps) {
-                    updateAllStepsPredecessors();
+                if (stateChangeEvent.hasPropertyChanged("timeZoneId")) {
+                    if (getState().timeZoneJson != null) {
+                        timeZone = TimeZone.createTimeZone(getState().timeZoneJson);
+                    } else {
+                        timeZone = TimeZone.createTimeZone(0);
+                    }
                 }
-                updateVerticalScrollDelegation();
-                adjustDelegateTargetHeightLazily();
+
+                final boolean changeHasInpactToSteps = stateChangeEvent.hasPropertyChanged("resolution")
+                        || stateChangeEvent.hasPropertyChanged("startDate")
+                        || stateChangeEvent.hasPropertyChanged("endDate");
+
+                if (stateChangeEvent.hasPropertyChanged("monthRowVisible")
+                        || stateChangeEvent.hasPropertyChanged("yearRowVisible")
+                        || stateChangeEvent.hasPropertyChanged("monthFormat")
+                        || stateChangeEvent.hasPropertyChanged("yearFormat")
+                        || stateChangeEvent.hasPropertyChanged("weekFormat")
+                        || stateChangeEvent.hasPropertyChanged("dayFormat")) {
+                    notifyHeight = !stateChangeEvent.isInitialStateChange();
+                    getWidget().setForceUpdateTimeline();
+                }
+                if (!notifyHeight && stateChangeEvent.hasPropertyChanged("resolution")) {
+                    notifyHeight = !stateChangeEvent.isInitialStateChange();
+                }
+                if (stateChangeEvent.hasPropertyChanged("movableSteps")
+                        || stateChangeEvent.hasPropertyChanged("resizableSteps")) {
+                    getWidget().resetListeners();
+                }
+
+                if (stateChangeEvent.hasPropertyChanged("readOnly")) {
+                    getWidget().setMovableSteps(!getState().readOnly && getState().movableSteps);
+                    getWidget().setResizableSteps(!getState().readOnly && getState().resizableSteps);
+                    for (StepWidget s : getSteps()) {
+                        s.setReadOnly(getState().readOnly);
+                    }
+                }
+
+                if (stateChangeEvent.hasPropertyChanged("verticalScrollDelegateTarget")) {
+                    handleVerticalScrollDelegateTargetChange();
+                }
+
+                Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+
+                    @Override
+                    public void execute() {
+                        getWidget().requestUpdate(getSteps());
+                        if (notifyHeight) {
+                            getWidget().notifyHeightChanged(previousHeight);
+                        }
+                        if (changeHasInpactToSteps) {
+                            updateAllStepsPredecessors();
+                        }
+                        updateVerticalScrollDelegation();
+                        adjustDelegateTargetHeightLazily();
+                    }
+                });
+
+                return null;
             }
         });
     }
@@ -712,47 +750,114 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
     @Override
     public void onConnectorHierarchyChange(ConnectorHierarchyChangeEvent connectorHierarchyChangeEvent) {
+        GWT.log("************ GanttConnector.onConnectorHierarchyChange");
+        getWidget().ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                GWT.log("************* GanttConnector.onConnectorHierarchyChange READY");
+                doInit();
 
-        // Here we handle removing and other necessary changed related
-        // hierarchy.
-        Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
-        // remove old steps
-        for (ComponentConnector c : connectorHierarchyChangeEvent.getOldChildren()) {
-            if (!getChildComponents().contains(c)) {
-                StepWidget stepWidget = ((StepConnector) c).getWidget();
+                // Here we handle removing and other necessary changed related
+                // hierarchy.
+                Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
+                // remove old steps
+                for (ComponentConnector c : connectorHierarchyChangeEvent.getOldChildren()) {
+                    if (!getChildComponents().contains(c)) {
+                        StepWidget stepWidget = ((StepConnector) c).getWidget();
+                        predecessorRemoved.add(stepWidget);
+                    }
+                }
+
+                for (StepWidget stepWidget : predecessorRemoved) {
+                    requestRemoveStep(stepWidget);
+                }
+
+                // Sync steps with changed hierarchy; add new ones and move
+                // existing ones.
+                List<StepWidget> addSteps = new ArrayList<>();
+                int index = 0;
+                for (ComponentConnector c : getChildComponents()) {
+                    StepWidget stepWidget = ((StepConnector) c).getWidget();
+                    addSteps.add(stepWidget);
+                    getWidget().insertStep(index++, stepWidget);
+                }
+                requestSetSteps(addSteps);
+
+                Map<Step, StepWidget> steps = getStepsMap();
+
+                // update new steps with references to gantt widget and locale
+                // data
+                // provider.
+                for (ComponentConnector c : getChildComponents()) {
+                    StepWidget stepWidget = ((StepConnector) c).getWidget();
+                    if (!connectorHierarchyChangeEvent.getOldChildren().contains(c)) {
+                        stepWidget.setGantt(getWidget(), localeDataProvider);
+                    }
+
+                    Step predecessor = ((StepConnector) c).getState().step.getPredecessor();
+                    if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
+                        stepWidget.setPredecessorStepWidget(steps.get(predecessor));
+                    } else {
+                        stepWidget.setPredecessorStepWidget(null);
+                    }
+                }
+
+                deferredUpdateAllStepsPredecessors();
+
+                return null;
+            }
+
+        });
+    }
+
+    private void requestRemoveStep(final StepWidget stepWidget) {
+        stepWidget.ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
                 getWidget().removeStep(stepWidget);
-                predecessorRemoved.add(stepWidget);
+                return null;
+            }
+        });
+    }
+
+    void requestSetSteps(final List<StepWidget> stepWidgets) {
+        if (stepWidgets.isEmpty()) {
+            return;
+        }
+        for (StepWidget sw : new ArrayList<StepWidget>(stepWidgets)) {
+            requestSetStep(stepWidgets, sw);
+        }
+    }
+
+    private void requestSetStep(final List<StepWidget> stepWidgets, StepWidget sw) {
+        sw.ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object arg) {
+                GWT.log("GanttConnector.requestSetStep " + stepWidgets.indexOf(sw));
+                sw.waitingForPolymer = false;
+                if (areStepsReady(stepWidgets)) {
+                    setSteps(stepWidgets);
+                }
+                return null;
+            }
+
+        });
+    }
+
+    private void setSteps(final List<StepWidget> stepWidgets) {
+        int index = 0;
+        for (StepWidget sw : stepWidgets) {
+            getWidget().setStep(index++, sw, false);
+        }
+    }
+
+    private boolean areStepsReady(List<StepWidget> stepWidgets) {
+        for (StepWidget sw : stepWidgets) {
+            if (sw.waitingForPolymer) {
+                return false;
             }
         }
-
-        // Sync steps with changed hierarchy; add new ones and move existing
-        // ones.
-        int stepIndex = 0;
-        for (ComponentConnector c : getChildComponents()) {
-            StepWidget stepWidget = ((StepConnector) c).getWidget();
-            getWidget().addStep(stepIndex, stepWidget, false);
-            stepIndex++;
-        }
-
-        Map<Step, StepWidget> steps = getStepsMap();
-
-        // update new steps with references to gantt widget and locale data
-        // provider.
-        for (ComponentConnector c : getChildComponents()) {
-            StepWidget stepWidget = ((StepConnector) c).getWidget();
-            if (!connectorHierarchyChangeEvent.getOldChildren().contains(c)) {
-                stepWidget.setGantt(getWidget(), localeDataProvider);
-            }
-
-            Step predecessor = ((StepConnector) c).getState().step.getPredecessor();
-            if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
-                stepWidget.setPredecessorStepWidget(steps.get(predecessor));
-            } else {
-                stepWidget.setPredecessorStepWidget(null);
-            }
-        }
-
-        deferredUpdateAllStepsPredecessors();
+        return true;
     }
 
     /** Updates all steps predecessor visualizations. */
@@ -772,19 +877,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         });
     }
 
-    /**
-     * Return {@link StepWidget} objects that are related to the given
-     * StepWidget. Via {@link Step#getPredecessor()} for example.
-     */
-    public Set<StepWidget> findRelatedSteps(Step targetStep, List<ComponentConnector> stepConnectors) {
-        Set<StepWidget> widgets = new HashSet<StepWidget>();
+    public void updateRelatedStepsPredecessors(Step targetStep, List<ComponentConnector> stepConnectors) {
         for (ComponentConnector con : stepConnectors) {
             StepWidget stepWidget = ((StepConnector) con).getWidget();
-            if (targetStep.equals(stepWidget.getStep().getPredecessor())) {
-                widgets.add(stepWidget);
-            }
+            stepWidget.requestUpdatePredecessor(targetStep);
         }
-        return widgets;
     }
 
     public StepWidget getStepWidget(Step target) {

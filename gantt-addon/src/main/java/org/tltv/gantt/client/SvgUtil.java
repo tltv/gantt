@@ -11,8 +11,7 @@ public class SvgUtil {
         return createElementNS(SVG_NS, tag);
     }
 
-    public static native void setAttributeNS(String uri, Element elem,
-            String attr, String value)
+    public static native void setAttributeNS(String uri, Element elem, String attr, String value)
     /*-{
         elem.setAttributeNS(uri, attr, value);
     }-*/;

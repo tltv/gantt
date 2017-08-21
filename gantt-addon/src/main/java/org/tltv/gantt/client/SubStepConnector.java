@@ -18,12 +18,12 @@ package org.tltv.gantt.client;
 import org.tltv.gantt.SubStepComponent;
 import org.tltv.gantt.client.shared.SubStepState;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.TooltipInfo;
 import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.ui.AbstractComponentConnector;
+import com.vaadin.polymer.elemental.Function;
 import com.vaadin.shared.ui.Connect;
 import com.vaadin.shared.ui.ContentMode;
 
@@ -34,7 +34,7 @@ public class SubStepConnector extends AbstractComponentConnector {
 
     @Override
     protected Widget createWidget() {
-        return GWT.create(SubStepWidget.class);
+        return new SubStepWidget();
     }
 
     @Override
@@ -65,14 +65,29 @@ public class SubStepConnector extends AbstractComponentConnector {
             getWidget().setOwner(step);
         }
 
-        if (stateChangeEvent.hasPropertyChanged("step")) {
-            getWidget().setStep(getState().step);
-        }
-        if (!getWidget().getElement().hasParentElement()) {
-            step.add(getWidget());
-            getWidget().getOwner().updateStylesForSubSteps();
-        }
-        getWidget().updateWidth();
+        step.ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+
+                getWidget().ready(new Function<Object, Object>() {
+                    @Override
+                    public Object call(Object args) {
+                        if (stateChangeEvent.hasPropertyChanged("step")) {
+                            getWidget().setStep(getState().step);
+                        }
+                        if (!getWidget().getElement().hasParentElement()) {
+                            step.add(getWidget());
+                            getWidget().getOwner().updateStylesForSubSteps();
+                        }
+                        getWidget().updateWidth();
+                        return null;
+                    }
+                });
+
+                return null;
+            }
+        });
+
     }
 
     @Override

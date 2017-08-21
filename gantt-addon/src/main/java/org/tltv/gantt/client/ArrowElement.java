@@ -2,6 +2,7 @@ package org.tltv.gantt.client;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.vaadin.polymer.elemental.Function;
 
 /** Element representing an arrow between two elements. SVG implementation. */
 public interface ArrowElement {
@@ -23,6 +24,8 @@ public interface ArrowElement {
     void setUpEventHandlers(boolean touchSupported, boolean msTouchSupported);
 
     void setArrowChangeHandler(ArrowChangeHandler handler);
+
+    void whenReady(Function<?, ?> op);
 
     public interface ArrowChangeHandler {
         /**

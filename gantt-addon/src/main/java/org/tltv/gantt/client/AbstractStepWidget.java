@@ -1,24 +1,23 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.AbstractStep;
+import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 
-import com.google.gwt.dom.client.DivElement;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style.Visibility;
-import com.google.gwt.user.client.DOM;
-import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.vaadin.polymer.PolymerWidget;
+import com.vaadin.polymer.elemental.Function;
 
-public class AbstractStepWidget extends ComplexPanel {
+public class AbstractStepWidget extends PolymerWidget {
 
     public static final String STYLE_BAR = "bar";
     public static final String STYLE_BAR_LABEL = "bar-label";
     public static final String STYLE_INVALID = "invalid";
 
     protected boolean readOnly;
-    protected DivElement caption;
 
     protected String extraStyle;
     protected long start = -1;
@@ -30,22 +29,50 @@ public class AbstractStepWidget extends ComplexPanel {
     protected GanttWidget gantt;
     protected LocaleDataProvider localeDataProvider;
 
+    public boolean waitingForPolymer = true;
+
+    private int calculatedHeight = 0;
+
     @Override
     protected void onDetach() {
         super.onDetach();
     }
 
     public AbstractStepWidget() {
-        DivElement bar = DivElement.as(DOM.createDiv());
-        bar.setClassName(STYLE_BAR);
-        setElement(bar);
+        super("gantt-step", "gantt/gantt-step.html", "");
+        addStyleName("bar");
 
-        caption = DivElement.as(DOM.createDiv());
-        caption.setClassName(STYLE_BAR_LABEL);
-        bar.appendChild(caption);
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                GWT.log("AbstractStepWidget() READY");
+                waitingForPolymer = false;
+                return null;
+            }
+        });
+        // DivElement bar = DivElement.as(DOM.createDiv());
+        // bar.setClassName(STYLE_BAR);
+        // setElement(bar);
+        //
+        // caption = DivElement.as(DOM.createDiv());
+        // caption.setClassName(STYLE_BAR_LABEL);
+        // bar.appendChild(caption);
 
         // hide by default
-        bar.getStyle().setVisibility(Visibility.HIDDEN);
+        // bar.getStyle().setVisibility(Visibility.HIDDEN);
+    }
+
+    @Override
+    public void ready(Function<?, ?> f) {
+        GanttUtil.whenReady(f, getElement());
+    }
+
+    public Element getBar() {
+        return getElement();
+    }
+
+    public Element getBarCaption() {
+        return getBar().getFirstChildElement();
     }
 
     public void setGantt(GanttWidget gantt, LocaleDataProvider localeDataProvider) {
@@ -85,14 +112,14 @@ public class AbstractStepWidget extends ComplexPanel {
 
     protected void updateCaption() {
         if (step.getCaptionMode() == Step.CaptionMode.HTML) {
-            caption.setInnerHTML(step.getCaption());
+            getBarCaption().setInnerHTML(step.getCaption());
         } else {
-            caption.setInnerText(step.getCaption());
+            getBarCaption().setInnerText(step.getCaption());
         }
     }
 
     protected void updateBackground() {
-        getElement().getStyle().setBackgroundColor(step.getBackgroundColor());
+        getBar().getStyle().setBackgroundColor(step.getBackgroundColor());
     }
 
     protected void updateStyle() {
@@ -100,13 +127,13 @@ public class AbstractStepWidget extends ComplexPanel {
             if (!step.getStyleName().equals(extraStyle)) {
                 // style name changed. Clear old and add new style.
                 if (!isEmpty(extraStyle)) {
-                    getElement().removeClassName(extraStyle);
+                    getBar().removeClassName(extraStyle);
                 }
-                getElement().addClassName(step.getStyleName());
+                getBar().addClassName(step.getStyleName());
             }
             extraStyle = step.getStyleName();
         } else if (!isEmpty(extraStyle)) {
-            getElement().removeClassName(extraStyle);
+            getBar().removeClassName(extraStyle);
             extraStyle = null;
         }
     }
@@ -116,7 +143,7 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     protected void updatePositionAndWidth() {
-        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getElement());
+        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getBar());
     }
 
     protected void updateProgress() {
@@ -135,7 +162,7 @@ public class AbstractStepWidget extends ComplexPanel {
             progressElement.setProgress(step.getProgress());
         }
         if (!progressElement.getElement().hasParentElement()) {
-            getElement().insertAfter(progressElement.getElement(), caption);
+            getBar().insertAfter(progressElement.getElement(), getBarCaption());
         }
     }
 
@@ -149,21 +176,27 @@ public class AbstractStepWidget extends ComplexPanel {
      * Updates width of this widget to match the Gantt chart's timeline.
      */
     public void updateWidth() {
-        if (gantt == null || !getElement().hasParentElement()) {
-            return;
-        }
+        ready(new Function<Object, Object>() {
+            @Override
+            public Object call(Object args) {
+                if (gantt == null || !getElement().hasParentElement()) {
+                    return null;
+                }
 
-        getElement().getStyle().clearVisibility();
+                getBar().getStyle().clearVisibility();
 
-        if (start != step.getStartDate() || end != step.getEndDate()) {
+                if (start != step.getStartDate() || end != step.getEndDate()) {
 
-            // sanity check
-            if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
-                getElement().addClassName(STYLE_INVALID);
-            } else {
-                updatePositionAndWidth();
+                    // sanity check
+                    if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
+                        getBar().addClassName(STYLE_INVALID);
+                    } else {
+                        updatePositionAndWidth();
+                    }
+                }
+                return null;
             }
-        }
+        });
     }
 
     public void setReadOnly(boolean readOnly) {
@@ -180,7 +213,19 @@ public class AbstractStepWidget extends ComplexPanel {
     }
 
     protected int countNonSubStepChilds() {
-        return ((caption != null && caption.hasParentElement()) ? 1 : 0)
+        return ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
                 + ((progressElement != null && progressElement.getElement().hasParentElement()) ? 1 : 0);
+    }
+
+    public void registerCalculatedHeight(int height) {
+        calculatedHeight = height;
+    }
+
+    public int getPreviousHeight() {
+        return calculatedHeight;
+    }
+
+    public boolean isSet() {
+        return getPreviousHeight() != 0;
     }
 }
