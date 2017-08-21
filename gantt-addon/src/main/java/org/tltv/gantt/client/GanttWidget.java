@@ -30,6 +30,8 @@ import java.util.Set;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
 
+import com.google.gwt.animation.client.AnimationScheduler;
+import com.google.gwt.animation.client.AnimationScheduler.AnimationCallback;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
@@ -273,19 +275,25 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         @Override
         public void onScroll(ScrollEvent event) {
-            Element element = event.getNativeEvent().getEventTarget().cast();
+            final Element element = event.getNativeEvent().getEventTarget().cast();
             if (element != container) {
                 return;
             }
-            int sl = container.getScrollLeft();
-            int st = container.getScrollTop();
-            if (sl != previousContainerScrollLeft) {
-                timeline.setScrollLeft(sl);
-                previousContainerScrollLeft = sl;
-            }
-            if (st != previousContainerScrollTop) {
-                previousContainerScrollTop = st;
-            }
+            AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
+
+                @Override
+                public void execute(double timestamp) {
+                    int sl = container.getScrollLeft();
+                    int st = container.getScrollTop();
+                    if (sl != previousContainerScrollLeft) {
+                        timeline.setScrollLeft(sl);
+                        previousContainerScrollLeft = sl;
+                    }
+                    if (st != previousContainerScrollTop) {
+                        previousContainerScrollTop = st;
+                    }
+                }
+            });
         }
     };
 

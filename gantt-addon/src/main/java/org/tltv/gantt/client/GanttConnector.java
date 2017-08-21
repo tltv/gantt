@@ -30,6 +30,8 @@ import org.tltv.gantt.client.shared.GanttState;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
+import com.google.gwt.animation.client.AnimationScheduler;
+import com.google.gwt.animation.client.AnimationScheduler.AnimationCallback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -123,20 +125,26 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 // event
                 return;
             }
-            ganttScrollDelay.cancel();
-            ganttDelegatingVerticalScroll = true;
-            int scrollTop = getWidget().getScrollContainer().getScrollTop();
-            try {
-                if (delegateScrollPanelTarget != null) {
-                    delegateScrollPanelTarget.setScrollPosition(scrollTop);
+            AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
 
-                } else if (delegateScrollGridTarget != null) {
-                    delegateScrollGridTarget.setScrollTop(scrollTop);
+                @Override
+                public void execute(double timestamp) {
+                    ganttScrollDelay.cancel();
+                    ganttDelegatingVerticalScroll = true;
+                    int scrollTop = getWidget().getScrollContainer().getScrollTop();
+                    try {
+                        if (delegateScrollPanelTarget != null) {
+                            delegateScrollPanelTarget.setScrollPosition(scrollTop);
+
+                        } else if (delegateScrollGridTarget != null) {
+                            delegateScrollGridTarget.setScrollTop(scrollTop);
+                        }
+
+                    } finally {
+                        ganttScrollDelay.schedule(20);
+                    }
                 }
-
-            } finally {
-                ganttScrollDelay.schedule(20);
-            }
+            });
         }
     };
     /**
@@ -147,7 +155,17 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         @Override
         public void onScroll(ScrollEvent event) {
-            onDelegateScroll();
+            if (ganttDelegatingVerticalScroll) {
+                // if gantt is scrolling, don't allow this scroll event
+                return;
+            }
+            AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
+
+                @Override
+                public void execute(double timestamp) {
+                    onDelegateScroll();
+                }
+            });
         }
 
     };
@@ -159,7 +177,17 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         @Override
         public void onScroll(com.vaadin.client.widget.grid.events.ScrollEvent event) {
-            onDelegateScroll();
+            if (ganttDelegatingVerticalScroll) {
+                // if gantt is scrolling, don't allow this scroll event
+                return;
+            }
+            AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
+
+                @Override
+                public void execute(double timestamp) {
+                    onDelegateScroll();
+                }
+            });
         }
     };
     final StateChangeHandler scrollDelegateTargetStateChangeHandler = new StateChangeHandler() {
@@ -504,10 +532,6 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     }
 
     private void onDelegateScroll() {
-        if (ganttDelegatingVerticalScroll) {
-            // if gantt is scrolling, don't allow this scroll event
-            return;
-        }
         scrollDelay.cancel();
         double scrollPosition = 0.0;
         if (delegateScrollPanelTarget != null) {
