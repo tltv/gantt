@@ -277,19 +277,25 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     private int previousContainerScrollTop = 0;
     
     public void onContainerScroll(NativeEvent event) {
-        Element element = GanttUtil.getEventTarget(event);
+        final Element element = GanttUtil.getEventTarget(event);
         if (element != container) {
             return;
         }
-        int sl = container.getScrollLeft();
-        int st = container.getScrollTop();
-        if (sl != previousContainerScrollLeft) {
-            timeline.setScrollLeft(sl);
-            previousContainerScrollLeft = sl;
-        }
-        if (st != previousContainerScrollTop) {
-            previousContainerScrollTop = st;
-        }
+        AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
+
+            @Override
+            public void execute(double timestamp) {
+                int sl = container.getScrollLeft();
+                int st = container.getScrollTop();
+                if (sl != previousContainerScrollLeft) {
+                    timeline.setScrollLeft(sl);
+                    previousContainerScrollLeft = sl;
+                }
+                if (st != previousContainerScrollTop) {
+                    previousContainerScrollTop = st;
+                }
+            }
+        });
     }
 
     private DoubleClickHandler doubleClickHandler = new DoubleClickHandler() {
