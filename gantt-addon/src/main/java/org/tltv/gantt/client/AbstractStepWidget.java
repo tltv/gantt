@@ -7,6 +7,7 @@ import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.elemental.Function;
@@ -29,7 +30,7 @@ public class AbstractStepWidget extends PolymerWidget {
     protected GanttWidget gantt;
     protected LocaleDataProvider localeDataProvider;
 
-    public boolean waitingForPolymer = true;
+    public boolean waitingForPolymer = true; // TODO can this be removed now?
 
     private int calculatedHeight = 0;
 
@@ -39,7 +40,8 @@ public class AbstractStepWidget extends PolymerWidget {
     }
 
     public AbstractStepWidget() {
-        super("gantt-step", "gantt/gantt-step.html", "");
+        super("gantt-step", new SafeHtmlBuilder().toSafeHtml());
+        // super("gantt-step", "gantt/gantt-step.html", "");
         addStyleName("bar");
 
         ready(new Function<Object, Object>() {
@@ -67,13 +69,27 @@ public class AbstractStepWidget extends PolymerWidget {
         GanttUtil.whenReady(f, getElement());
     }
 
+    public Element getRoot() {
+        return getRootElement(getElement());
+    }
+
     public Element getBar() {
         return getElement();
     }
 
     public Element getBarCaption() {
-        return getBar().getFirstChildElement();
+        return getInternalBarCaptionElement(getElement());
     }
+
+    public static native Element getInternalBarCaptionElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.barLabel;
+    }-*/;
+
+    public static native Element getRootElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.root;
+    }-*/;
 
     public void setGantt(GanttWidget gantt, LocaleDataProvider localeDataProvider) {
         this.gantt = gantt;
@@ -162,7 +178,7 @@ public class AbstractStepWidget extends PolymerWidget {
             progressElement.setProgress(step.getProgress());
         }
         if (!progressElement.getElement().hasParentElement()) {
-            getBar().insertAfter(progressElement.getElement(), getBarCaption());
+            getRoot().insertAfter(progressElement.getElement(), getBarCaption());
         }
     }
 
@@ -209,7 +225,7 @@ public class AbstractStepWidget extends PolymerWidget {
 
     @Override
     public void add(Widget w) {
-        super.add(w, (Element) getElement());
+        super.add(w, getRoot());
     }
 
     protected int countNonSubStepChilds() {

@@ -1,19 +1,31 @@
 <link rel="import" href="../polymer/polymer.html">
 
-<dom-module id="timeline">
+<dom-module id="gantt-timeline">
 
-	<template>
-		
+	<template strip-whitespace>
+		<style>
+			:host {
+				display: block;
+			}
+		</style>
 	</template>
-	
-</dom-module>
 
-<script>
-  Polymer({
-    is: 'timeline',
-    
-    properties: {
-    	
-    }
-  });
-</script>
+	<script>
+		class GanttTimeline extends Polymer.Element {
+			static get is() { return 'gantt-timeline'; }
+
+			static get properties() {
+				return {
+
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+				this.readyAndConnected = true;
+			}
+		}
+		customElements.define(GanttTimeline.is, GanttTimeline);
+	</script>
+
+</dom-module>

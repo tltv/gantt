@@ -79,13 +79,7 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public void setPredecessorStepWidget(StepWidget predecessorStepWidget) {
-        ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                StepWidget.this.predecessorStepWidget = predecessorStepWidget;
-                return null;
-            }
-        });
+        StepWidget.this.predecessorStepWidget = predecessorStepWidget;
     }
 
     public void requestUpdatePredecessor(final Step sourceRelatedStep) {
@@ -100,7 +94,7 @@ public class StepWidget extends AbstractStepWidget {
             @Override
             public Object call(Object args) {
                 GWT.log("requestUpdatePredecessor READY");
-                if (sourceRelatedStep.equals(getStep().getPredecessor())) {
+                if (getStep() != null && sourceRelatedStep.equals(getStep().getPredecessor())) {
                     updatePredecessor();
                 }
                 return null;
@@ -144,7 +138,7 @@ public class StepWidget extends AbstractStepWidget {
             @Override
             public Object call(Object args) {
                 a.setReadOnly(isReadOnly());
-                return a;
+                return null;
             }
         });
         return a;
@@ -168,13 +162,7 @@ public class StepWidget extends AbstractStepWidget {
                 });
             }
 
-            predecessorArrow.whenReady(new Function<Object, Object>() {
-                @Override
-                public Object call(Object arg) {
-                    gantt.registerContentElement((Widget) predecessorArrow);
-                    return null;
-                }
-            });
+            gantt.registerContentElement((Widget) predecessorArrow);
         }
     }
 

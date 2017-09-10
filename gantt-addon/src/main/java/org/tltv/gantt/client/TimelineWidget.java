@@ -98,6 +98,8 @@ public class TimelineWidget extends Widget {
     public static final long HOUR_INTERVAL = 60 * 60 * 1000;
     public int resolutionWeekDayblockWidth = 4;
 
+    private Element parentElement;
+
     private boolean ie;
 
     private boolean forceUpdateFlag;
@@ -267,7 +269,11 @@ public class TimelineWidget extends Widget {
         injectLeftStyle();
 
         if (styleElementForLeft != null) {
-            StyleInjector.setContents(styleElementForLeft, "." + STYLE_COL + " { position: relative; left: 0px; }");
+            getParentElement().setAttribute("col-position", "relative");
+            getParentElement().setAttribute("col-left", "" + 0);
+            // StyleInjector.setContents(styleElementForLeft, "." + STYLE_COL +
+            // " {
+            // position: relative; left: 0px; }");
         }
 
         this.localeDataProvider = localeDataProvider;
@@ -946,8 +952,7 @@ public class TimelineWidget extends Widget {
      * Update horizontal overflow state.
      */
     private void updateTimelineOverflowingHorizontally() {
-        timelineOverflowingHorizontally = (getElementWidth(resolutionDiv) > getElementWidth(
-                getElement().getParentElement()));
+        timelineOverflowingHorizontally = (getElementWidth(resolutionDiv) > getElementWidth(getParentElement()));
     }
 
     private DivElement createSpacerBlock(String className) {
@@ -1042,8 +1047,14 @@ public class TimelineWidget extends Widget {
             if (isLastResBlockShort()) {
                 last = getWidth(lastResBlockCount);
             }
-            StyleInjector.setContents(styleElement, "." + STYLE_CENTER + " { width: " + center + "; } ." + STYLE_FIRST
-                    + " { width: " + first + "; } ." + STYLE_LAST + " { width: " + last + "; } ");
+            getParentElement().setAttribute("col-center-width", center);
+            getParentElement().setAttribute("col-first-width", first);
+            getParentElement().setAttribute("col-last-width", last);
+
+            // StyleInjector.setContents(styleElement, "." + STYLE_CENTER + " {
+            // width: " + center + "; } ." + STYLE_FIRST
+            // + " { width: " + first + "; } ." + STYLE_LAST + " { width: " +
+            // last + "; } ");
         }
     }
 
@@ -1897,13 +1908,17 @@ public class TimelineWidget extends Widget {
         boolean noticeDst = resolution == Resolution.Hour;
         leftDate = getDateForLeftPosition(datePos, noticeDst);
 
-        double containerWidth = GanttUtil.getBoundingClientRectWidth(getElement().getParentElement());
+        double containerWidth = GanttUtil.getBoundingClientRectWidth(getParentElement());
         fillTimelineForResolution(leftDate,
                 Math.min(endDate, getDateForLeftPosition(datePos + containerWidth, noticeDst)), left);
 
         if (styleElementForLeft != null) {
-            StyleInjector.setContents(styleElementForLeft,
-                    "." + STYLE_COL + " { position: relative; left: " + left + "px; }");
+            getParentElement().setAttribute("col-position", "relative");
+            getParentElement().setAttribute("col-left", "" + left);
+
+            // StyleInjector.setContents(styleElementForLeft,
+            // "." + STYLE_COL + " { position: relative; left: " + left + "px;
+            // }");
         }
 
         GWT.log(getClass().getSimpleName() + " Updated visible timeline elements for horizontal scroll position "
@@ -1963,7 +1978,10 @@ public class TimelineWidget extends Widget {
 
     private void showAllResolutionBlocks() {
         if (styleElementForLeft != null) {
-            StyleInjector.setContents(styleElementForLeft, "." + STYLE_COL + " { position: relative; left: 0px; }");
+            getParentElement().setAttribute("col.position", "relative");
+            getParentElement().setAttribute("col-left", "" + 0);
+            // StyleInjector.setContents(styleElementForLeft, "." + STYLE_COL +
+            // " { position: relative; left: 0px; }");
         }
         fillTimelineForResolution(startDate, endDate, 0);
     }
@@ -1984,7 +2002,7 @@ public class TimelineWidget extends Widget {
         // first: detect how many blocks we can fit in the screen
         int blocks = resolutionBlockCount;
         if (isTimelineOverflowingHorizontally()) {
-            blocks = (int) (GanttUtil.getBoundingClientRectWidth(getElement().getParentElement())
+            blocks = (int) (GanttUtil.getBoundingClientRectWidth(getParentElement())
                     / calculateMinimumResolutionBlockWidth());
             if (resolutionBlockCount < blocks) {
                 // blocks need to be scaled up to fit the screen
@@ -2024,6 +2042,14 @@ public class TimelineWidget extends Widget {
 
     public DivElement getResolutionDiv() {
         return resolutionDiv;
+    }
+
+    public Element getParentElement() {
+        return parentElement;
+    }
+
+    public void setParentElement(Element element) {
+        parentElement = element;
     }
 
     private class BlockRowData {

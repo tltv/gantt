@@ -38,6 +38,7 @@ import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.touch.client.Point;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -222,7 +223,8 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
     }
 
     public SvgArrowWidget() {
-        super("svg-arrow", "gantt/svg-arrow.html", "");
+        super("svg-arrow", new SafeHtmlBuilder().toSafeHtml());
+        // super("svg-arrow", "gantt/svg-arrow.html", "");
 
         // Element predecessorArrow = createSVGElementNS("svg");
         // addStyleName(predecessorArrow, "arrow");
@@ -260,23 +262,43 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
 
     @Override
     public void ready(Function<?, ?> f) {
-        GanttUtil.whenReady(f, getElement());
+        GanttUtil.whenReadyAndConnected(f, getElement());
     }
 
+    public static native Element getInternalSvgELement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.svgElement;
+    }-*/;
+
+    public static native Element getInternalCusrveLineELement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.curveLine;
+    }-*/;
+
+    public static native Element getInternalStartPointElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.startPoint;
+    }-*/;
+
+    public static native Element getInternalEndPointELement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.endPoint;
+    }-*/;
+
     protected Element getSvg() {
-        return getElement().getElementsByTagName("svg").getItem(0);
+        return getInternalSvgELement(getElement());
     }
 
     protected Element getCurve() {
-        return getElement().getElementsByTagName("path").getItem(0);
+        return getInternalCusrveLineELement(getElement());
     }
 
     protected Element getStartPoint() {
-        return getElement().getElementsByTagName("circle").getItem(0);
+        return getInternalStartPointElement(getElement());
     }
 
     protected Element getEndPoint() {
-        return getElement().getElementsByTagName("circle").getItem(1);
+        return getInternalEndPointELement(getElement());
     }
 
     @Override

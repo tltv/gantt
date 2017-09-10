@@ -5,6 +5,7 @@ import java.util.Date;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.i18n.client.TimeZone;
 import com.vaadin.client.widgets.Escalator;
 import com.vaadin.polymer.elemental.Function;
@@ -206,17 +207,17 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
-                if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e)) {
+                if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
                   if (f) f(e);
                 } else {
                     nextTimeout(10);
                 }
               }, delayms);
         }
-
+    
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -245,9 +246,32 @@ public class GanttUtil {
         }
     }-*/;
 
+    public static native void whenReadyAndConnected(Function f, Element e)
+    /*-{
+    
+        function nextTimeout(delayms) {
+           setTimeout(function() {
+                if (e.readyAndConnected) {
+                  if (f) f(e);
+                } else {
+                    nextTimeout(10);
+                }
+              }, delayms);
+        }
+    
+        function registered() {
+          if (e) {
+              nextTimeout(0);
+          } else {
+              if (f) f();
+          }
+        }
+        registered();
+    }-*/;
+
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {
@@ -258,5 +282,21 @@ public class GanttUtil {
               }, delayms);
         }
         nextTimeout(0);
+    }-*/;
+
+    public static native Element getEventTarget(NativeEvent event)
+    /*-{
+        if(event.path) {
+            return event.path[0];
+        }
+        return event.target;
+    }-*/;
+
+    public static native Element getHost(Node node)
+    /*-{
+        if(node.host) {
+            return node.host;
+        }
+        return null;
     }-*/;
 }

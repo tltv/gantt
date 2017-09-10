@@ -17,7 +17,6 @@
 package org.tltv.gantt.client;
 
 import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
-import static org.tltv.gantt.client.shared.GanttUtil.getMarginByComputedStyle;
 import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
 import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
 
@@ -39,6 +38,7 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Unit;
@@ -52,8 +52,6 @@ import com.google.gwt.event.dom.client.MouseMoveEvent;
 import com.google.gwt.event.dom.client.MouseMoveHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.dom.client.ScrollEvent;
-import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.event.dom.client.TouchCancelEvent;
 import com.google.gwt.event.dom.client.TouchCancelHandler;
 import com.google.gwt.event.dom.client.TouchEndEvent;
@@ -277,31 +275,22 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     private int previousContainerScrollLeft = 0;
     private int previousContainerScrollTop = 0;
-    private ScrollHandler scrollHandler = new ScrollHandler() {
-
-        @Override
-        public void onScroll(ScrollEvent event) {
-            final Element element = event.getNativeEvent().getEventTarget().cast();
-            if (element != container) {
-                return;
-            }
-            AnimationScheduler.get().requestAnimationFrame(new AnimationCallback() {
-
-                @Override
-                public void execute(double timestamp) {
-                    int sl = container.getScrollLeft();
-                    int st = container.getScrollTop();
-                    if (sl != previousContainerScrollLeft) {
-                        timeline.setScrollLeft(sl);
-                        previousContainerScrollLeft = sl;
-                    }
-                    if (st != previousContainerScrollTop) {
-                        previousContainerScrollTop = st;
-                    }
-                }
-            });
+    
+    public void onContainerScroll(NativeEvent event) {
+        Element element = GanttUtil.getEventTarget(event);
+        if (element != container) {
+            return;
         }
-    };
+        int sl = container.getScrollLeft();
+        int st = container.getScrollTop();
+        if (sl != previousContainerScrollLeft) {
+            timeline.setScrollLeft(sl);
+            previousContainerScrollLeft = sl;
+        }
+        if (st != previousContainerScrollTop) {
+            previousContainerScrollTop = st;
+        }
+    }
 
     private DoubleClickHandler doubleClickHandler = new DoubleClickHandler() {
 
@@ -570,14 +559,15 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     @Override
     public void ready(Function<?, ?> f) {
-        GanttUtil.whenReady(f, getElement());
+        GanttUtil.whenReadyAndConnected(f, getElement());
     }
 
     void doInit() {
         if (container != null) {
             return; // already initialized
         }
-        getGanttElement().insertFirst(timeline.getElement());
+        getRoot().insertAfter(timeline.getElement(), getRoot().getFirstChild());
+        timeline.setParentElement(getElement());
 
         container = DivElement.as(getGanttContainerElement());
         content = DivElement.as(getGanttContentElement());
@@ -586,23 +576,53 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
         scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
     }
-
+    
     public Element getGanttElement() {
-        return getElement().getFirstChildElement();
+        return getElement();
     }
 
-    public Element getGanttContainerElement() {
-        return getGanttElement().getFirstChildElement().getNextSiblingElement();
+    public static native Element getRootElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.root;
+    }-*/;
+
+    public Element getRoot() {
+        return getRootElement(getElement());
     }
+
+    public static native double getMarginByComputedStyle(com.google.gwt.dom.client.Element elem)
+    /*-{
+        var cs = elem.ownerDocument.defaultView.getComputedStyle(elem);
+        if (cs) {
+            size = parseInt(cs.getPropertyValue('margin-top'))
+                        + parseInt(cs.getPropertyValue('margin-bottom'));
+        } else {
+            size = 0;
+        }
+        return size;
+     }-*/;
+
+    private Element getGanttContainerElement() {
+        return getInternalGanttContainerElement(getGanttElement());
+    }
+
+    public static native Element getInternalGanttContainerElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.ganttContainer;
+    }-*/;
+
+    public static native Element getInternalGanttContentElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.$.ganttContent;
+    }-*/;
 
     public Element getGanttContentElement() {
-        return getGanttContainerElement().getFirstChildElement();
+        return getInternalGanttContentElement(getGanttElement());
     }
 
     public Element getMoveElement() {
         return getGanttContentElement().getFirstChildElement();
     }
-
     public Element getScrollbarSpacerElement() {
         return getGanttContainerElement().getNextSiblingElement();
     }
@@ -997,19 +1017,30 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         return ganttRpc;
     }
 
+    public static native Element registerContainerScrollHandler(Element elem, Function f)
+    /*-{
+        return elem.registerContainerScrollHandler(f);
+    }-*/;
+
     /**
      * Reset listeners.
      */
     public void resetListeners() {
-        Event.sinkEvents(container, Event.ONSCROLL | Event.ONCONTEXTMENU);
+        Event.sinkEvents(container, Event.ONCONTEXTMENU);
 
         if (contextMenuHandlerRegistration == null) {
             contextMenuHandlerRegistration = addDomHandler(contextMenuHandler, ContextMenuEvent.getType());
         }
 
-        if (scrollHandlerRegistration == null) {
-            scrollHandlerRegistration = addHandler(scrollHandler, ScrollEvent.getType());
-        }
+        registerContainerScrollHandler(getElement(), new Function<Object, NativeEvent>() {
+            @Override
+            public Object call(NativeEvent event) {
+                onContainerScroll(event);
+                return null;
+            }
+
+        });
+
         if (isMsTouchSupported()) {
             // IE10 pointer events (ms-prefixed events)
             if (pointerDownHandlerRegistration == null) {
@@ -1516,18 +1547,26 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     }
 
     protected Element getBar(NativeEvent event) {
-        Element element = event.getEventTarget().cast();
+        Element element = GanttUtil.getEventTarget(event);
         if (element == null || isSvg(element)) {
             return null;
         }
-        Element parent = element;
-        while (parent.getParentElement() != null && parent.getParentElement() != content && !isBar(parent)) {
-            parent = parent.getParentElement();
+        Node parent = element;
+        while (parent != getElement() && getParentNode(parent) != null && getParentNode(parent) != getElement()
+                && getParentNode(parent) != content && (!Element.is(parent) || !isBar(Element.as(parent)))) {
+            parent = getParentNode(parent);
         }
-        if (isBar(parent)) {
-            return parent;
+        if (Element.is(parent) && isBar(Element.as(parent))) {
+            return Element.as(parent);
         }
         return null;
+    }
+
+    private Node getParentNode(Node p) {
+        if (!Element.is(p)) {
+            return GanttUtil.getHost(p);
+        }
+        return p.getParentNode();
     }
 
     protected boolean isBgElement(Element target) {
