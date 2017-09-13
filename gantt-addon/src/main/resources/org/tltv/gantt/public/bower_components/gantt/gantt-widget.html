@@ -25,15 +25,20 @@
 				padding-left: 2px;
 				text-overflow: ellipsis;
 				white-space: nowrap;
-			    border-right: 1px solid #A9A9A9;
-			    background-color: #d0d0d0;
-			    box-sizing: border-box;
-			    -moz-box-sizing: border-box;
-			    -webkit-box-sizing: border-box;
+		   	border-right: 1px solid #A9A9A9;
+		    background-color: #d0d0d0;
+		    box-sizing: border-box;
+		    -moz-box-sizing: border-box;
+		    -webkit-box-sizing: border-box;
 
 			    &.spacer {
 			    	padding-left: 0px;
 			    }
+			}
+			.year.spacer,
+			.month.spacer,
+			.day.spacer {
+				padding-left: 0px;
 			}
 
 			.month:nth-of-type(even),
@@ -128,6 +133,15 @@
 				border-right: 1px dashed #ddd;
 			}
 
+			/* Optional background svg element. */
+			svg.bg-grid {
+				position: absolute;
+				overflow: hidden;
+				top: 0;
+				z-index: 0;
+				background: transparent;
+			}
+			
 		</style>
 
 				<!-- >div class="timeline"></div-->
@@ -180,7 +194,6 @@
 				this.containerScrollHandler = f;
 			}
 			handleContainerScroll(e) {
-				console.log("scrolling!" + e);
 				if(this.containerScrollHandler) {
 					this.containerScrollHandler(e);
 				}

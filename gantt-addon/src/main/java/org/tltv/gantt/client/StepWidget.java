@@ -204,7 +204,7 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public SubStepWidget getSubStepWidgetByElement(Element element) {
-        Widget w = getWidget(DOM.getChildIndex(getBar(), element) - countNonSubStepChilds());
+        Widget w = getWidget(DOM.getChildIndex(getShadowRoot(), element) - countNonSubStepChilds() - 1);
         if (w instanceof SubStepWidget) {
             return (SubStepWidget) w;
         }

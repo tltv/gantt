@@ -572,7 +572,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         if (container != null) {
             return; // already initialized
         }
-        getRoot().insertAfter(timeline.getElement(), getRoot().getFirstChild());
+        getShadowRoot().insertAfter(timeline.getElement(), getShadowRoot().getFirstChild());
         timeline.setParentElement(getElement());
 
         container = DivElement.as(getGanttContainerElement());
@@ -592,7 +592,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         return elem.root;
     }-*/;
 
-    public Element getRoot() {
+    public Element getShadowRoot() {
         return getRootElement(getElement());
     }
 
@@ -1381,7 +1381,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     public void updateBarPercentagePosition(long startDate, long endDate, long ownerStartDate, long ownerEndDate,
             Element bar) {
-        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(bar.getParentElement());
+        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(GanttUtil.getHost(bar.getParentNode()));
         String sLeft = timeline.getLeftPositionPercentageStringForDate(startDate, ownerStepWidth, ownerStartDate,
                 ownerEndDate);
         bar.getStyle().setProperty("left", sLeft);
@@ -1506,6 +1506,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             int startIndex = getWidgetIndex(w);
             int height = getElementHeightWithMargin(((StepWidget) w).getBar());
             contentHeight -= height;
+            ((StepWidget) w).clearCalculatedHeight();
 
             if ((startIndex = removeAndReturnIndex(w)) >= 0) {
                 updateTopForAllStepsBelow(startIndex, -height);
@@ -1828,7 +1829,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     protected Element findStepElement(Element startFromBar, int startTopY, int startBottomY, int newY, double deltay) {
         boolean subStep = isSubBar(startFromBar);
         if (subStep) {
-            startFromBar = startFromBar.getParentElement();
+            startFromBar = GanttUtil.getHost(startFromBar.getParentNode());
         }
 
         if (isBetween(newY, startTopY, startBottomY)) {
@@ -1881,7 +1882,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     }
 
     protected String getSubStepUid(Element subStepElement) {
-        Element stepElement = subStepElement.getParentElement();
+        Element stepElement = GanttUtil.getHost(subStepElement.getParentNode());
         StepWidget widget = getStepWidget(stepElement);
         if (widget != null) {
             return widget.getStepUidBySubStepElement(subStepElement);
@@ -1890,7 +1891,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     }
 
     protected SubStepWidget getSubStepWidget(Element subStepElement) {
-        Element stepElement = subStepElement.getParentElement();
+        Element stepElement = GanttUtil.getHost(subStepElement.getParentNode());
         StepWidget widget = getStepWidget(stepElement);
         if (widget != null) {
             return widget.getSubStepWidgetByElement(subStepElement);
@@ -2077,7 +2078,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             left = parseSize(styleLeft, "px");
         }
         if (isSubBar(target)) {
-            left += target.getParentElement().getOffsetLeft();
+            left += GanttUtil.getHost(target.getParentNode()).getOffsetLeft();
         }
         moveElement.getStyle().setProperty("left", left + "px");
         moveElement.getStyle().setProperty("width", target.getClientWidth() + "px");
@@ -2099,10 +2100,10 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         long ownerEndDate = 0;
         double left = parseSize(bar.getStyle().getLeft(), "px");
         if (subBar) {
-            double ownerLeft = bar.getParentElement().getOffsetLeft();
+            double ownerLeft = GanttUtil.getHost(bar.getParentNode()).getOffsetLeft();
             left += ownerLeft;
             ownerStartDate = timeline.getDateForLeftPosition(ownerLeft);
-            ownerLeft += GanttUtil.getBoundingClientRectWidth(bar.getParentElement());
+            ownerLeft += GanttUtil.getBoundingClientRectWidth(GanttUtil.getHost(bar.getParentNode()));
             ownerEndDate = timeline.getDateForLeftPosition(ownerLeft);
         }
         long startDate = timeline.getDateForLeftPosition(left);
@@ -2269,7 +2270,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         int barHeight = getElementHeightWithMargin(bar);
         double offsetY = 0; // offset from content top edge
         if (isSubBar(bar)) {
-            Element stepElement = bar.getParentElement();
+            Element stepElement = GanttUtil.getHost(bar.getParentNode());
             offsetY = parseSize(stepElement.getStyle().getTop(), "px");
         }
         double barTop = parseSize(bar.getStyle().getTop(), "px") + offsetY;

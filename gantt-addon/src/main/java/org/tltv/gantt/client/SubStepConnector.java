@@ -69,14 +69,21 @@ public class SubStepConnector extends AbstractComponentConnector {
             @Override
             public Object call(Object args) {
 
+                final boolean added;
+                if (getWidget().getElement().getParentNode() == null) {
+                    added = true;
+                    step.add(getWidget());
+                } else {
+                    added = false;
+                }
+
                 getWidget().ready(new Function<Object, Object>() {
                     @Override
                     public Object call(Object args) {
                         if (stateChangeEvent.hasPropertyChanged("step")) {
                             getWidget().setStep(getState().step);
                         }
-                        if (!getWidget().getElement().hasParentElement()) {
-                            step.add(getWidget());
+                        if (added) {
                             getWidget().getOwner().updateStylesForSubSteps();
                         }
                         getWidget().updateWidth();

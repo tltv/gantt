@@ -19,40 +19,35 @@
 		  	box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 			}
 
-			&.has-sub-steps:hover {
-		  		> .bar-label {
-    				width: 100%;
-    				padding-left: 3px;
-		  			background-color: rgba(246, 255, 99, 0.3);
-		  			-webkit-border-radius: 6px;
-		  			-moz-border-radius: 6px;
-		  			border-radius: 6px;
-						transform: translate(0,-27px);
-    				-webkit-transform: translate(0,-27px);
-    				-o-transform: translate(0,-27px);
-    				-moz-transform: translate(0,-27px);
-				}
-				> .bar-label:hover {
-					cursor: move;
-
-					~ .bar-progress {
-						display: block;
-					}
-				}
+			:host(.has-sub-steps:hover) > .bar-label {
+				width: 100%;
+				padding-left: 3px;
+				background-color: rgba(246, 255, 99, 0.3);
+				-webkit-border-radius: 6px;
+				-moz-border-radius: 6px;
+				border-radius: 6px;
+				transform: translate(0,-27px);
+				-webkit-transform: translate(0,-27px);
+				-o-transform: translate(0,-27px);
+				-moz-transform: translate(0,-27px);
 			}
-
-			&.has-sub-steps {
+			:host(.has-sub-steps:hover) > .bar-label:hover {
+				cursor: move;
+			}
+			:host(.has-sub-steps:hover) > .bar-label:hover ~ .bar-progress {
+				display: block;
+			}
+			:host(.has-sub-steps) {
 				background-color: rgba(246, 255, 99, 0.3) !important;
-
-				> .bar-label {
-					position: absolute;
-					max-width: 100%;
-				}
-				> .bar-progress {
-					z-index: 2;
-					bottom: 0;
-					display: none;
-				}
+			}
+			:host(.has-sub-steps) > .bar-label {
+				position: absolute;
+				max-width: 100%;
+			}
+			:host(.has-sub-steps) > .bar-progress {
+				z-index: 2;
+				bottom: 0;
+				display: none;
 			}
 
 			.bar-label {
@@ -68,27 +63,37 @@
 				display: block;
 				width: 100%;
 				overflow: hidden;
-
-				.v-progressbar-wrapper,
-				.v-progressbar-indicator {
-					min-width: auto;
-				}
 			}
 
-			.bar.moving {
+			.v-progressbar-wrapper,
+			.v-progressbar-indicator {
+				min-width: auto;
+			}
+
+			:host(.bar.moving) {
 				background: orange;
 				cursor: move;
 				z-index: 3;
 			}
 
-			.bar.resizing {
+			:host(.bar.resizing) {
 				background: orange;
 				cursor: e-resize;
 				z-index: 3;
 			}
 
-			.bar.invalid {
+			:host(.bar.invalid) {
 				visibility: hidden;
+			}
+
+			/* Bar elements on selection mode.
+		 	Highlight hovered bar elements */
+			:host(.select-target-step) {
+				touch-action: none;
+				-ms-touch-action: none;
+			}
+			:host(.select-target-step.bar:hover) {
+				background: orange !important;
 			}
 		</style>
 		<div id="barLabel" class="bar-label"></div>

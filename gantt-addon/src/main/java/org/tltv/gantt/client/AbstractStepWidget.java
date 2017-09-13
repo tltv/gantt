@@ -69,7 +69,7 @@ public class AbstractStepWidget extends PolymerWidget {
         GanttUtil.whenReady(f, getElement());
     }
 
-    public Element getRoot() {
+    public Element getShadowRoot() {
         return getRootElement(getElement());
     }
 
@@ -178,7 +178,7 @@ public class AbstractStepWidget extends PolymerWidget {
             progressElement.setProgress(step.getProgress());
         }
         if (!progressElement.getElement().hasParentElement()) {
-            getRoot().insertAfter(progressElement.getElement(), getBarCaption());
+            getShadowRoot().insertAfter(progressElement.getElement(), getBarCaption());
         }
     }
 
@@ -195,7 +195,7 @@ public class AbstractStepWidget extends PolymerWidget {
         ready(new Function<Object, Object>() {
             @Override
             public Object call(Object args) {
-                if (gantt == null || !getElement().hasParentElement()) {
+                if (gantt == null || getElement().getParentNode() == null) {
                     return null;
                 }
 
@@ -225,16 +225,20 @@ public class AbstractStepWidget extends PolymerWidget {
 
     @Override
     public void add(Widget w) {
-        super.add(w, getRoot());
+        super.add(w, getShadowRoot());
     }
 
     protected int countNonSubStepChilds() {
-        return ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
+        return 1 /* <style> is first */ + ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
                 + ((progressElement != null && progressElement.getElement().hasParentElement()) ? 1 : 0);
     }
 
     public void registerCalculatedHeight(int height) {
         calculatedHeight = height;
+    }
+
+    public void clearCalculatedHeight() {
+        calculatedHeight = 0;
     }
 
     public int getPreviousHeight() {
