@@ -160,11 +160,14 @@ public class GanttUtil {
         }
     }
 
-    public static native Element getElementFromPoint(int clientX, int clientY)
+    public static native Element getElementFromPoint(Node shadowRoot, int clientX, int clientY)
     /*-{
-        var el = $wnd.document.elementFromPoint(clientX, clientY);
-        // Call elementFromPoint two times to make sure IE8 also returns something sensible if the application is running in an iframe
-        el = $wnd.document.elementFromPoint(clientX, clientY);
+        var el;
+        if(shadowRoot) {
+            el = shadowRoot.elementFromPoint(clientX, clientY);
+        } else {
+            el = $wnd.document.elementFromPoint(clientX, clientY);
+        }
         if(el != null && el.nodeType == 3) {
             el = el.parentNode;
         }
@@ -207,7 +210,7 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
@@ -217,7 +220,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -248,7 +251,7 @@ public class GanttUtil {
 
     public static native void whenReadyAndConnected(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (e.readyAndConnected) {
@@ -258,7 +261,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -271,7 +274,7 @@ public class GanttUtil {
 
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {

@@ -48,8 +48,8 @@ public class StepWidget extends AbstractStepWidget {
 
         @Override
         public boolean onArrowChanged(boolean startingPointChanged, NativeEvent event) {
-            Element target = GanttUtil.getElementFromPoint(GanttUtil.getTouchOrMouseClientX(event),
-                    GanttUtil.getTouchOrMouseClientY(event));
+            Element target = GanttUtil.getElementFromPoint(getRootElement(gantt.getElement()),
+                    GanttUtil.getTouchOrMouseClientX(event), GanttUtil.getTouchOrMouseClientY(event));
             if (target != null) {
                 return gantt.getRpc().onStepRelationSelected(StepWidget.this, startingPointChanged, target);
             }

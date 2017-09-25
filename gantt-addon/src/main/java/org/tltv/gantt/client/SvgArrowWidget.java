@@ -216,7 +216,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
         } else if (touchSupported) {
             addDomHandler(touchStartHandler, TouchStartEvent.getType());
         } else {
-            addHandler(mouseDownHandler, MouseDownEvent.getType());
+            addDomHandler(mouseDownHandler, MouseDownEvent.getType());
         }
         registerMouseDownAndTouchDownEventListener(getStartPoint());
         registerMouseDownAndTouchDownEventListener(getEndPoint());
@@ -264,6 +264,11 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
     public void ready(Function<?, ?> f) {
         GanttUtil.whenReadyAndConnected(f, getElement());
     }
+
+    public static native Element getShadowRootElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.root;
+    }-*/;
 
     public static native Element getInternalSvgELement(com.google.gwt.dom.client.Element elem)
     /*-{
@@ -458,7 +463,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
         }
         capturePointScrollTop = getElement().getParentElement().getParentElement().getScrollTop();
         capturePointScrollLeft = getElement().getParentElement().getParentElement().getScrollLeft();
-        getParent().getElement().appendChild(movePointElement);
+        getShadowRootElement(getParent().getElement()).appendChild(movePointElement);
         getElement().getParentElement().addClassName(SELECTION_STYLE_NAME);
         GWT.log("Capturing clicked point.");
         captureElement = getElement();
@@ -496,6 +501,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
             Event.releaseCapture(captureElement);
         }
         movePointElement.removeFromParent();
+
         getElement().getParentElement().removeClassName(SELECTION_STYLE_NAME);
         moveRegisteration.removeHandler();
         if (touchCancelRegisteration != null) {
@@ -524,7 +530,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
             return;
         }
 
-        Element element = event.getEventTarget().cast();
+        Element element = GanttUtil.getEventTarget(event);
         if (element != null && (element.equals(getStartPoint()) || element.equals(getEndPoint()))) {
             startMoving(event, element);
         }

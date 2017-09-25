@@ -671,10 +671,6 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         Element bar = stepWidget.getBar();
 
         deferredUpdateStepTop(stepIndex, updateAffectedSteps, bar, insertDOM);
-
-        if (newStep) {
-            registerBarEventListener(bar);
-        }
     }
 
     private void deferredUpdateStepTop(int stepIndex, boolean updateAffectedSteps, DivElement bar, boolean insertDOM) {
@@ -716,10 +712,6 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         }
         contentHeight = contentHeight - stepWidget.getPreviousHeight() + newHeight;
         stepWidget.registerCalculatedHeight(newHeight);
-
-        if (newStep) {
-            registerBarEventListener(bar);
-        }
         
         updateIfReady();
     }
