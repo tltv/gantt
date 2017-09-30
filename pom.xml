@@ -15,6 +15,7 @@
 	
 	<modules>
 		<module>gantt-addon</module>
+		<module>gantt-element</module>
 		<module>gantt-demo</module>
 	</modules>
 

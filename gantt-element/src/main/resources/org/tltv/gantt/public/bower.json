@@ -1,0 +1,20 @@
+{
+  "name": "public",
+  "homepage": "https://github.com/tltv/gantt",
+  "authors": [
+    "Tomi Virtanen <tltv@vaadin.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "Apache-2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "^2.0.2"
+  }
+}

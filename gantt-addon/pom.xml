@@ -54,6 +54,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.tltv.gantt</groupId>
+			<artifactId>gantt-element</artifactId>
+			<version>${version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.vaadin</groupId>
 			<artifactId>vaadin-server</artifactId>
 		</dependency>
