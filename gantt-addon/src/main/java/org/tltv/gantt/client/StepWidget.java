@@ -215,17 +215,12 @@ public class StepWidget extends AbstractStepWidget {
     public void updateWidth() {
         super.updateWidth();
 
-        ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                List<SubStepWidget> subSteps = getSubSteps();
-                updateStylesForSubSteps(!subSteps.isEmpty());
-                for (SubStepWidget subStep : subSteps) {
-                    subStep.updateWidth();
-                }
-                return null;
-            }
-        });
+        List<SubStepWidget> subSteps = getSubSteps();
+        updateStylesForSubSteps(!subSteps.isEmpty());
+
+        for (SubStepWidget subStep : subSteps) {
+            subStep.updateWidth();
+        }
     }
 
     private void updateStylesForSubSteps(boolean hasSubSteps) {

@@ -2,7 +2,6 @@ package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.AbstractStep;
 import org.tltv.gantt.client.shared.GanttUtil;
-import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
@@ -47,22 +46,52 @@ public class AbstractStepWidget extends PolymerWidget {
         ready(new Function<Object, Object>() {
             @Override
             public Object call(Object args) {
+                registerPositionCalculator(getElement(), new Function<Object, Object[]>() {
+                    @Override
+                    public Object call(Object[] arg) {
+                        if (gantt == null || arg == null) {
+                            return "0px";
+                        }
+                        Long start = Long.valueOf(String.valueOf(arg[0]));
+                        Long end = Long.valueOf(String.valueOf(arg[1]));
+                        return getLeftPositionPercentageStringForDate(start, end);
+                    }
+                });
+                registerWidthCalculator(getElement(), new Function<Object, Object[]>() {
+                    @Override
+                    public Object call(Object[] arg) {
+                        if (gantt == null || arg == null) {
+                            return "0px";
+                        }
+                        Long start = Long.valueOf(String.valueOf(arg[0]));
+                        Long end = Long.valueOf(String.valueOf(arg[1]));
+                        return getWidthPercentageStringForDateInterval(start, end);
+                    }
+                });
                 GWT.log("AbstractStepWidget() READY");
                 waitingForPolymer = false;
                 return null;
             }
         });
-        // DivElement bar = DivElement.as(DOM.createDiv());
-        // bar.setClassName(STYLE_BAR);
-        // setElement(bar);
-        //
-        // caption = DivElement.as(DOM.createDiv());
-        // caption.setClassName(STYLE_BAR_LABEL);
-        // bar.appendChild(caption);
-
-        // hide by default
-        // bar.getStyle().setVisibility(Visibility.HIDDEN);
     }
+
+    public String getLeftPositionPercentageStringForDate(Long start, Long end) {
+        return gantt.getLeftPositionPercentageStringForDate(start);
+    }
+
+    public String getWidthPercentageStringForDateInterval(Long start, Long end) {
+        return gantt.getWidthPercentageStringForDateInterval(start, end);
+    }
+
+    public static native void registerPositionCalculator(Element elem, Function f)
+    /*-{
+        return elem.registerPositionCalculator(f);
+    }-*/;
+
+    public static native void registerWidthCalculator(Element elem, Function f)
+    /*-{
+        return elem.registerWidthCalculator(f);
+    }-*/;
 
     @Override
     public void ready(Function<?, ?> f) {
@@ -112,9 +141,7 @@ public class AbstractStepWidget extends PolymerWidget {
      */
     public void setStep(AbstractStep step) {
         this.step = step;
-        updateBackground();
         updateStyle();
-        updateCaption();
         updateProgress();
     }
 
@@ -124,18 +151,6 @@ public class AbstractStepWidget extends PolymerWidget {
      */
     public AbstractStep getStep() {
         return step;
-    }
-
-    protected void updateCaption() {
-        if (step.getCaptionMode() == Step.CaptionMode.HTML) {
-            getBarCaption().setInnerHTML(step.getCaption());
-        } else {
-            getBarCaption().setInnerText(step.getCaption());
-        }
-    }
-
-    protected void updateBackground() {
-        getBar().getStyle().setBackgroundColor(step.getBackgroundColor());
     }
 
     protected void updateStyle() {
@@ -156,10 +171,6 @@ public class AbstractStepWidget extends PolymerWidget {
 
     protected boolean isEmpty(String string) {
         return string == null || string.trim().isEmpty();
-    }
-
-    protected void updatePositionAndWidth() {
-        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getBar());
     }
 
     protected void updateProgress() {
@@ -192,28 +203,34 @@ public class AbstractStepWidget extends PolymerWidget {
      * Updates width of this widget to match the Gantt chart's timeline.
      */
     public void updateWidth() {
-        ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                if (gantt == null || getElement().getParentNode() == null) {
-                    return null;
-                }
+        if (gantt == null || step == null || getElement().getParentNode() == null) {
+            return;
+        }
 
-                getBar().getStyle().clearVisibility();
+        getBar().getStyle().clearLeft();
+        getBar().getStyle().clearWidth();
+        getBar().getStyle().clearVisibility();
 
-                if (start != step.getStartDate() || end != step.getEndDate()) {
+        if (start != step.getStartDate() || end != step.getEndDate()) {
 
-                    // sanity check
-                    if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
-                        getBar().addClassName(STYLE_INVALID);
-                    } else {
-                        updatePositionAndWidth();
-                    }
-                }
-                return null;
+            // sanity check
+            if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
+                getBar().addClassName(STYLE_INVALID);
+            } else {
+                updateStepCustomStyle(getBar(),
+                        getLeftPositionPercentageStringForDate(getStep().getStartDate(), getStep().getEndDate()),
+                        getWidthPercentageStringForDateInterval(getStep().getStartDate(), getStep().getEndDate()));
             }
-        });
+        }
     }
+
+    public static native void updateStepCustomStyle(Element e, String left, String width)
+    /*-{
+        e.updateStyles({
+          '--gantt-step-left': left,
+          '--gantt-step-width': width,
+        });
+    }-*/;
 
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;

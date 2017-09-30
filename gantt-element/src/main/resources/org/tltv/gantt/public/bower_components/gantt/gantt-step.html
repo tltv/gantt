@@ -5,6 +5,9 @@
 	<template strip-whitespace>
 		<style>
 			:host {
+				--gantt-step-left: 0px;
+				--gantt-step-width: 0px;
+
 				position: absolute;
 				height: 30px;
 				z-index: 1;
@@ -17,6 +20,9 @@
 		  	-webkit-box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 		  	-moz-box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
 		  	box-shadow: 2px 0 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.07);
+				background-color: [[backgroundColor]];
+				left: var(--gantt-step-left);
+				width: var(--gantt-step-width);
 			}
 
 			:host(.has-sub-steps:hover) > .bar-label {
@@ -96,7 +102,7 @@
 				background: orange !important;
 			}
 		</style>
-		<div id="barLabel" class="bar-label"></div>
+		<div id="barLabel" class="bar-label">[[caption]]</div>
 	</template>
 
 	<script>
@@ -105,13 +111,70 @@
 
 			static get properties() {
 				return {
-
+					caption: String,
+					description: String,
+					showProgress: Boolean,
+					styleName: String,
+					backgroundColor: {
+						type: String,
+						value: "#A8D9FF",
+					},
+					progress: {
+						type: Number,
+						value: 0.0,
+					},
+					resizable: {
+						type: Boolean,
+						value: true,
+					},
+					movable: {
+						type: Boolean,
+						value: true,
+					},
+					startDate: {
+						type: Number,
+						value: -1,
+					},
+					endDate: {
+						type: Number,
+						value: -1,
+					}
 				};
+			}
+
+			static get observers() {
+			  return [
+			    'datesChanged(startDate, endDate)'
+			  ]
+			}
+
+			datesChanged(start, end) {
+				this.updateStyles({
+          '--gantt-step-left': this.calculateLeftPosition(start, end),
+					'--gantt-step-width': this.calculateWidth(start, end),
+        });
 			}
 
 			connectedCallback() {
 				super.connectedCallback();
 				this.readyAndConnected = true;
+			}
+
+			registerPositionCalculator(f) {
+				this.positionCalculator = f;
+			}
+			registerWidthCalculator(f) {
+				this.widthCalculator = f;
+			}
+			calculateLeftPosition(start, end) {
+				if(!this.positionCalculator)
+					return "0px";
+				return this.positionCalculator([start, end]);
+			}
+			calculateWidth(start, end) {
+				if(!this.widthCalculator)
+					return "0px";
+				return this.widthCalculator([start, end]);
 			}
 		}
 		customElements.define(GanttStep.is, GanttStep);

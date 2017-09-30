@@ -16,8 +16,10 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.SubStepComponent;
+import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.client.shared.SubStepState;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.TooltipInfo;
@@ -80,12 +82,19 @@ public class SubStepConnector extends AbstractComponentConnector {
                 getWidget().ready(new Function<Object, Object>() {
                     @Override
                     public Object call(Object args) {
+                        GWT.log("*** SubStepConnector.onStateChanged READY");
                         if (stateChangeEvent.hasPropertyChanged("step")) {
+                            setStep(getState().step);
                             getWidget().setStep(getState().step);
                         }
                         if (added) {
                             getWidget().getOwner().updateStylesForSubSteps();
                         }
+                        getWidget().getElement().setAttribute("start-date", "" + getState().step.getStartDate());
+                        getWidget().getElement().setAttribute("end-date", "" + getState().step.getEndDate());
+                        // if (stateChangeEvent.hasPropertyChanged("step")) {
+                        // getWidget().getOwner().updateOtherSubstepsWidths(getWidget());
+                        // }
                         getWidget().updateWidth();
                         return null;
                     }
@@ -95,6 +104,12 @@ public class SubStepConnector extends AbstractComponentConnector {
             }
         });
 
+    }
+
+    protected void setStep(SubStep step) {
+        getWidget().getBar().setAttribute("background-color", step.getBackgroundColor());
+        getWidget().getBar().setAttribute("caption", step.getCaption());
+        getWidget().setStep(getState().step);
     }
 
     @Override

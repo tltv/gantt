@@ -96,12 +96,14 @@ public class StepConnector extends AbstractHasComponentsConnector {
                                                                // called
                             // before
                             // setStep
-                            getWidget().setStep(getState().step);
+                            setStep(getState().step);
                         }
                         if (!getWidget().getElement().hasParentElement()) {
                             gantt.insertStep(getStepIndex(), getWidget());
                             gantt.setStep(getStepIndex(), getWidget(), true);
                         }
+                        getWidget().getBar().setAttribute("start-date", "" + getState().step.getStartDate());
+                        getWidget().getBar().setAttribute("end-date", "" + getState().step.getEndDate());
                         getWidget().updateWidth();
 
                         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
@@ -122,6 +124,12 @@ public class StepConnector extends AbstractHasComponentsConnector {
             }
         });
 
+    }
+
+    protected void setStep(Step step) {
+        getWidget().getBar().setAttribute("background-color", step.getBackgroundColor());
+        getWidget().getBar().setAttribute("caption", step.getCaption());
+        getWidget().setStep(getState().step);
     }
 
     protected int getStepIndex() {

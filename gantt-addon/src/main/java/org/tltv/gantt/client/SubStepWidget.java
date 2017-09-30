@@ -52,8 +52,15 @@ public class SubStepWidget extends AbstractStepWidget {
     }
 
     @Override
-    protected void updatePositionAndWidth() {
-        gantt.updateBarPercentagePosition(step.getStartDate(), step.getEndDate(), getOwner().getStep().getStartDate(),
+    public String getLeftPositionPercentageStringForDate(Long start, Long end) {
+        return gantt.getSubstepLeftPositionPercentageStringForDate(start, end, getOwner().getStep().getStartDate(),
                 getOwner().getStep().getEndDate(), getBar());
     }
+
+    @Override
+    public String getWidthPercentageStringForDateInterval(Long start, Long end) {
+        return gantt.getSubstepWidthPercentageStringForDateInterval(start, end, getOwner().getStep().getStartDate(),
+                getOwner().getStep().getEndDate());
+    }
+
 }

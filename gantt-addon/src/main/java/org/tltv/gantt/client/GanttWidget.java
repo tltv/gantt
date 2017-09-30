@@ -275,7 +275,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     private int previousContainerScrollLeft = 0;
     private int previousContainerScrollTop = 0;
-    
+
     public void onContainerScroll(NativeEvent event) {
         final Element element = GanttUtil.getEventTarget(event);
         if (element != container) {
@@ -582,7 +582,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
         scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
     }
-    
+
     public Element getGanttElement() {
         return getElement();
     }
@@ -629,6 +629,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     public Element getMoveElement() {
         return getGanttContentElement().getFirstChildElement();
     }
+
     public Element getScrollbarSpacerElement() {
         return getGanttContainerElement().getNextSiblingElement();
     }
@@ -1373,23 +1374,46 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     public void updateBarPercentagePosition(long startDate, long endDate, long ownerStartDate, long ownerEndDate,
             Element bar) {
-        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(GanttUtil.getHost(bar.getParentNode()));
-        String sLeft = timeline.getLeftPositionPercentageStringForDate(startDate, ownerStepWidth, ownerStartDate,
+        String sLeft = getSubstepLeftPositionPercentageStringForDate(startDate, endDate, ownerStartDate, ownerEndDate,
+                bar);
+        String sWidth = getSubstepWidthPercentageStringForDateInterval(startDate, endDate, ownerStartDate,
                 ownerEndDate);
-        bar.getStyle().setProperty("left", sLeft);
+        updateStepCustomStyles(bar, sLeft, sWidth);
+    }
 
+    public String getSubstepWidthPercentageStringForDateInterval(long startDate, long endDate, long ownerStartDate,
+            long ownerEndDate) {
         double range = ownerEndDate - ownerStartDate;
-        String sWidth = timeline.getWidthPercentageStringForDateInterval(endDate - startDate, range);
-        bar.getStyle().setProperty("width", sWidth);
+        return timeline.getWidthPercentageStringForDateInterval(endDate - startDate, range);
+    }
+
+    public String getSubstepLeftPositionPercentageStringForDate(long startDate, long endDate, long ownerStartDate,
+            long ownerEndDate, Element bar) {
+        double ownerStepWidth = GanttUtil.getBoundingClientRectWidth(GanttUtil.getHost(bar.getParentNode()));
+        return timeline.getLeftPositionPercentageStringForDate(startDate, ownerStepWidth, ownerStartDate, ownerEndDate);
+    }
+
+    public String getLeftPositionPercentageStringForDate(long startDate) {
+        return timeline.getLeftPositionPercentageStringForDate(startDate, getContentWidth());
+    }
+
+    public String getWidthPercentageStringForDateInterval(long startDate, long endDate) {
+        return timeline.getWidthPercentageStringForDateInterval(endDate - startDate);
     }
 
     public void updateBarPercentagePosition(long startDate, long endDate, Element bar) {
-        String sLeft = timeline.getLeftPositionPercentageStringForDate(startDate, getContentWidth());
-        bar.getStyle().setProperty("left", sLeft);
-
-        String sWidth = timeline.getWidthPercentageStringForDateInterval(endDate - startDate);
-        bar.getStyle().setProperty("width", sWidth);
+        String sLeft = getLeftPositionPercentageStringForDate(startDate);
+        String sWidth = getWidthPercentageStringForDateInterval(startDate, endDate);
+        updateStepCustomStyles(bar, sLeft, sWidth);
     }
+
+    public static native void updateStepCustomStyles(Element e, String left, String width)
+    /*-{
+        e.updateStyles({
+          '--gantt-step-left': left,
+          '--gantt-step-width': width,
+        });
+    }-*/;
 
     /**
      * Register and add Widget inside the content.
