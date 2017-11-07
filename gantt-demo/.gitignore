@@ -5,4 +5,5 @@
 /.project
 /.settings
 /src/main/webapp/VAADIN
+/.externalToolBuilders/
 addons.scss
