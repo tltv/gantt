@@ -59,8 +59,6 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
         svgElement.appendChild(rect2);
 
         setAttributeNS(svgElement, "class", STYLE_BG_GRID);
-
-        appendToContainer(svgElement);
     }
 
     private void appendToContainer(Element svgElement) {
@@ -73,16 +71,18 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
     }
 
     @Override
-    public void setBackgroundSize(String gridBlockWidth,
-            double gridBlockWidthPx, int gridBlockHeightPx) {
+    public void show() {
+        appendToContainer(svgElement);
+    }
+
+    @Override
+    public void setBackgroundSize(String gridBlockWidth, double gridBlockWidthPx, int gridBlockHeightPx) {
         this.gridBlockWidthPx = gridBlockWidthPx;
         this.gridBlockHeightPx = gridBlockHeightPx;
 
         // set background to cover the whole content area.
-        setAttributeNS(svgElement, "width", content.getClientWidth()
-                + gridBlockWidthPx + "px");
-        setAttributeNS(svgElement, "height", content.getClientHeight()
-                + gridBlockHeightPx + "px");
+        setAttributeNS(svgElement, "width", content.getClientWidth() + gridBlockWidthPx + "px");
+        setAttributeNS(svgElement, "height", content.getClientHeight() + gridBlockHeightPx + "px");
         setAttributeNS(pattern, "width", "" + gridBlockWidthPx);
         setAttributeNS(pattern, "height", "" + gridBlockHeightPx);
 
@@ -94,21 +94,19 @@ public class BgGridSvgElement extends BgGridCssElement implements BgGridElement 
         if (x < 0) {
             x = 0;
         }
-        setAttributeNS(path, "d", "M0," + y + " h" + x + " v0 h0 v-"
-                + gridBlockHeightPx);
+        setAttributeNS(path, "d", "M0," + y + " h" + x + " v0 h0 v-" + gridBlockHeightPx);
     }
 
     @Override
-    public void setBackgroundPosition(String offsetX, String offsetY,
-            double offsetXPx, double offsetYPx) {
+    public void setBackgroundPosition(String offsetX, String offsetY, double offsetXPx, double offsetYPx) {
         double offX = 0;
         if (offsetXPx == 0 || offsetXPx == gridBlockWidthPx) {
             offX = 0;
         } else {
             offX = -(gridBlockWidthPx - offsetXPx - 1);
         }
-        setAttributeNS(svgElement, "style", "margin-left: " + offX + "px;"
-                + "margin-top: " + -(gridBlockHeightPx - offsetYPx) + "px;");
+        setAttributeNS(svgElement, "style",
+                "margin-left: " + offX + "px;" + "margin-top: " + -(gridBlockHeightPx - offsetYPx) + "px;");
     }
 
     @Override

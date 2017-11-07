@@ -85,7 +85,6 @@ public class SubStepConnector extends AbstractComponentConnector {
                         GWT.log("*** SubStepConnector.onStateChanged READY");
                         if (stateChangeEvent.hasPropertyChanged("step")) {
                             setStep(getState().step);
-                            getWidget().setStep(getState().step);
                         }
                         if (added) {
                             getWidget().getOwner().updateStylesForSubSteps();

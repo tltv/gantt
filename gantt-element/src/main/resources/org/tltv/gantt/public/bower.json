@@ -1,18 +1,26 @@
 {
-  "name": "public",
+  "name": "gantt-element",
   "homepage": "https://github.com/tltv/gantt",
   "authors": [
     "Tomi Virtanen <tltv@vaadin.com>"
   ],
-  "description": "",
-  "main": "",
+  "description": "Gantt chart component",
+  "keywords": [
+    "gantt",
+    "chart",
+    "diagram"
+  ],
+  "main":  [
+    "gantt-widget.html"
+  ],
   "license": "Apache-2.0",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "index.html"
   ],
   "dependencies": {
     "polymer": "^2.0.2"

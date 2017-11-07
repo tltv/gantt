@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.tltv.gantt</groupId>
+	<artifactId>gantt-exporter</artifactId>
+	<packaging>jar</packaging>
+	<version>1.0.1</version>
+	<name>Gantt element javascript exporter</name>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<vaadin.plugin.version>8.1.2</vaadin.plugin.version>
+		<vaadin.version>8.1.2</vaadin.version>
+		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
+	</properties>
+
+	<licenses>
+		<license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.tltv.gantt</groupId>
+			<artifactId>gantt-addon</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.timepedia.exporter</groupId>
+			<artifactId>gwtexporter</artifactId>
+			<version>2.4.0</version>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client</artifactId>
+			<version>${vaadin.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vaadin</groupId>
+			<artifactId>vaadin-client-compiler</artifactId>
+			<version>${vaadin.version}</version>
+		</dependency>
+	</dependencies>
+
+
+	<build>
+		<plugins>
+	
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>gwt-maven-plugin</artifactId>
+				<version>2.8.1</version>
+				<configuration>
+					<extraJvmArgs>-Xmx1G -Xss1G</extraJvmArgs>
+					<style>PRETTY</style>
+					<webappDirectory>${basedir}/src/main/frontend/widgetset</webappDirectory>
+					<hostedWebapp>${basedir}/src/main/frontend/widgetset</hostedWebapp>
+					<noServer>true</noServer>
+					<persistentunitcachedir>${basedir}/target/tmp/gwt-unitCache</persistentunitcachedir>
+					<compileReport>true</compileReport>
+					<strict>true</strict>
+					<modules>
+						<module>org.tltv.gantt.GanttLib</module>
+					</modules>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<filesets>
+						<fileset>
+							<!-- Clean-up widgetset required for "inplace" compilation -->
+							<directory>${basedir}/src/main/frontend/widgetset</directory>
+						</fileset>
+						<fileset>
+							<!-- Clean-up gwt cache -->
+							<directory>${basedir}/target/tmp/gwt-unitCache</directory>
+						</fileset>
+						<fileset>
+							<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public</directory>
+							<includes>
+								<include>*.cache.js</include>
+								<include>*.nocache.js</include>
+							</includes>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/src/main/frontend/widgetset/org.tltv.gantt.GanttLib</directory>
+									<includes>
+										<include>*.cache.js</include>
+										<include>*.nocache.js</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		
+		</plugins>
+	</build>
+</project>

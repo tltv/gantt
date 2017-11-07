@@ -12,7 +12,7 @@ public interface BgGridElement {
      * background grid. Depending on the implementation. Container is the main
      * 'panel' with scroll bars. Content is usually the first child element
      * inside the container, which wraps the actual content elements.
-     * 
+     *
      * @param container
      *            (Scroll) container element which contains content element.
      * @param content
@@ -23,22 +23,23 @@ public interface BgGridElement {
     /** Hide background grid. */
     void hide();
 
+    /** Show background grid. */
+    void show();
+
     /**
      * Set background grid's block width and height.
      * <p>
      * Should be called <u>before</u>
      * {@link #setBackgroundPosition(String, String, double, double)}.
      */
-    void setBackgroundSize(String gridBlockWidth, double gridBlockWidthPx,
-            int gridBlockHeightPx);
+    void setBackgroundSize(String gridBlockWidth, double gridBlockWidthPx, int gridBlockHeightPx);
 
     /**
      * Set background grid position.
      * <p>
      * Should be called after {@link #setBackgroundSize(String, double, int)}.
      */
-    void setBackgroundPosition(String offsetX, String offsetY, double posXPx,
-            double posYPx);
+    void setBackgroundPosition(String offsetX, String offsetY, double posXPx, double posYPx);
 
     /** Returns true if this is a element attached to container. */
     boolean isAttached();

@@ -1,17 +1,46 @@
-<link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="gantt-step.html">
-<link rel="import" href="svg-arrow.html">
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="elements/gantt-step.html">
+<link rel="import" href="elements/svg-arrow.html">
 
 <dom-module id="gantt-widget">
 
 	<template strip-whitespace>
 		<style>
+
 			:host {
 				display: block;
 				height: [[height]];
 				width: [[width]];
 				background: #fff;
 				overflow: hidden;
+
+				--grid-line-color: #eee;
+
+				--no-user-select: {
+					-webkit-user-select: none;
+					-khtml-user-select: none;
+					-moz-user-select: none;
+					-ms-user-select: none;
+					user-select: none;
+  			}
+
+				--gantt-bg-grid: {
+					background: var(--grid-line-color);
+					/* Webkit (Safari/Chrome 10) */
+					background: -webkit-gradient(linear, left top, right top, color-stop(1px, var(--grid-line-color)), color-stop(0, transparent)), -webkit-gradient(linear, left top, left bottom, color-stop(1px, var(--grid-line-color)), color-stop(0, transparent));
+					/* Webkit (Chrome 11+) */
+					background: -webkit-linear-gradient(var(--grid-line-color) 1px, transparent 0px), -webkit-linear-gradient(0deg, var(--grid-line-color) 1px, transparent 0px);
+					/* Mozilla Firefox */
+					background: -moz-linear-gradient(var(--grid-line-color) 1px, transparent 0px), -moz-linear-gradient(0deg, var(--grid-line-color) 1px, transparent 0px);
+					/* IE10 Consumer Preview */
+					background: -ms-linear-gradient(0deg, var(--grid-line-color) 1.1px, transparent 0px), -ms-linear-gradient(90deg, var(--grid-line-color) 1.1px, transparent 0px);
+					/* Opera */
+					background: -o-linear-gradient(var(--grid-line-color) 1px, transparent 0px), -o-linear-gradient(90deg, var(--grid-line-color) 1px, transparent 0px);
+					/* W3C Markup, IE10 Release Preview */
+					background: linear-gradient(0deg, var(--grid-line-color) 1px, transparent 0px), linear-gradient(90deg, var(--grid-line-color) 1.1px, transparent 0px);
+
+					background-attachment: local;
+				}
 			}
 
 			.timeline {
@@ -63,7 +92,7 @@
 				-moz-box-sizing: border-box;
 				-webkit-box-sizing: border-box;
 				-webkit-touch-callout: none;
-				//@include noUserSelect;
+				@apply --no-user-select;
 			}
 
 			.c-col {
@@ -102,14 +131,14 @@
 				height: 15px;
 				-ms-flex-pack: justify;
 				-webkit-touch-callout: none;
-				//@include noUserSelect;
+				@apply --no-user-select;
 			}
 			.gantt-container {
 				width: 100%;
 				height: 100%;
 				overflow: auto;
-				//@include noUserSelect;
-				//@include ganttBgGrid(#eee);
+				@apply --no-user-select;
+				@apply --gantt-bg-grid;
 			}
 
 			.gantt-content {
@@ -197,6 +226,15 @@
 				if(this.containerScrollHandler) {
 					this.containerScrollHandler(e);
 				}
+			}
+
+			handleStepClicked(stepUid, details) {
+			}
+			handleOnMove(newStepUid, startDate, endDate, details) {
+			}
+			handleOnResize(stepUid, startDate, endDate, details) {
+			}
+			handleOnPredecessorChange(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
 			}
 		}
 		customElements.define(GanttWidget.is, GanttWidget);

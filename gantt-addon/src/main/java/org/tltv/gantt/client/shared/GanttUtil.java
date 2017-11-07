@@ -2,13 +2,13 @@ package org.tltv.gantt.client.shared;
 
 import java.util.Date;
 
-import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.i18n.client.TimeZone;
-import com.vaadin.client.widgets.Escalator;
 import com.vaadin.polymer.elemental.Function;
+
+import elemental.html.ClientRect;
 
 public class GanttUtil {
 
@@ -62,6 +62,17 @@ public class GanttUtil {
         return size;
      }-*/;
 
+    public static double getBoundingClientRectRight(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            return element.getBoundingClientRect().getRight();
+        } else {
+            return element.getOffsetLeft() + element.getOffsetWidth();
+        }
+    }
+
     public static native double getBoundingClientRectRight(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
@@ -74,6 +85,17 @@ public class GanttUtil {
           return element.offsetLeft + element.offsetWidth;
         }
     }-*/;
+
+    public static double getBoundingClientRectLeft(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            return element.getBoundingClientRect().getLeft();
+        } else {
+            return element.getOffsetLeft();
+        }
+    }
 
     public static native double getBoundingClientRectLeft(com.google.gwt.dom.client.Element element)
     /*-{
@@ -88,6 +110,18 @@ public class GanttUtil {
         }
     }-*/;
 
+    public static double getBoundingClientRectWidth(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            ClientRect rect = element.getBoundingClientRect();
+            return rect.getRight() - rect.getLeft();
+        } else {
+            return element.getOffsetWidth();
+        }
+    }
+
     public static native double getBoundingClientRectWidth(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
@@ -100,6 +134,18 @@ public class GanttUtil {
           return element.offsetWidth;
         }
     }-*/;
+
+    public static double getBoundingClientRectHeight(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            ClientRect rect = element.getBoundingClientRect();
+            return rect.getBottom() - rect.getTop();
+        } else {
+            return element.getOffsetHeight();
+        }
+    }
 
     public static native double getBoundingClientRectHeight(com.google.gwt.dom.client.Element element)
     /*-{
@@ -114,6 +160,18 @@ public class GanttUtil {
         }
     }-*/;
 
+    public static double getBoundingClientRectTop(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            ClientRect rect = element.getBoundingClientRect();
+            return rect.getTop();
+        } else {
+            return element.getOffsetTop();
+        }
+    }
+
     public static native double getBoundingClientRectTop(com.google.gwt.dom.client.Element element)
     /*-{
         if(!element) {
@@ -126,6 +184,18 @@ public class GanttUtil {
           return element.offsetTop;
         }
     }-*/;
+
+    public static double getBoundingClientRectBottom(elemental.dom.Element element) {
+        if (element == null) {
+            return 0.0;
+        }
+        if (element.getBoundingClientRect() != null) {
+            ClientRect rect = element.getBoundingClientRect();
+            return rect.getBottom();
+        } else {
+            return element.getOffsetTop() + element.getOffsetHeight();
+        }
+    }
 
     public static native double getBoundingClientRectBottom(com.google.gwt.dom.client.Element element)
     /*-{
@@ -196,11 +266,6 @@ public class GanttUtil {
             ++index;
         }
         return (index == 0) ? 0 : targetTimeZone.@com.google.gwt.i18n.client.TimeZone::adjustments[index - 1];
-    }-*/;
-
-    public static native DivElement getTableWrapper(Escalator escalator)
-    /*-{
-        return escalator.@com.vaadin.client.widgets.Escalator::tableWrapper;
     }-*/;
 
     /**

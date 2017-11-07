@@ -18,6 +18,11 @@ package org.tltv.gantt.client.shared;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.google.gwt.json.client.JSONBoolean;
+import com.google.gwt.json.client.JSONNumber;
+import com.google.gwt.json.client.JSONObject;
+import com.google.gwt.json.client.JSONString;
+
 public abstract class AbstractStep implements Serializable {
 
     private Long identifier;
@@ -35,6 +40,8 @@ public abstract class AbstractStep implements Serializable {
     private long startDate = -1;
     private long endDate = -1;
 
+    private boolean substep;
+
     public AbstractStep() {
     }
 
@@ -45,6 +52,14 @@ public abstract class AbstractStep implements Serializable {
     public AbstractStep(String caption, CaptionMode captionMode) {
         setCaption(caption);
         setCaptionMode(captionMode);
+    }
+
+    public boolean isSubstep() {
+        return substep;
+    }
+
+    public void setSubstep(boolean substep) {
+        this.substep = substep;
     }
 
     /** Application specific Optional identifier. */
@@ -230,5 +245,77 @@ public abstract class AbstractStep implements Serializable {
             return false;
         }
         return true;
+    }
+
+    public void read(JSONObject json) {
+        if (json.containsKey("uid")) {
+            setUid(json.get("uid").isString().stringValue());
+        }
+        if (json.containsKey("caption")) {
+            setCaption(json.get("caption").isString().stringValue());
+        }
+        if (json.containsKey("description")) {
+            setDescription(json.get("description").isString().stringValue());
+        }
+        if (json.containsKey("backgroundColor")) {
+            setBackgroundColor(json.get("backgroundColor").isString().stringValue());
+        }
+        if (json.containsKey("styleName")) {
+            setStyleName(json.get("styleName").isString().stringValue());
+        }
+        if (json.containsKey("identifier")) {
+            setIdentifier(Double.valueOf(json.get("identifier").isNumber().doubleValue()).longValue());
+        }
+        if (json.containsKey("startDate")) {
+            setStartDate(Double.valueOf(json.get("startDate").isNumber().doubleValue()).longValue());
+        }
+        if (json.containsKey("endDate")) {
+            setEndDate(Double.valueOf(json.get("endDate").isNumber().doubleValue()).longValue());
+        }
+        if (json.containsKey("captionMode")) {
+            setCaptionMode(CaptionMode.valueOf(json.get("captionMode").isString().stringValue()));
+        }
+        if (json.containsKey("resizable")) {
+            setResizable(json.get("resizable").isBoolean().booleanValue());
+        }
+        if (json.containsKey("movable")) {
+            setMovable(json.get("movable").isBoolean().booleanValue());
+        }
+        if (json.containsKey("showProgress")) {
+            setShowProgress(json.get("showProgress").isBoolean().booleanValue());
+        }
+        if (json.containsKey("progress")) {
+            setProgress(json.get("progress").isNumber().doubleValue());
+        }
+    }
+
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("uid", new JSONString(getUid()));
+        if (getCaption() != null) {
+            json.put("caption", new JSONString(getCaption()));
+        }
+        if (getDescription() != null) {
+            json.put("description", new JSONString(getDescription()));
+        }
+        if (getBackgroundColor() != null) {
+            json.put("backgroundColor", new JSONString(getBackgroundColor()));
+        }
+        if (getStyleName() != null) {
+            json.put("styleName", new JSONString(getStyleName()));
+        }
+        if (getIdentifier() != null) {
+            json.put("identifier", new JSONNumber(getIdentifier()));
+        }
+        json.put("startDate", new JSONNumber(getStartDate()));
+        json.put("endDate", new JSONNumber(getEndDate()));
+        if (getCaptionMode() != null) {
+            json.put("captionMode", new JSONString(getCaptionMode().name()));
+        }
+        json.put("resizable", JSONBoolean.getInstance(isResizable()));
+        json.put("movable", JSONBoolean.getInstance(isMovable()));
+        json.put("showProgress", JSONBoolean.getInstance(isShowProgress()));
+        json.put("progress", new JSONNumber(getProgress()));
+        return json;
     }
 }

@@ -1,12 +1,8 @@
-# Gantt Chart Add-on for Vaadin 8
+# Gantt Chart Web Component
 
-Gantt is an UI component add-on for Vaadin 8.
+Gantt is an UI component add-on created for Vaadin 8 Framework. This projects creates gantt-widget web component based on Polymer library that makes it possible to use Gantt in any web project either by using javacript API or just html elements.
 
 You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
-
-Download latest release jar from http://vaadin.com/directory#addon/gantt
-
-Please use version 0.9.5 with Vaadin Framework 7.
 
 List of features that are supported:
 * Server side API allows to modify timeline options and step options like start/end date, caption, color and adding/removing steps
@@ -24,17 +20,6 @@ List of features that are supported:
 * touch support
 * supports Valo theme
 
-Technical details:
-* server side class name is Gantt, it extends AbstractComponent
-* client side connector class name is GanttConnector
-* client side widgets (pure GWT) are 
-	* GanttWidget: main widget that GanttConnector uses, extends ComplexPanel
-	* TimelineWidget: standalone widget representing timeline.
-	* AbstractStepWidget: extends ComplexPanel
-		* StepWidget
-		* SubStepWidget
-	* SvgArrowWidget
-
 Tested to work with following browsers: 
 * IE 11
 * Edge
@@ -45,7 +30,7 @@ Tested to work with following browsers:
 
 ## Demo
 
-Online demo available @ http://tomivirtanen.app.fi/gantt-demo/
+Online demo (Vaadin 8) available @ http://tomivirtanen.app.fi/gantt-demo/
 
 Code can be found under /gantt-demo folder.
 
@@ -53,10 +38,10 @@ Code can be found under /gantt-demo folder.
 
 * git clone <url of the Gantt repository>
 * mvn clean install
-* cd gantt-demo
-* mvn jetty:run
+* cd gantt-element/src/main/resources/org/tltv/gantt/public/
+* polymer serve
 
-To see the demo, navigate to http://localhost:8080/gantt-demo
+To see the demo, navigate to http://localhost:8081/
 
 
 ## License & Author

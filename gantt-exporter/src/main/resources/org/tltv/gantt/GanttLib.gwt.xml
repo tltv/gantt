@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.5.1//EN" "http://google-web-toolkit.googlecode.com/svn/tags/2.5.1/distro-source/core/src/gwt-module.dtd">
+
+<module>
+	
+	<inherits name="com.google.gwt.json.JSON" />
+	
+	<inherits name="elemental.Elemental" />
+	<inherits name="com.vaadin.polymer.Elements"/>
+	
+	<inherits name='org.timepedia.exporter.Exporter'/>
+	
+	<replace-with class="org.tltv.gantt.client.BgGridSvgElement">
+    	<when-type-is class="org.tltv.gantt.client.BgGridCssElement" />
+    	<any>
+      		<when-property-is name="user.agent" value="safari"/>
+    	</any>
+  	</replace-with>
+  	
+	<inherits name="com.vaadin.IncludeVaadin" />
+	
+  	<set-property name="export" value="yes"/>
+	
+	<source path="client" >
+   		<exclude name="GanttConnector.java" />
+   		<exclude name="StepConnector.java" />
+   		<exclude name="SubStepConnector.java" />
+   		<exclude name="shared/*Rpc.java" />
+		<exclude name="shared/SubStepState.java" />
+   		<exclude name="shared/StepState.java" />
+   		<exclude name="shared/GanttState.java" />	
+	</source>
+	
+	<entry-point class="org.tltv.gantt.client.GanttLib"/>
+	
+	<collapse-all-properties />
+</module>

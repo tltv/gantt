@@ -242,4 +242,19 @@ public class StepWidget extends AbstractStepWidget {
         updateStylesForSubSteps(!subSteps.isEmpty());
     }
 
+    public void updatePredecessorWidgetReference(Step step, StepProvider stepProvider) {
+
+        // check predecessor change and update widget reference if
+        // needed.
+        Step predecessor = step.getPredecessor();
+        Step oldPredecessor = null;
+        if (getPredecessorStepWidget() != null) {
+            oldPredecessor = getPredecessorStepWidget().getStep();
+        }
+
+        if ((predecessor == null && oldPredecessor != null)
+                || (predecessor != null && !predecessor.equals(oldPredecessor))) {
+            setPredecessorStepWidget(stepProvider.getStepWidget(predecessor));
+        }
+    }
 }

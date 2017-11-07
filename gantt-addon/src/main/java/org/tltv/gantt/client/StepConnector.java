@@ -89,13 +89,9 @@ public class StepConnector extends AbstractHasComponentsConnector {
                     public Object call(Object args) {
                         GWT.log("*** StepConnector.onStateChanged READY " + getStepIndex());
 
-                        getWidget().waitingForPolymer = false;
-
                         if (stateChangeEvent.hasPropertyChanged("step")) {
-                            updatePredecessorWidgetReference();// need to be
-                                                               // called
-                            // before
-                            // setStep
+                            getWidget().updatePredecessorWidgetReference(getState().step, getGanttConnector());
+                            // need to be called before setStep
                             setStep(getState().step);
                         }
                         if (!getWidget().getElement().hasParentElement()) {
@@ -134,22 +130,6 @@ public class StepConnector extends AbstractHasComponentsConnector {
 
     protected int getStepIndex() {
         return Math.max(0, getGanttConnector().getState().steps.indexOf(this));
-    }
-
-    private void updatePredecessorWidgetReference() {
-
-        // check predecessor change and update widget reference if
-        // needed.
-        Step predecessor = getState().step.getPredecessor();
-        Step oldPredecessor = null;
-        if (getWidget().getPredecessorStepWidget() != null) {
-            oldPredecessor = getWidget().getPredecessorStepWidget().getStep();
-        }
-
-        if ((predecessor == null && oldPredecessor != null)
-                || (predecessor != null && !predecessor.equals(oldPredecessor))) {
-            getWidget().setPredecessorStepWidget(((GanttConnector) getParent()).getStepWidget(predecessor));
-        }
     }
 
     protected GanttConnector getGanttConnector() {

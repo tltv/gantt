@@ -24,9 +24,14 @@ import java.util.Set;
 
 import org.tltv.gantt.client.ArrowElement;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
-public class Step extends AbstractStep {
+//@Export
+//@ExportPackage(value = "gantt")
+public class Step extends AbstractStep /* implements Exportable */ {
 
     private Step predecessor;
     private List<SubStep> subSteps = new LinkedList<SubStep>();
@@ -80,6 +85,7 @@ public class Step extends AbstractStep {
     /** Add new sub step. */
     public boolean addSubStep(SubStep subStep) {
         if (subStep != null) {
+            subStep.setSubstep(true);
             subStep.setOwner(this);
             boolean added = subSteps.add(subStep);
             if (added && subStepObserver != null) {
@@ -169,5 +175,40 @@ public class Step extends AbstractStep {
             }
         }
         return max;
+    }
+
+    public static Step toStep(JavaScriptObject o) {
+        Step s = new Step();
+        s.read(new JSONObject(o));
+        return s;
+    }
+
+    @Override
+    public void read(JSONObject json) {
+        super.read(json);
+        if (json.containsKey("predecessor")) {
+            setPredecessor(toStep(json.get("predecessor").isObject().getJavaScriptObject()));
+        }
+        if (json.containsKey("subSteps")) {
+            JSONArray subs = json.get("subSteps").isArray();
+            for (int i = 0; i < subs.size(); i++) {
+                addSubStep(SubStep.toStep(subs.get(i).isObject().getJavaScriptObject()));
+            }
+        }
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = super.toJson();
+        if (getPredecessor() != null) {
+            json.put("predecessor", getPredecessor().toJson());
+        }
+        JSONArray subs = new JSONArray();
+        int i = 0;
+        for (SubStep s : getSubSteps()) {
+            subs.set(i++, s.toJson());
+        }
+        json.put("subSteps", subs);
+        return json;
     }
 }

@@ -73,6 +73,13 @@
 			<version>1.7.0.0</version>
 		</dependency>
 
+		<dependency>
+	      <groupId>org.timepedia.exporter</groupId>
+	      <artifactId>gwtexporter</artifactId>
+	      <version>2.4.0</version>
+	      <scope>compile</scope>
+	    </dependency>
+	    
 		<!-- This can be replaced with TestNG or some other test framework supported 
 			by the surefire plugin -->
 		<dependency>

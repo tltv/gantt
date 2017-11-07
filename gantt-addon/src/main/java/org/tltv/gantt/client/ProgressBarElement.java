@@ -1,15 +1,14 @@
 package org.tltv.gantt.client;
 
 import com.google.gwt.dom.client.Element;
-import com.vaadin.client.ui.VProgressBar;
 
 public class ProgressBarElement implements ProgressElement {
 
-    private VProgressBar element;
+    private GanttProgressBar element;
 
     @Override
     public void init(double progressValue) {
-        element = new VProgressBar();
+        element = new GanttProgressBar();
         element.addStyleName("bar-progress");
         element.setState(convertToState(progressValue));
     }

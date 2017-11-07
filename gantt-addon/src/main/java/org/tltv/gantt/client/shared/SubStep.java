@@ -15,9 +15,14 @@
  */
 package org.tltv.gantt.client.shared;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.json.client.JSONBoolean;
+import com.google.gwt.json.client.JSONObject;
+
 public class SubStep extends AbstractStep {
 
     public SubStep() {
+        setSubstep(true);
     }
 
     public SubStep(String caption) {
@@ -38,4 +43,27 @@ public class SubStep extends AbstractStep {
         this.owner = owner;
     }
 
+    public static SubStep toStep(JavaScriptObject o) {
+        SubStep s = new SubStep();
+        s.read(new JSONObject(o));
+        return s;
+    }
+
+    @Override
+    public void read(JSONObject json) {
+        super.read(json);
+        if (json.containsKey("owner")) {
+            setOwner(Step.toStep(json.get("owner").isObject().getJavaScriptObject()));
+        }
+    }
+
+    @Override
+    public JSONObject toJson() {
+        JSONObject json = super.toJson();
+        json.put("substep", JSONBoolean.getInstance(isSubstep()));
+        if (getOwner() != null) {
+            json.put("owner", getOwner().toJson());
+        }
+        return json;
+    }
 }

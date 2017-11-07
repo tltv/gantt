@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="widgetset/org.tltv.gantt.GanttLib/org.tltv.gantt.GanttLib.nocache.js"></script>
+	<script>
+	function myInit() {
+		var element = document.getElementById("test-wrapper");
+
+		var g = new gantt.GanttElement();
+		// element MUST be attached to DOM before setState call
+		element.appendChild(g.getWidget().element);
+
+		g.setState(
+			{
+				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+				endDate: new Date('2017-12-31T23:59:59Z').getTime(),
+				locale: "en_US",
+				resolution: "Week",
+				backgroundGridEnabled: true
+			},
+			[
+				{
+					uid: "1", // required unique step id
+					identifier: 1, // optional ID
+					caption: "Step A",
+					description: "Description of Step A",
+					backgroundColor: "#A8D9FF",
+					startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+					endDate: new Date('2017-01-31T23:59:59Z').getTime(),
+					resizable: true,
+					movable: true
+				},
+				{
+					uid: "2", // required unique step id
+					identifier: 2, // optional ID
+					caption: "Step B",
+					description: "Description of Step B",
+					backgroundColor: "#AAAAAA",
+					startDate: new Date('2017-02-01T00:00:00Z').getTime(),
+					endDate: new Date('2017-02-28T23:59:59Z').getTime(),
+					resizable: true,
+					movable: true
+				}
+			]);
+  	}
+	</script>
+</head>
+<body>
+<div>Hello World!</div>
+<div id="test-wrapper" style="height:100%;width:100%;"></div>
+
+</body>
+</html>

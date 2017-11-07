@@ -23,4 +23,26 @@
 		</license>
 	</licenses>
 
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<resources>
+						<resource>
+							<directory>${project.basedir}/src/main/resources/org/tltv/gantt/public</directory>
+							<includes>
+								<include>*.cache.js</include>
+								<include>*.nocache.js</include>
+							</includes>
+						</resource>
+					</resources>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	
 </project>

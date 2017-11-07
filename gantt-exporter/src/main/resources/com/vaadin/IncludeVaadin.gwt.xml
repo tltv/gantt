@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit 2.5.1//EN" "http://google-web-toolkit.googlecode.com/svn/tags/2.5.1/distro-source/core/src/gwt-module.dtd">
+
+<module>
+	<!-- Include only java files that Gantt uses -->
+	
+	<source path="shared">
+		<include name="ui/datefield/DateResolution.java"/>
+		<include name="ui/ui/UIState.java"/>
+		<include name="MouseEventDetails.java"/>
+		<include name="VBrowserDetails.java"/>
+	</source>
+	
+	<source path="client">
+		<include name="DateTimeService.java"/>
+		<include name="LocaleService.java"/>
+		<include name="LocaleNotLoadedException.java"/>
+		<include name="MouseEventDetailsBuilder.java"/>
+		<include name="WidgetUtil.java"/>
+		<include name="BrowserInfo.java"/>
+		<include name="ComputedStyle.java"/>
+		<include name="Profiler.java"/>
+		<include name="Focusable.java"/>
+		<include name="event/Pointer*.java"/>
+	</source>
+		
+</module>

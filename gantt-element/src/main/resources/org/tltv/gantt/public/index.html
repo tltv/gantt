@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Gantt Demo</title>
+	<script src="org.tltv.gantt.GanttLib.nocache.js"></script>
+
+	<script>
+	function myInit() {
+		var element = document.getElementById("test-wrapper");
+
+		var g = new gantt.GanttElement();
+		// element MUST be attached to DOM before setState call
+		element.appendChild(g.getWidget().element);
+
+		g.setState(
+			{
+				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+				endDate: new Date('2017-12-31T23:59:59Z').getTime(),
+				locale: "en_US",
+				resolution: "Day",
+				backgroundGridEnabled: true
+			},
+			[
+				{
+					uid: "1", // required unique step id
+					identifier: 1, // optional ID
+					caption: "Step A",
+					description: "Description of Step A",
+					backgroundColor: "#A8D9FF",
+					startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+					endDate: new Date('2017-01-31T23:59:59Z').getTime(),
+					resizable: true,
+					movable: true
+				},
+				{
+					uid: "2",
+					identifier: 2,
+					caption: "Step B",
+					description: "Description of Step B",
+					backgroundColor: "#AAAAAA",
+					startDate: new Date('2017-02-01T00:00:00Z').getTime(),
+					endDate: new Date('2017-02-28T23:59:59Z').getTime(),
+					resizable: true,
+					movable: true,
+					predecessor: {
+						uid: "1"
+					}
+				},
+				{
+					uid: "3",
+					identifier: 3,
+					caption: "Step with substeps",
+					backgroundColor: "#e2afaf",
+					startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+					endDate: new Date('2017-10-31T23:59:59Z').getTime(),
+					resizable: true,
+					movable: true,
+					subSteps: [
+						{
+							uid: "4",
+							caption: "Substep #1",
+							backgroundColor: "#e2afaf",
+							startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+							endDate: new Date('2017-06-15T23:59:59Z').getTime(),
+							resizable: true,
+							movable: true,
+						},
+						{
+							uid: "5",
+							caption: "Substep #2",
+							backgroundColor: "#eeafaf",
+							startDate: new Date('2017-06-16T00:00:00Z').getTime(),
+							endDate: new Date('2017-10-31T23:59:59Z').getTime(),
+							resizable: true,
+							movable: true,
+						}
+					]
+				}
+			]);
+
+			// step click handling
+			g.getWidget().element.handleStepClicked = function(stepUid, details) {
+				var step = g.getStepByUid(stepUid);
+				alert(step.caption + ': ' + details.toString());
+			}
+
+			// step move handling
+			g.getWidget().element.handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
+				var step = g.getStepByUid(stepUid);
+				if(step.substep) {
+					step.startDate = startDate;
+					step.endDate = endDate;
+					g.updateSubStep(step);
+				} else {
+					step.startDate = startDate;
+					step.endDate = endDate;
+					g.updateStep(step);
+				}
+			}
+
+			// step resize handling
+			g.getWidget().element.handleOnResize = function(stepUid, startDate, endDate, details) {
+				var step = g.getStepByUid(stepUid);
+				step.startDate = startDate;
+				step.endDate = endDate;
+				g.update(step);
+			}
+
+			// step predecessor change handling
+			g.getWidget().element.handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+
+			}
+  	}
+	</script>
+</head>
+<body>
+<div id="test-wrapper" style="height:100%;width:100%;"></div>
+
+</body>
+</html>

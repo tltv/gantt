@@ -16,7 +16,6 @@
 package org.tltv.gantt.client;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,6 @@ import org.tltv.gantt.Gantt;
 import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
-import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.animation.client.AnimationScheduler;
@@ -35,6 +33,7 @@ import com.google.gwt.animation.client.AnimationScheduler.AnimationCallback;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
@@ -43,14 +42,11 @@ import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.i18n.client.TimeZone;
-import com.google.gwt.i18n.shared.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Widget;
 import com.vaadin.client.BrowserInfo;
 import com.vaadin.client.ComponentConnector;
 import com.vaadin.client.ConnectorHierarchyChangeEvent;
-import com.vaadin.client.LocaleNotLoadedException;
-import com.vaadin.client.LocaleService;
 import com.vaadin.client.MouseEventDetailsBuilder;
 import com.vaadin.client.WidgetUtil;
 import com.vaadin.client.communication.RpcProxy;
@@ -62,6 +58,7 @@ import com.vaadin.client.ui.FocusableScrollPanel;
 import com.vaadin.client.ui.layout.ElementResizeEvent;
 import com.vaadin.client.ui.layout.ElementResizeListener;
 import com.vaadin.client.widget.escalator.ScrollbarBundle.Direction;
+import com.vaadin.client.widgets.Escalator;
 import com.vaadin.client.widgets.Grid;
 import com.vaadin.polymer.elemental.Function;
 import com.vaadin.shared.Connector;
@@ -76,14 +73,10 @@ import com.vaadin.shared.ui.Connect;
  *
  */
 @Connect(Gantt.class)
-public class GanttConnector extends AbstractHasComponentsConnector {
+public class GanttConnector extends AbstractHasComponentsConnector implements StepProvider {
 
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
-    String locale;
-    String timeZoneId;
-    TimeZone timeZone;
-    GanttDateTimeService dateTimeService;
     boolean notifyHeight = false;
 
     ComponentConnector delegateScrollConnector;
@@ -94,6 +87,10 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     // flag indicating that scroll is delegating right now
     boolean ganttDelegatingVerticalScroll = false;
     boolean delegatingVerticalScroll = false;
+
+    LocaleDataProviderImpl localeDataProvider = new LocaleDataProviderImpl();
+
+    StepHierarchyHandler internalHandler;
 
     Timer ganttScrollDelay = new Timer() {
 
@@ -224,96 +221,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
     };
 
-    LocaleDataProvider localeDataProvider = new LocaleDataProvider() {
-
-        @Override
-        public String[] getWeekdayNames() {
-            try {
-                return LocaleService.getDayNames(locale);
-            } catch (LocaleNotLoadedException e) {
-                GWT.log(e.getMessage(), e);
-            }
-            // return default
-            return new String[] { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
-        }
-
-        @Override
-        public String[] getMonthNames() {
-            try {
-                return LocaleService.getMonthNames(locale);
-            } catch (LocaleNotLoadedException e) {
-                GWT.log(e.getMessage(), e);
-            }
-            // return default
-            return new String[] { "January", "February", "March", "April", "May", "June", "July", "August", "September",
-                    "October", "November", "December" };
-        }
-
-        @Override
-        public int getFirstDayOfWeek() {
-            try {
-                // Gantt uses 1-based index, just as the server-side Java
-                // Locale does. Vaadin locale state has 0-based value.
-                return LocaleService.getFirstDayOfWeek(locale) + 1;
-            } catch (LocaleNotLoadedException e) {
-                GWT.log(e.getMessage(), e);
-            }
-            // return default
-            return 1; // sunday
-        }
-
-        @Override
-        public String formatDate(Date zonedDate, String formatStr) {
-            if (dateTimeService == null) {
-                try {
-                    dateTimeService = new GanttDateTimeService(getLocale());
-                } catch (LocaleNotLoadedException e) {
-                    GWT.log("Could not create DateTimeService for the locale " + getLocale(), e);
-                    return "";
-                }
-            }
-            return dateTimeService.formatDate(zonedDate, formatStr, getTimeZone());
-        }
-
-        @Override
-        public String formatDate(Date zonedDate, DateTimeFormat formatter) {
-            return formatter.format(zonedDate, getTimeZone());
-        }
-
-        @Override
-        public boolean isTwelveHourClock() {
-            try {
-                return LocaleService.isTwelveHourClock(locale);
-            } catch (LocaleNotLoadedException e) {
-                GWT.log(e.getMessage(), e);
-            }
-            return false;
-        }
-
-        @Override
-        public String getLocale() {
-            return locale;
-        }
-
-        @Override
-        public long getTimeZoneOffset(Date zonedDate) {
-            int offset = -getTimeZone().getOffset(zonedDate) * 60000;
-            return offset;
-        }
-
-        @Override
-        public TimeZone getTimeZone() {
-            return timeZone;
-        }
-
-        @Override
-        public long getDaylightAdjustment(Date zonedDate) {
-            return getTimeZone().getDaylightAdjustment(zonedDate) * 60000;
-        }
-
-    };
-
-    GanttRpc ganttRpc = new GanttRpc() {
+    GanttEventHandler ganttRpc = new GanttEventHandler() {
 
         @Override
         public void stepClicked(String stepUid, NativeEvent event, Element relativeToElement) {
@@ -402,8 +310,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         @Override
         public void onElementResize(ElementResizeEvent e) {
-            final int height = e.getElement().getClientHeight();
-            final int width = e.getElement().getClientWidth();
+            final int height = getWidget().getElement().getClientHeight();
+            final int width = getWidget().getElement().getClientWidth();
             if (previousHeight != height) {
                 previousHeight = height;
 
@@ -423,7 +331,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     @Override
                     public void execute() {
                         getWidget().notifyWidthChanged(width);
-                        updateAllStepsPredecessors();
+                        internalHandler.updateAllStepsPredecessors(getSteps());
                         updateDelegateTargetHeight();
                     }
                 });
@@ -462,19 +370,21 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         getWidget().setAlwaysCalculatePixelWidths(info.isSafari() || info.isOpera());
         getWidget().setTouchSupported(info.isTouchDevice());
         getWidget().initWidget(ganttRpc, localeDataProvider);
-        getLayoutManager().addElementResizeListener(getWidget().getElement(), widgetResizeListener);
+        getLayoutManager().addElementResizeListener(getWidget().getScrollContainer(), widgetResizeListener);
     }
 
     @Override
     public void onUnregister() {
         super.onUnregister();
-        getLayoutManager().removeElementResizeListener(getWidget().getElement(), widgetResizeListener);
+        getLayoutManager().removeElementResizeListener(getWidget().getScrollContainer(), widgetResizeListener);
         unRegisterScrollDelegateHandlers();
     }
 
     @Override
     protected Widget createWidget() {
-        return new GanttWidget();
+        GanttWidget w = new GanttWidget();
+        internalHandler = new StepHierarchyHandler(w);
+        return w;
     }
 
     @Override
@@ -499,16 +409,16 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 GWT.log("************* GanttConnector.onStateChanged READY");
                 doInit();
 
-                locale = getState().locale;
-                timeZoneId = getState().timeZoneId;
+                localeDataProvider.locale = getState().locale;
+                localeDataProvider.timeZoneId = getState().timeZoneId;
                 if (stateChangeEvent.hasPropertyChanged("locale")) {
-                    dateTimeService = null;
+                    localeDataProvider.dateTimeService = null;
                 }
                 if (stateChangeEvent.hasPropertyChanged("timeZoneId")) {
                     if (getState().timeZoneJson != null) {
-                        timeZone = TimeZone.createTimeZone(getState().timeZoneJson);
+                        localeDataProvider.timeZone = TimeZone.createTimeZone(getState().timeZoneJson);
                     } else {
-                        timeZone = TimeZone.createTimeZone(0);
+                        localeDataProvider.timeZone = TimeZone.createTimeZone(0);
                     }
                 }
 
@@ -554,7 +464,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                             getWidget().notifyHeightChanged(previousHeight);
                         }
                         if (changeHasInpactToSteps) {
-                            updateAllStepsPredecessors();
+                            internalHandler.updateAllStepsPredecessors(getSteps());
                         }
                         updateVerticalScrollDelegation();
                         adjustDelegateTargetHeightLazily();
@@ -727,7 +637,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         if (delegateScrollPanelTarget != null) {
             delegateScrollPanelTarget.setHeight(Math.max(0, newTableScrollContainerHeight) + "px");
         } else if (delegateScrollGridTarget != null) {
-            GanttUtil.getTableWrapper(delegateScrollGridTarget.getEscalator()).getStyle().setProperty("height",
+            getTableWrapper(delegateScrollGridTarget.getEscalator()).getStyle().setProperty("height",
                     Math.max(0, headerHeight + newTableScrollContainerHeight) + "px");
             delegateScrollGridTarget.getEscalator().getBody().getElement().getStyle().setProperty("height",
                     Math.max(0, newTableScrollContainerHeight) + "px");
@@ -737,6 +647,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
 
         getLayoutManager().setNeedsMeasure((ComponentConnector) getState().verticalScrollDelegateTarget);
     }
+
+    public static native DivElement getTableWrapper(Escalator escalator)
+    /*-{
+        return escalator.@com.vaadin.client.widgets.Escalator::tableWrapper;
+    }-*/;
 
     void adjustDelegateTargetHeightLazily() {
         lazyAdjustDelegateTargetHeight.cancel();
@@ -769,7 +684,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 }
 
                 for (StepWidget stepWidget : predecessorRemoved) {
-                    requestRemoveStep(stepWidget);
+                    internalHandler.requestRemoveStep(stepWidget);
                 }
 
                 // Sync steps with changed hierarchy; add new ones and move
@@ -781,7 +696,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     addSteps.add(stepWidget);
                     getWidget().insertStep(index++, stepWidget);
                 }
-                requestSetSteps(addSteps);
+                internalHandler.setSteps(addSteps);
 
                 Map<Step, StepWidget> steps = getStepsMap();
 
@@ -794,7 +709,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                         stepWidget.setGantt(getWidget(), localeDataProvider);
                     }
 
-                    Step predecessor = ((StepConnector) c).getState().step.getPredecessor();
+                    Step s = ((StepConnector) c).getState().step;
+                    Step predecessor = (s != null) ? s.getPredecessor() : null;
                     if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
                         stepWidget.setPredecessorStepWidget(steps.get(predecessor));
                     } else {
@@ -810,69 +726,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         });
     }
 
-    private void requestRemoveStep(final StepWidget stepWidget) {
-        stepWidget.ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                getWidget().removeStep(stepWidget);
-                return null;
-            }
-        });
-    }
-
-    void requestSetSteps(final List<StepWidget> stepWidgets) {
-        if (stepWidgets.isEmpty()) {
-            return;
-        }
-        for (StepWidget sw : new ArrayList<StepWidget>(stepWidgets)) {
-            requestSetStep(stepWidgets, sw);
-        }
-    }
-
-    private void requestSetStep(final List<StepWidget> stepWidgets, StepWidget sw) {
-        sw.ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object arg) {
-                GWT.log("GanttConnector.requestSetStep " + stepWidgets.indexOf(sw));
-                sw.waitingForPolymer = false;
-                if (areStepsReady(stepWidgets)) {
-                    setSteps(stepWidgets);
-                }
-                return null;
-            }
-
-        });
-    }
-
-    private void setSteps(final List<StepWidget> stepWidgets) {
-        int index = 0;
-        for (StepWidget sw : stepWidgets) {
-            getWidget().setStep(index++, sw, false);
-        }
-    }
-
-    private boolean areStepsReady(List<StepWidget> stepWidgets) {
-        for (StepWidget sw : stepWidgets) {
-            if (sw.waitingForPolymer) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** Updates all steps predecessor visualizations. */
-    public void updateAllStepsPredecessors() {
-        for (ComponentConnector c : getChildComponents()) {
-            StepWidget stepWidget = ((StepConnector) c).getWidget();
-            stepWidget.updatePredecessor();
-        }
-    }
-
     private void deferredUpdateAllStepsPredecessors() {
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
             public void execute() {
-                updateAllStepsPredecessors();
+                internalHandler.updateAllStepsPredecessors(getSteps());
             }
         });
     }
@@ -884,6 +742,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         }
     }
 
+    @Override
     public StepWidget getStepWidget(Step target) {
         return getStepsMap().get(target);
     }

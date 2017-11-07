@@ -5,12 +5,15 @@
 
 	<inherits name="com.vaadin.polymer.Elements"/>
 
+  	<inherits name="org.timepedia.exporter.Exporter"/>
+  	
 	<replace-with class="org.tltv.gantt.client.BgGridSvgElement">
     	<when-type-is class="org.tltv.gantt.client.BgGridCssElement" />
     	<any>
       		<when-property-is name="user.agent" value="safari"/>
     	</any>
   	</replace-with>
+  	
   	
 	<!-- set-property name="user.agent" value="gecko1_8"/-->
 </module>

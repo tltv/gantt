@@ -3,7 +3,7 @@ package org.tltv.gantt.client;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 
-public interface GanttRpc {
+public interface GanttEventHandler {
 
     void stepClicked(String stepUid, NativeEvent event, Element relativeToElement);
 

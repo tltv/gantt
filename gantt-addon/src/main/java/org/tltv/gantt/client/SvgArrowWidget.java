@@ -224,40 +224,6 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
 
     public SvgArrowWidget() {
         super("svg-arrow", new SafeHtmlBuilder().toSafeHtml());
-        // super("svg-arrow", "gantt/svg-arrow.html", "");
-
-        // Element predecessorArrow = createSVGElementNS("svg");
-        // addStyleName(predecessorArrow, "arrow");
-        // predecessorArrow.getStyle().setPosition(Position.ABSOLUTE);
-        // predecessorArrow.getStyle().setZIndex(2);
-        // predecessorArrow.getStyle().setProperty("pointerEvents", "none");
-
-        // Element g = createSVGElementNS("g");
-        // setAttributeNS(g, "stroke", "black");
-        // setAttributeNS(g, "stroke-width", "1");
-        // curve = createSVGElementNS("path");
-        // addStyleName(curve, "curve-line");
-        // setAttributeNS(curve, "fill", "none");
-        // startingPoint = createSVGElementNS("circle");
-        // startingPoint.getStyle().setProperty("pointerEvents",
-        // "visiblePainted");
-        // addStyleName(startingPoint, "start-p");
-        // setAttributeNS(startingPoint, "stroke-width", "2");
-        // setAttributeNS(startingPoint, "r", "7");
-        // setAttributeNS(startingPoint, "fill", "black");
-        // endingPoint = createSVGElementNS("circle");
-        // endingPoint.getStyle().setProperty("pointerEvents",
-        // "visiblePainted");
-        // addStyleName(endingPoint, "end-p");
-        // setAttributeNS(endingPoint, "stroke-width", "2");
-        // setAttributeNS(endingPoint, "r", "5");
-        // setAttributeNS(endingPoint, "fill", "black");
-        // DOM.appendChild(g, curve);
-        // DOM.appendChild(g, startingPoint);
-        // DOM.appendChild(g, endingPoint);
-        // DOM.appendChild(predecessorArrow, g);
-
-        // getElement().appendChild(predecessorArrow);
     }
 
     @Override

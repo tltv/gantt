@@ -89,15 +89,15 @@ import com.vaadin.polymer.elemental.Function;
  * These steps can be moved and resized freely in the space available, limited
  * only by the timeline's borders.
  * <p>
- * All events are handled via {@link GanttRpc}.
+ * All events are handled via {@link GanttEventHandler}.
  * <p>
  * Timeline's localization is handled via {@link LocaleDataProvider}.
  * <p>
  * Here are few steps that need to be notified when taking this widget in use.
  * <br>
  * First of all, after constructing this widget, you need to initialize it by
- * {@link #initWidget(GanttRpc, LocaleDataProvider)} method. But before doing
- * that, make sure to call
+ * {@link #initWidget(GanttEventHandler, LocaleDataProvider)} method. But before
+ * doing that, make sure to call
  * {@link #setBrowserInfo(boolean, boolean, boolean, boolean, int)} to let this
  * widget know some details of the browser. And if client supports touch events,
  * let this widget know that by calling {@link #setTouchSupported(boolean)}
@@ -170,7 +170,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     private Function<List<StepWidget>, Object> pendingUpdateSteps;
 
-    private GanttRpc ganttRpc;
+    private GanttEventHandler ganttRpc;
     private LocaleDataProvider localeDataProvider;
 
     private String locale;
@@ -522,34 +522,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     private boolean ie, chrome, safari, webkit;
 
     public GanttWidget() {
-        super("gantt-widget", "gantt/gantt-widget.html", "");
-
-        // setElement(DivElement.as(DOM.createDiv()));
-        // setStyleName(STYLE_GANTT);
-        //
-        // moveElement.setClassName(STYLE_MOVE_ELEMENT);
-        // // not visible by default
-        // moveElement.getStyle().setDisplay(Display.NONE);
-        //
-        // timeline = GWT.create(TimelineWidget.class);
-        //
-        // container = DivElement.as(DOM.createDiv());
-        // container.setClassName(STYLE_GANTT_CONTAINER);
-        //
-        // content = DivElement.as(DOM.createDiv());
-        // content.setClassName(STYLE_GANTT_CONTENT);
-        // container.appendChild(content);
-        //
-        // content.appendChild(moveElement);
-        //
-        // scrollbarSpacer = DivElement.as(DOM.createDiv());
-        // scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(),
-        // Unit.PX);
-        // scrollbarSpacer.getStyle().setDisplay(Display.NONE);
-        //
-        // getElement().appendChild(timeline.getElement());
-        // getElement().appendChild(container);
-        // getElement().appendChild(scrollbarSpacer);
+        super("gantt-widget", "../gantt-widget.html", "");
 
         timeline = GWT.create(TimelineWidget.class);
 
@@ -566,6 +539,11 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     @Override
     public void ready(Function<?, ?> f) {
         GanttUtil.whenReadyAndConnected(f, getElement());
+    }
+
+    @Override
+    public void onAttach() {
+        super.onAttach();
     }
 
     void doInit() {
@@ -634,7 +612,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         return getGanttContainerElement().getNextSiblingElement();
     }
 
-    public void initWidget(GanttRpc ganttRpc, LocaleDataProvider localeDataProvider) {
+    public void initWidget(GanttEventHandler ganttRpc, LocaleDataProvider localeDataProvider) {
         setRpc(ganttRpc);
         setLocaleDataProvider(localeDataProvider);
         resetListeners();
@@ -755,9 +733,9 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         pendingUpdate = true;
     }
 
-    private boolean areStepsReady(List<StepWidget> steps) {
+    public boolean areStepsReady(List<StepWidget> steps) {
         for (StepWidget s : steps) {
-            if (s.waitingForPolymer || !s.isSet()) {
+            if (!s.isSet()) {
                 return false;
             }
         }
@@ -1003,7 +981,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
      * @param ganttRpc
      *            GanttRpc
      */
-    public void setRpc(GanttRpc ganttRpc) {
+    public void setRpc(GanttEventHandler ganttRpc) {
         this.ganttRpc = ganttRpc;
     }
 
@@ -1012,7 +990,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
      *
      * @return GanttRpc
      */
-    public GanttRpc getRpc() {
+    public GanttEventHandler getRpc() {
         return ganttRpc;
     }
 
@@ -1037,7 +1015,6 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
                 onContainerScroll(event);
                 return null;
             }
-
         });
 
         if (isMsTouchSupported()) {
@@ -1969,6 +1946,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         if (!isBackgroundGridEnabled()) {
             bgGrid.hide();
             return;
+        } else {
+            bgGrid.show();
         }
         // Container element has a background image that is positioned, sized
         // and repeated to fill the whole container with a nice grid background.

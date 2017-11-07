@@ -20,16 +20,12 @@ public class AbstractStepWidget extends PolymerWidget {
     protected boolean readOnly;
 
     protected String extraStyle;
-    protected long start = -1;
-    protected long end = -1;
 
     protected ProgressElement progressElement;
     protected AbstractStep step = null;
 
     protected GanttWidget gantt;
     protected LocaleDataProvider localeDataProvider;
-
-    public boolean waitingForPolymer = true; // TODO can this be removed now?
 
     private int calculatedHeight = 0;
 
@@ -40,7 +36,6 @@ public class AbstractStepWidget extends PolymerWidget {
 
     public AbstractStepWidget() {
         super("gantt-step", new SafeHtmlBuilder().toSafeHtml());
-        // super("gantt-step", "gantt/gantt-step.html", "");
         addStyleName("bar");
 
         ready(new Function<Object, Object>() {
@@ -69,7 +64,6 @@ public class AbstractStepWidget extends PolymerWidget {
                     }
                 });
                 GWT.log("AbstractStepWidget() READY");
-                waitingForPolymer = false;
                 return null;
             }
         });
@@ -211,16 +205,13 @@ public class AbstractStepWidget extends PolymerWidget {
         getBar().getStyle().clearWidth();
         getBar().getStyle().clearVisibility();
 
-        if (start != step.getStartDate() || end != step.getEndDate()) {
-
-            // sanity check
-            if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
-                getBar().addClassName(STYLE_INVALID);
-            } else {
-                updateStepCustomStyle(getBar(),
-                        getLeftPositionPercentageStringForDate(getStep().getStartDate(), getStep().getEndDate()),
-                        getWidthPercentageStringForDateInterval(getStep().getStartDate(), getStep().getEndDate()));
-            }
+        // sanity check
+        if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
+            getBar().addClassName(STYLE_INVALID);
+        } else {
+            updateStepCustomStyle(getBar(),
+                    getLeftPositionPercentageStringForDate(getStep().getStartDate(), getStep().getEndDate()),
+                    getWidthPercentageStringForDateInterval(getStep().getStartDate(), getStep().getEndDate()));
         }
     }
 

@@ -23,6 +23,11 @@ public class BgGridCssElement implements BgGridElement {
     }
 
     @Override
+    public void show() {
+        container.getStyle().clearBackgroundImage();
+    }
+
+    @Override
     public void setBackgroundSize(String gridBlockWidth,
             double gridBlockWidthPx, int gridBlockHeightPx) {
         container.getStyle().setProperty("backgroundSize",
