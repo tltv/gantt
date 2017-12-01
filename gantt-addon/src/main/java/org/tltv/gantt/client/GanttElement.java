@@ -3,10 +3,8 @@ package org.tltv.gantt.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportConstructor;
@@ -39,7 +37,6 @@ public class GanttElement implements Exportable, StepProvider {
     int previousWidth = -1;
 
     private GanttElementState state = null;
-    private List<Step> steps = new ArrayList<>();
     private Map<Step, StepWidget> stepsMap = new HashMap<>();
     private Map<Step, Map<SubStep, SubStepWidget>> substepsMap = new HashMap<>();
     private Map<String, AbstractStep> uidMap = new HashMap<>();
@@ -200,9 +197,33 @@ public class GanttElement implements Exportable, StepProvider {
         getWidget().notifyWidthChanged((int) GanttUtil.getBoundingClientRectWidth(getWidget().getElement()));
     }
 
-    protected List<StepWidget> getSteps() {
+    public static native void setGanttElement(com.google.gwt.dom.client.Element elem,
+            JavaScriptObject ganttElementWrapper)
+    /*-{
+        elem.ganttElement = ganttElementWrapper;
+    }-*/;
+
+    public static native JavaScriptObject[] getSteps(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.steps;
+    }-*/;
+
+    private List<JavaScriptObject> getStepsList(com.google.gwt.dom.client.Element elem) {
+        JavaScriptObject[] arr = getSteps(elem);
+        if (arr == null || arr.length == 0) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(arr);
+    }
+
+    private List<Step> getSteps() {
+        List<JavaScriptObject> l = getStepsList(getWidget().getGanttElement());
+        return l != null ? toSteps(l) : new ArrayList<>();
+    }
+
+    protected List<StepWidget> getStepWidgets() {
         List<StepWidget> list = new ArrayList<StepWidget>();
-        for (Step s : steps) {
+        for (Step s : getSteps()) {
             if (stepsMap.containsKey(s)) {
                 list.add(stepsMap.get(s));
             }
@@ -211,7 +232,7 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     protected StepWidget findStepWidgetByElement(Element target) {
-        for (Widget w : getSteps()) {
+        for (Widget w : getStepWidgets()) {
             if (w.getElement().isOrHasChild(target)) {
                 if (w instanceof StepWidget) {
                     return (StepWidget) w;
@@ -249,12 +270,15 @@ public class GanttElement implements Exportable, StepProvider {
 
     /** Updates all steps predecessor visualizations. */
     public void updateAllStepsPredecessors() {
-        for (StepWidget s : getSteps()) {
+        for (StepWidget s : getStepWidgets()) {
             s.updatePredecessor();
         }
     }
 
-    public void setState(JavaScriptObject newState, JavaScriptObject[] newStepsJson) {
+    public void setState(JavaScriptObject ganttElementWrapper, JavaScriptObject newState,
+            JavaScriptObject[] newStepsJson) {
+        setGanttElement(getWidget().getGanttElement(), ganttElementWrapper);
+
         doSetState(GanttElementState.toState(newState), newStepsJson);
     }
 
@@ -264,7 +288,7 @@ public class GanttElement implements Exportable, StepProvider {
             public Object call(Object args) {
                 boolean initialState = state == null;
                 state = newState;
-                steps = new ArrayList<>();
+                List<Step> steps = new ArrayList<>();
                 if (newStepsJson != null) {
                     steps.addAll(toSteps(Arrays.asList(newStepsJson)));
                 }
@@ -298,13 +322,16 @@ public class GanttElement implements Exportable, StepProvider {
                 getWidget().setForceUpdateTimeline();
                 getWidget().resetListeners();
 
+                // need to call onAttach explicitly
+                getWidget().onAttach();
+
                 doSetSteps(steps);
 
                 Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 
                     @Override
                     public void execute() {
-                        getWidget().requestUpdate(getSteps());
+                        getWidget().requestUpdate(getStepWidgets());
                         getWidget().notifyHeightChanged(
                                 (int) GanttUtil.getBoundingClientRectHeight(getWidget().getElement()));
                         getWidget().notifyWidthChanged(
@@ -329,6 +356,73 @@ public class GanttElement implements Exportable, StepProvider {
         });
     }
 
+    public void removeStep(JavaScriptObject step) {
+        removeSteps(Arrays.asList(step));
+    }
+
+    public void addStep(JavaScriptObject step, int index) {
+        Step s = Step.toStep(step);
+        doAddStep(s, index);
+        doUpdateStep(s);
+    }
+
+    public void addSteps(List<JavaScriptObject> steps, int fromIndex) {
+        doAddSteps(toSteps(steps), fromIndex);
+    }
+
+    private void doAddSteps(List<Step> steps, int fromIndex) {
+        int index = Math.max(0, fromIndex);
+        for (Step s : steps) {
+            doAddStep(s, index++);
+        }
+        for (Step s : steps) {
+            doUpdateStep(s);
+        }
+    }
+
+    private void doAddStep(Step s, int index) {
+        doAddStep(null, s, index);
+    }
+
+    private void doAddStep(JavaScriptObject element, Step s, int index) {
+        StepWidget stepWidget = stepsMap.get(s);
+        if (stepWidget == null) {
+            stepWidget = (element == null) ? new StepWidget() : new StepWidget(element);
+            stepWidget.setGantt(getWidget(), localeDataProvider);
+            stepsMap.put(s, stepWidget);
+            uidMap.put(s.getUid(), s);
+        }
+        getWidget().insertStep(index, stepWidget);
+        getWidget().setStep(index, stepWidget, false);
+
+        stepWidget.setReadOnly(state.readOnly);
+        Step predecessor = s.getPredecessor();
+        if (predecessor != null) {
+            stepWidget.setPredecessorStepWidget(stepsMap.get(predecessor));
+        } else {
+            stepWidget.setPredecessorStepWidget(null);
+        }
+    }
+
+    public void removeSteps(List<JavaScriptObject> steps) {
+        List<Step> remSteps = new ArrayList<>();
+        for (JavaScriptObject o : steps) {
+            remSteps.add(Step.toStep(o));
+        }
+        doRemoveSteps(remSteps);
+    }
+
+    private void doRemoveSteps(List<Step> steps) {
+        for (Step s : steps) {
+            if (stepsMap.containsKey(s)) {
+                StepWidget stepWidget = stepsMap.get(s);
+                internalHandler.requestRemoveStep(stepWidget);
+                stepsMap.remove(stepWidget.getStep());
+                uidMap.remove(stepWidget.getStep().getUid());
+            }
+        }
+    }
+
     private List<Step> toSteps(List<JavaScriptObject> newStepObjects) {
         List<Step> newSteps = new ArrayList<>();
         for (JavaScriptObject o : newStepObjects) {
@@ -338,70 +432,19 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     private void doSetSteps(List<Step> newSteps) {
-        // need to call onAttach explicitly
-        getWidget().onAttach();
-
-        List<Step> oldSteps = new ArrayList<>(steps);
-        List<StepWidget> oldStepWidgets = new ArrayList<>();
-        for (Step s : oldSteps) {
-            if (stepsMap.containsKey(s)) {
-                oldStepWidgets.add(stepsMap.get(s));
-            }
-        }
         // Here we handle removing and other necessary changed related
-        // hierarchy.
-        Set<StepWidget> predecessorRemoved = new HashSet<StepWidget>();
-        // remove old steps
-        for (Step s : oldSteps) {
-            if (!newSteps.contains(s) && stepsMap.containsKey(s)) {
-                StepWidget stepWidget = stepsMap.get(s);
-                predecessorRemoved.add(stepWidget);
+        // hierarchy. remove old steps
+        List<Step> remSteps = new ArrayList<>();
+        for (Step s : getSteps()) {
+            if (!newSteps.contains(s)) {
+                remSteps.add(s);
             }
         }
-
-        for (StepWidget stepWidget : predecessorRemoved) {
-            internalHandler.requestRemoveStep(stepWidget);
-            stepsMap.remove(stepWidget.getStep());
-            uidMap.remove(stepWidget.getStep().getUid());
-        }
+        doRemoveSteps(remSteps);
 
         // Sync steps with changed hierarchy; add new ones and move
         // existing ones.
-        List<StepWidget> addSteps = new ArrayList<>();
-        int index = 0;
-        for (Step s : newSteps) {
-            StepWidget stepWidget = stepsMap.get(s);
-            if (stepWidget == null) {
-                stepWidget = new StepWidget();
-                stepWidget.setGantt(getWidget(), localeDataProvider);
-                stepsMap.put(s, stepWidget);
-                uidMap.put(s.getUid(), s);
-            }
-            addSteps.add(stepWidget);
-            getWidget().insertStep(index++, stepWidget);
-        }
-        internalHandler.setSteps(addSteps);
-
-        Map<Step, StepWidget> steps = getStepsMap();
-
-        // update new steps with references to gantt widget and locale
-        // data provider.
-        for (Step s : newSteps) {
-            StepWidget stepWidget = stepsMap.get(s);
-            stepWidget.setReadOnly(state.readOnly);
-            Step predecessor = s.getPredecessor();
-            if (predecessor != null && !predecessorRemoved.contains(stepWidget)) {
-                stepWidget.setPredecessorStepWidget(steps.get(predecessor));
-            } else {
-                stepWidget.setPredecessorStepWidget(null);
-            }
-        }
-
-        deferredUpdateAllStepsPredecessors();
-
-        for (Step s : newSteps) {
-            doUpdateStep(s);
-        }
+        doAddSteps(newSteps, 0);
     }
 
     private void doSetSubSteps(Step step) {
@@ -497,7 +540,7 @@ public class GanttElement implements Exportable, StepProvider {
             @Override
             public void execute() {
                 w.updatePredecessor();
-                internalHandler.updateRelatedStepsPredecessors(s, getSteps());
+                internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
             }
         });
     }
@@ -523,14 +566,14 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     protected int getStepIndex(Step s) {
-        return Math.max(0, steps.indexOf(s));
+        return Math.max(0, getSteps().indexOf(s));
     }
 
     private void deferredUpdateAllStepsPredecessors() {
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
             public void execute() {
-                internalHandler.updateAllStepsPredecessors(getSteps());
+                internalHandler.updateAllStepsPredecessors(getStepWidgets());
             }
         });
     }
@@ -587,5 +630,18 @@ public class GanttElement implements Exportable, StepProvider {
                 }
             });
         }
+    }
+
+    /**
+     * Registers given gantt-step element. This will initialize the element
+     * properly.
+     */
+    public void registerStepElement(JavaScriptObject stepElementObj, JavaScriptObject step) {
+        if (step == null) {
+            return;
+        }
+        Step s = Step.toStep(step);
+        doAddStep(stepElementObj, s, getStepIndex(s));
+        doUpdateStep(s);
     }
 }

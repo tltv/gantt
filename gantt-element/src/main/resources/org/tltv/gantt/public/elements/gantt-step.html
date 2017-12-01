@@ -109,6 +109,8 @@
 
 			static get properties() {
 				return {
+					ganttElement: Object,
+					step: Object,
 					caption: String,
 					description: String,
 					showProgress: Boolean,
@@ -155,7 +157,12 @@
 
 			connectedCallback() {
 				super.connectedCallback();
+				var initial = !this.readyAndConnected;
 				this.readyAndConnected = true;
+
+				if(initial) {
+					this.dispatchEvent(new CustomEvent('register-step', {bubbles: true, composed: true, detail: {stepElement: this, step: this.step}}));
+				}
 			}
 
 			registerPositionCalculator(f) {

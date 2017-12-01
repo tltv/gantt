@@ -38,7 +38,6 @@ import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.touch.client.Point;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -51,7 +50,6 @@ import com.vaadin.client.event.PointerMoveEvent;
 import com.vaadin.client.event.PointerMoveHandler;
 import com.vaadin.client.event.PointerUpEvent;
 import com.vaadin.client.event.PointerUpHandler;
-import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.elemental.Function;
 
 /** SVG implementation of {@link ArrowElement} arrow between two elements. */
@@ -223,7 +221,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
     }
 
     public SvgArrowWidget() {
-        super("svg-arrow", new SafeHtmlBuilder().toSafeHtml());
+        super("svg-arrow");
     }
 
     @Override

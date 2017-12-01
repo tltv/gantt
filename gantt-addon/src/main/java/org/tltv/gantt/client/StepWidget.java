@@ -23,6 +23,7 @@ import org.tltv.gantt.client.ArrowElement.ArrowChangeHandler;
 import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
@@ -63,6 +64,10 @@ public class StepWidget extends AbstractStepWidget {
             gantt.unregisterContentElement((Widget) predecessorArrow);
         }
         super.onDetach();
+    }
+
+    public StepWidget(JavaScriptObject jselement) {
+        super(jselement);
     }
 
     public StepWidget() {

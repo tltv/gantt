@@ -78,7 +78,6 @@ import com.vaadin.client.event.PointerMoveEvent;
 import com.vaadin.client.event.PointerMoveHandler;
 import com.vaadin.client.event.PointerUpEvent;
 import com.vaadin.client.event.PointerUpHandler;
-import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.elemental.Function;
 
 /**
@@ -522,7 +521,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     private boolean ie, chrome, safari, webkit;
 
     public GanttWidget() {
-        super("gantt-widget", "../gantt-widget.html", "");
+        super("gantt-widget", "../gantt-widget.html");
 
         timeline = GWT.create(TimelineWidget.class);
 

@@ -1,14 +1,12 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.AbstractStep;
-import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.ui.Widget;
-import com.vaadin.polymer.PolymerWidget;
 import com.vaadin.polymer.elemental.Function;
 
 public class AbstractStepWidget extends PolymerWidget {
@@ -34,8 +32,17 @@ public class AbstractStepWidget extends PolymerWidget {
         super.onDetach();
     }
 
+    public AbstractStepWidget(JavaScriptObject jselement) {
+        super(jselement);
+        doInit();
+    }
+
     public AbstractStepWidget() {
-        super("gantt-step", new SafeHtmlBuilder().toSafeHtml());
+        super("gantt-step");
+        doInit();
+    }
+
+    protected void doInit() {
         addStyleName("bar");
 
         ready(new Function<Object, Object>() {
@@ -86,11 +93,6 @@ public class AbstractStepWidget extends PolymerWidget {
     /*-{
         return elem.registerWidthCalculator(f);
     }-*/;
-
-    @Override
-    public void ready(Function<?, ?> f) {
-        GanttUtil.whenReady(f, getElement());
-    }
 
     public Element getShadowRoot() {
         return getRootElement(getElement());

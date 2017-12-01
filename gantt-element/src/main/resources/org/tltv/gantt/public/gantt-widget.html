@@ -177,6 +177,22 @@
 			<div id="ganttContainer" class="gantt-container" on-scroll="handleContainerScroll">
 				<div id="ganttContent" class="gantt-content">
 					<div class="mv-el" style="display: none;"></div>
+
+					<template is="dom-repeat" items="{{steps}}" as="step">
+			      <gantt-step step="{{step}}"
+							caption="{{step.caption}}"
+							description="{{step.description}}"
+							show-progress="{{step.showProgress}}"
+							style-name="{{step.styleName}}"
+							background-color="{{step.backgroundColor}}"
+							progress="{{step.progress}}"
+							resizable="{{step.resizable}}"
+							movable="{{step.movable}}"
+							start-date="{{step.startDate}}"
+							end-date="{{step.endDate}}">
+						</gantt-step>
+			    </template>
+
 				</div>
 			</div>
 			<div style="display: none;"></div>
@@ -189,6 +205,7 @@
 
 			static get properties() {
 				return {
+						ganttElement: Object,
 						height: String,
 						width: String,
 						colLeft: {
@@ -210,13 +227,53 @@
 						colLastWidth: {
 							type: String,
 							value: "auto",
-						}
+						},
+						steps: {
+							type: Array,
+						},
 				};
+			}
+
+			constructor() {
+				super();
 			}
 
 			connectedCallback() {
 				super.connectedCallback();
+				if(!this.readyAndConnected) {
+					this.addEventListener('register-step', e => this._onRegisterStep(e));
+				}
 				this.readyAndConnected = true;
+			}
+
+			static get observers() {
+			  return [
+			    'stepsAddedOrRemoved(steps.splices)'
+			  ]
+			}
+
+			stepsAddedOrRemoved(changeRecord) {
+				if (this.ganttElement && changeRecord) {
+		      changeRecord.indexSplices.forEach(function(s) {
+		        s.removed.forEach(function(step) {
+		          console.log(step.caption + ' was removed');
+
+		        });
+		        for (var i=0; i<s.addedCount; i++) {
+		          var index = s.index + i;
+		          var newStep = s.object[index];
+		          console.log('Step ' + newStep.caption + ' added at index ' + index);
+		        }
+		      }, this);
+		    }
+			}
+
+			_onRegisterStep(event) {
+				event.detail.stepElement.ganttElement = this.ganttElement;
+				if(this.ganttElement && event.detail.step && !event.detail.step.substep) {
+					console.log('Registering Step ' + event.detail.step.uid);
+					this.ganttElement.registerStepElement(event.detail.stepElement, event.detail.step);
+				}
 			}
 
 			registerContainerScrollHandler(f) {

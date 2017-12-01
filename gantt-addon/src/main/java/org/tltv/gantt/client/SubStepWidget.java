@@ -15,6 +15,7 @@
  */
 package org.tltv.gantt.client;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.vaadin.polymer.elemental.Function;
 
 /**
@@ -29,8 +30,16 @@ public class SubStepWidget extends AbstractStepWidget {
 
     private StepWidget owner;
 
+    public SubStepWidget(JavaScriptObject jselement) {
+        super(jselement);
+    }
+
     public SubStepWidget() {
         super();
+    }
+
+    @Override
+    protected void doInit() {
         ready(new Function<Object, Object>() {
             @Override
             public Object call(Object arg) {

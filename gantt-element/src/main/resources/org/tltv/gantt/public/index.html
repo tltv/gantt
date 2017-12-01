@@ -12,71 +12,74 @@
 		// element MUST be attached to DOM before setState call
 		element.appendChild(g.getWidget().element);
 
-		g.setState(
+		var steps = [
+			{
+				uid: "1", // required unique step id
+				identifier: 1, // optional ID
+				caption: "Step A",
+				description: "Description of Step A",
+				backgroundColor: "#A8D9FF",
+				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+				endDate: new Date('2017-01-31T23:59:59Z').getTime(),
+				resizable: true,
+				movable: true
+			},
+			{
+				uid: "2",
+				identifier: 2,
+				caption: "Step B",
+				description: "Description of Step B",
+				backgroundColor: "#AAAAAA",
+				startDate: new Date('2017-02-01T00:00:00Z').getTime(),
+				endDate: new Date('2017-02-28T23:59:59Z').getTime(),
+				resizable: true,
+				movable: true,
+				predecessor: {
+					uid: "1"
+				}
+			},
+			{
+				uid: "3",
+				identifier: 3,
+				caption: "Step with substeps",
+				backgroundColor: "#e2afaf",
+				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+				endDate: new Date('2017-10-31T23:59:59Z').getTime(),
+				resizable: true,
+				movable: true,
+				subSteps: [
+					{
+						uid: "4",
+						caption: "Substep #1",
+						backgroundColor: "#e2afaf",
+						startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+						endDate: new Date('2017-06-15T23:59:59Z').getTime(),
+						resizable: true,
+						movable: true,
+					},
+					{
+						uid: "5",
+						caption: "Substep #2",
+						backgroundColor: "#eeafaf",
+						startDate: new Date('2017-06-16T00:00:00Z').getTime(),
+						endDate: new Date('2017-10-31T23:59:59Z').getTime(),
+						resizable: true,
+						movable: true,
+					}
+				]
+			}
+		];
+
+		g.setState(g,
 			{
 				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
 				endDate: new Date('2017-12-31T23:59:59Z').getTime(),
 				locale: "en_US",
 				resolution: "Day",
 				backgroundGridEnabled: true
-			},
-			[
-				{
-					uid: "1", // required unique step id
-					identifier: 1, // optional ID
-					caption: "Step A",
-					description: "Description of Step A",
-					backgroundColor: "#A8D9FF",
-					startDate: new Date('2017-01-01T00:00:00Z').getTime(),
-					endDate: new Date('2017-01-31T23:59:59Z').getTime(),
-					resizable: true,
-					movable: true
-				},
-				{
-					uid: "2",
-					identifier: 2,
-					caption: "Step B",
-					description: "Description of Step B",
-					backgroundColor: "#AAAAAA",
-					startDate: new Date('2017-02-01T00:00:00Z').getTime(),
-					endDate: new Date('2017-02-28T23:59:59Z').getTime(),
-					resizable: true,
-					movable: true,
-					predecessor: {
-						uid: "1"
-					}
-				},
-				{
-					uid: "3",
-					identifier: 3,
-					caption: "Step with substeps",
-					backgroundColor: "#e2afaf",
-					startDate: new Date('2017-01-01T00:00:00Z').getTime(),
-					endDate: new Date('2017-10-31T23:59:59Z').getTime(),
-					resizable: true,
-					movable: true,
-					subSteps: [
-						{
-							uid: "4",
-							caption: "Substep #1",
-							backgroundColor: "#e2afaf",
-							startDate: new Date('2017-01-01T00:00:00Z').getTime(),
-							endDate: new Date('2017-06-15T23:59:59Z').getTime(),
-							resizable: true,
-							movable: true,
-						},
-						{
-							uid: "5",
-							caption: "Substep #2",
-							backgroundColor: "#eeafaf",
-							startDate: new Date('2017-06-16T00:00:00Z').getTime(),
-							endDate: new Date('2017-10-31T23:59:59Z').getTime(),
-							resizable: true,
-							movable: true,
-						}
-					]
-				}
-			]);
+			}, [ ]);
+
+			g.getWidget().element.steps = steps;
 
 			// step click handling
 			g.getWidget().element.handleStepClicked = function(stepUid, details) {
