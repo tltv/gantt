@@ -332,7 +332,7 @@ public class DemoUI extends UI {
                 if (gantt.isMovableStepsBetweenRows() && event.getStepIndex() != event.getPreviousStepIndex()) {
                     message += " New Step index: " + event.getStepIndex();
 
-                    if (ganttListener != null) {
+                    if (ganttListener != null && event.getStep() instanceof Step) {
                         ganttListener.stepMoved((Step) event.getStep(), event.getStepIndex(),
                                 event.getPreviousStepIndex());
                     }
