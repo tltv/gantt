@@ -33,6 +33,8 @@ import org.tltv.gantt.client.shared.Resolution;
 import com.google.gwt.animation.client.AnimationScheduler;
 import com.google.gwt.animation.client.AnimationScheduler.AnimationCallback;
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
@@ -576,6 +578,23 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             insert(stepIndex + getAdditonalContentElementCount(), stepWidget);
         }
 
+        deferredUpdateStepTop(stepIndex, updateAffectedSteps, bar, insertDOM);
+
+        if (newStep) {
+            registerBarEventListener(bar);
+        }
+    }
+
+    private void deferredUpdateStepTop(int stepIndex, boolean updateAffectedSteps, DivElement bar, boolean insertDOM) {
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+            @Override
+            public void execute() {
+                updateStepTop(stepIndex, updateAffectedSteps, bar, insertDOM);
+            }
+        });
+    }
+
+    private void updateStepTop(int stepIndex, boolean updateAffectedSteps, DivElement bar, boolean insertDOM) {
         // Update top
         int stepsInContainer = getChildren().size() - getAdditionalWidgetContentElementCount();
         int indexInWidgetContainer = stepIndex + getAdditionalWidgetContentElementCount();
@@ -605,10 +624,6 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
         if (insertDOM) {
             contentHeight += height;
-        }
-
-        if (newStep) {
-            registerBarEventListener(bar);
         }
     }
 
