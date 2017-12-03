@@ -683,22 +683,6 @@ public class DemoUI extends UI {
         item.setCheckable(true);
         item.setChecked(gantt.isMonthsVisible());
 
-        item = viewItem.addItem("Show Gantt with Table", new Command() {
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                getPage().setLocation("#table");
-                getPage().reload();
-            }
-        });
-        item = viewItem.addItem("Show Gantt with TreeTable", new Command() {
-
-            @Override
-            public void menuSelected(MenuItem selectedItem) {
-                getPage().setLocation("#treetable");
-                getPage().reload();
-            }
-        });
         item = viewItem.addItem("Show Gantt with Grid", new Command() {
 
             @Override
