@@ -16,6 +16,20 @@
 
 package org.tltv.gantt;
 
+import com.vaadin.shared.Connector;
+import com.vaadin.shared.MouseEventDetails;
+import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Grid;
+import com.vaadin.ui.HasComponents;
+import com.vaadin.util.ReflectTools;
+import org.tltv.gantt.client.shared.AbstractStep;
+import org.tltv.gantt.client.shared.GanttServerRpc;
+import org.tltv.gantt.client.shared.GanttState;
+import org.tltv.gantt.client.shared.Resolution;
+import org.tltv.gantt.client.shared.Step;
+import org.tltv.gantt.client.shared.SubStep;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,21 +58,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.tltv.gantt.client.shared.AbstractStep;
-import org.tltv.gantt.client.shared.GanttServerRpc;
-import org.tltv.gantt.client.shared.GanttState;
-import org.tltv.gantt.client.shared.Resolution;
-import org.tltv.gantt.client.shared.Step;
-import org.tltv.gantt.client.shared.SubStep;
-
-import com.vaadin.shared.Connector;
-import com.vaadin.shared.MouseEventDetails;
-import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Grid;
-import com.vaadin.ui.HasComponents;
-import com.vaadin.util.ReflectTools;
-
 /**
  * Gantt Chart server side component.
  * <p>
@@ -84,13 +83,16 @@ public class Gantt extends AbstractComponent implements HasComponents {
     private TimeZone timezone;
     private Calendar calendar;
 
-    protected final Map<Step, StepComponent> stepComponents = new HashMap<Step, StepComponent>();
-    protected final Map<SubStep, SubStepComponent> subStepMap = new HashMap<SubStep, SubStepComponent>();
+    protected final Set<Step> steps = new HashSet<>();
+    protected final Map<String, StepComponent> stepComponents = new HashMap<String, StepComponent>();
+    protected final Map<String, SubStepComponent> subStepMap = new HashMap<String, SubStepComponent>();
 
     protected Map<String, String> timezoneJsonCache = new HashMap<String, String>();
 
     protected static final String TZ_PATTERN = "^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$";
     protected static Set<String> timezoneIdCache;
+
+    private StepComponentFactory stepComponentFactory = new StepComponentFactory();
 
     private GanttServerRpc rpc = new GanttServerRpc() {
 
@@ -111,7 +113,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
 
         @Override
         public void onPredecessorChanged(String newPredecessorStepUid, String forTargetStepUid,
-                String clearPredecessorForStepUid) {
+                                         String clearPredecessorForStepUid) {
             if (newPredecessorStepUid == forTargetStepUid) {
                 return;
             }
@@ -289,9 +291,10 @@ public class Gantt extends AbstractComponent implements HasComponents {
      *            New Step object
      */
     public void addStep(Step step) {
-        if (!stepComponents.containsKey(step)) {
+        if (!stepComponents.containsKey(step.getUid())) {
             StepComponent sc = createStepComponent(step);
-            stepComponents.put(step, sc);
+            stepComponents.put(step.getUid(), sc);
+            steps.add(step);
             getState().steps.add(sc);
         }
     }
@@ -308,11 +311,12 @@ public class Gantt extends AbstractComponent implements HasComponents {
      *             getState().steps.size())
      */
     public void addStep(int index, Step step) {
-        if (stepComponents.containsKey(step)) {
+        if (stepComponents.containsKey(step.getUid())) {
             moveStep(index, step);
         } else {
             StepComponent sc = createStepComponent(step);
-            stepComponents.put(step, sc);
+            stepComponents.put(step.getUid(), sc);
+            steps.add(step);
             getState().steps.add(index, sc);
         }
     }
@@ -326,11 +330,12 @@ public class Gantt extends AbstractComponent implements HasComponents {
      *             getState().steps.size())
      */
     public void moveStep(int toIndex, Step step) {
-        if (!stepComponents.containsKey(step)) {
+        if (!stepComponents.containsKey(step.getUid())) {
             return;
         }
-        StepComponent targetComponent = stepComponents.get(getStep(toIndex));
-        StepComponent moveComponent = stepComponents.get(step);
+        Step stepByIndex = getStep(toIndex);
+        StepComponent targetComponent = stepByIndex == null? null : stepComponents.get(stepByIndex.getUid());
+        StepComponent moveComponent = stepComponents.get(step.getUid());
         if (targetComponent == moveComponent) {
             return;
         }
@@ -360,7 +365,8 @@ public class Gantt extends AbstractComponent implements HasComponents {
      * @return true when target step exists and was removed successfully.
      */
     public boolean removeStep(Step step) {
-        StepComponent sc = stepComponents.remove(step);
+        StepComponent sc = stepComponents.remove(step.getUid());
+        steps.remove(step);
         if (sc != null) {
             for (SubStep subStep : new HashSet<SubStep>(step.getSubSteps())) {
                 sc.onRemoveSubStep(subStep);
@@ -372,7 +378,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     public int getStepIndex(Step step) {
-        StepComponent sc = stepComponents.get(step);
+        StepComponent sc = stepComponents.get(step.getUid());
         return indexOf(sc);
     }
 
@@ -409,13 +415,13 @@ public class Gantt extends AbstractComponent implements HasComponents {
         AbstractStep key = new Step();
         key.setUid(uid);
 
-        StepComponent sc = stepComponents.get(key);
+        StepComponent sc = stepComponents.get(uid);
         if (sc != null) {
             return sc.getState().step;
         }
         key = new SubStep();
         key.setUid(uid);
-        SubStepComponent sub = subStepMap.get(key);
+        SubStepComponent sub = subStepMap.get(uid);
         if (sub != null) {
             return sub.getState().step;
         }
@@ -439,7 +445,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
      * Removes all the steps in this Gantt chart.
      */
     public void removeSteps() {
-        Set<Step> allSteps = new HashSet<Step>(stepComponents.keySet());
+        Set<Step> allSteps = new HashSet<Step>(this.steps);
         for (Step step : allSteps) {
             removeStep(step);
         }
@@ -773,7 +779,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     protected StepComponent createStepComponent(Step step) {
-        return new StepComponent(this, step);
+        return stepComponentFactory.create(this, step);
     }
 
     protected void addScrollDelegateTargetListeners(Grid grid) {
@@ -936,12 +942,11 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     AbstractStepComponent getStepComponent(AbstractStep step) {
-        if (stepComponents.containsKey(step)) {
-            return stepComponents.get(step);
-        } else if (subStepMap.containsKey(step)) {
-            return subStepMap.get(step);
+        StepComponent stepComponent = stepComponents.get(step);
+        if(stepComponent != null){
+            return stepComponent;
         }
-        return null;
+        return  subStepMap.get(step.getUid());
     }
 
     private BufferedReader createTimeZonePropertiesReader(InputStream inputStream) {
@@ -1063,7 +1068,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     protected void fireMoveEvent(String stepUid, String newStepUid, long startDate, long endDate,
-            MouseEventDetails details) {
+                                 MouseEventDetails details) {
         AbstractStep step = getStep(stepUid);
         AbstractStep newStep = getStep(newStepUid);
         int previousStepIndex = (step instanceof Step) ? getStepIndex((Step) step)
@@ -1104,7 +1109,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     protected void firePredecessorChangeEvent(String newPredecessorStepUid, String forTargetStepUid,
-            String clearPredecessorForStepUid) {
+                                              String clearPredecessorForStepUid) {
         Step newPredecessorStep = (Step) getStep(newPredecessorStepUid);
         Step forTargetStep = (Step) getStep(forTargetStepUid);
         Step clearPredecessorForStep = (Step) getStep(clearPredecessorForStepUid);
@@ -1136,7 +1141,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
                 if (endDelta != 0) {
                     sub.setEndDate(sub.getEndDate() + endDelta);
                 }
-                subStepMap.get(sub).getState(true);
+                subStepMap.get(sub.getUid()).getState(true);
             }
         }
     }
@@ -1250,7 +1255,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
                 PredecessorChangeListener.GANTT_PERDECESSORCHANGE_METHOD);
     }
 
-    public class ClickEvent extends Component.Event {
+    public class ClickEvent extends Event {
 
         private AbstractStep step;
         private MouseEventDetails details;
@@ -1280,7 +1285,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
 
     }
 
-    public class MoveEvent extends Component.Event {
+    public class MoveEvent extends Event {
 
         private AbstractStep step;
         private long startDate;
@@ -1292,7 +1297,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
         private MouseEventDetails details;
 
         public MoveEvent(Gantt source, AbstractStep step, long startDate, long endDate, int stepIndex,
-                long previousStartDate, long previousEndDate, int previousStepIndex, MouseEventDetails details) {
+                         long previousStartDate, long previousEndDate, int previousStepIndex, MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -1366,7 +1371,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
         }
     }
 
-    public class ResizeEvent extends Component.Event {
+    public class ResizeEvent extends Event {
 
         private AbstractStep step;
         private long startDate;
@@ -1376,7 +1381,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
         private MouseEventDetails details;
 
         public ResizeEvent(Gantt source, AbstractStep step, long startDate, long endDate, long previousStartDate,
-                long previousEndDate, MouseEventDetails details) {
+                           long previousEndDate, MouseEventDetails details) {
             super(source);
             this.step = step;
             this.startDate = startDate;
@@ -1440,7 +1445,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
         }
     }
 
-    public class PredecessorChangeEvent extends Component.Event {
+    public class PredecessorChangeEvent extends Event {
 
         private Step step;
 
@@ -1506,4 +1511,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
         return l.iterator();
     }
 
+    public void setStepComponentFactory(StepComponentFactory stepComponentFactory) {
+        this.stepComponentFactory = stepComponentFactory;
+    }
 }

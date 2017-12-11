@@ -1,30 +1,31 @@
 package org.tltv.gantt;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
+import com.vaadin.shared.Connector;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.HasComponents;
 import org.tltv.gantt.client.shared.Step;
 import org.tltv.gantt.client.shared.StepState;
 import org.tltv.gantt.client.shared.SubStep;
 import org.tltv.gantt.client.shared.SubStepObserver;
 import org.tltv.gantt.client.shared.SubStepObserverProxy;
 
-import com.vaadin.shared.Connector;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HasComponents;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Component representing a Step in the Gantt chart.
- * 
+ *
  * @author Tltv
- * 
+ *
  */
 public class StepComponent extends AbstractStepComponent implements
         HasComponents, SubStepObserver {
 
     protected Gantt gantt;
+
+    private SubStepComponentFactory subStepComponentFactory = new SubStepComponentFactory();
 
     public StepComponent(Gantt gantt, Step data) {
         this.gantt = gantt;
@@ -58,7 +59,7 @@ public class StepComponent extends AbstractStepComponent implements
 
     protected SubStepComponent createSubStepComponent(
             StepComponent stepComponent, SubStep subStep) {
-        return new SubStepComponent(stepComponent, subStep);
+        return this.subStepComponentFactory.create(stepComponent, subStep);
     }
 
     @Override
@@ -74,20 +75,23 @@ public class StepComponent extends AbstractStepComponent implements
     public void onAddSubStep(SubStep subStep) {
         SubStepComponent component = createSubStepComponent(this, subStep);
         getState(true).subSteps.add(component);
-        gantt.subStepMap.put(subStep, component);
+        gantt.subStepMap.put(subStep.getUid(), component);
         gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
     /** Detach sub-step component from the UI. */
     @Override
     public void onRemoveSubStep(SubStep subStep) {
-        SubStepComponent component = gantt.subStepMap.get(subStep);
+        SubStepComponent component = gantt.subStepMap.get(subStep.getUid());
         if (component != null) {
             component.setParent(null);
             getState(true).subSteps.remove(component);
         }
-        gantt.subStepMap.remove(subStep);
+        gantt.subStepMap.remove(subStep.getUid());
         gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
+    public void setSubStepComponentFactory(SubStepComponentFactory subStepComponentFactory) {
+        this.subStepComponentFactory = subStepComponentFactory;
+    }
 }
