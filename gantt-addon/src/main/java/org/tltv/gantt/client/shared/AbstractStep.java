@@ -289,9 +289,15 @@ public abstract class AbstractStep implements Serializable {
         }
     }
 
-    public JSONObject toJson() {
+    /** Returns JSON object with only uid for reference. */
+    public JSONObject toJsonReference() {
         JSONObject json = new JSONObject();
         json.put("uid", new JSONString(getUid()));
+        return json;
+    }
+
+    public JSONObject toJson() {
+        JSONObject json = toJsonReference();
         if (getCaption() != null) {
             json.put("caption", new JSONString(getCaption()));
         }

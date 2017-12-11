@@ -648,19 +648,19 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
         Element bar = stepWidget.getBar();
 
-        deferredUpdateStepTop(stepIndex, updateAffectedSteps, bar, insertDOM);
+        deferredUpdateStepTop(stepIndex, updateAffectedSteps, bar, stepWidget);
     }
 
-    private void deferredUpdateStepTop(int stepIndex, boolean updateAffectedSteps, DivElement bar, boolean insertDOM) {
+    private void deferredUpdateStepTop(int stepIndex, boolean updateAffectedSteps, Element bar, StepWidget stepWidget) {
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
             public void execute() {
-                updateStepTop(stepIndex, updateAffectedSteps, bar, insertDOM);
+                updateStepTop(stepIndex, updateAffectedSteps, bar, stepWidget);
             }
         });
     }
 
-    private void updateStepTop(int stepIndex, boolean updateAffectedSteps, DivElement bar, boolean insertDOM) {
+    private void updateStepTop(int stepIndex, boolean updateAffectedSteps, Element bar, StepWidget stepWidget) {
         // Update top
         int stepsInContainer = getChildren().size() - getAdditionalWidgetContentElementCount();
         int indexInWidgetContainer = stepIndex + getAdditionalWidgetContentElementCount();
@@ -690,7 +690,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         }
         contentHeight = contentHeight - stepWidget.getPreviousHeight() + newHeight;
         stepWidget.registerCalculatedHeight(newHeight);
-        
+
         updateIfReady();
     }
 
@@ -708,7 +708,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         update(pendingUpdateSteps.call(null));
         getRpc().requestLayout();
     }
-    
+
     /**
      * Remove Widget from the content area.
      *

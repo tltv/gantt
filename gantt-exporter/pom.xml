@@ -6,15 +6,15 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-exporter</artifactId>
 	<packaging>jar</packaging>
-	<version>1.0.1</version>
+	<version>1.0.3</version>
 	<name>Gantt element javascript exporter</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<vaadin.plugin.version>8.1.2</vaadin.plugin.version>
-		<vaadin.version>8.1.2</vaadin.version>
+		<vaadin.plugin.version>8.1.7</vaadin.plugin.version>
+		<vaadin.version>8.1.7</vaadin.version>
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
 	</properties>
 
