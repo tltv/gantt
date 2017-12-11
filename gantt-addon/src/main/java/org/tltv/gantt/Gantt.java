@@ -45,7 +45,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.tltv.gantt.client.shared.AbstractStep;
-import org.tltv.gantt.client.shared.GanttClientRpc;
 import org.tltv.gantt.client.shared.GanttServerRpc;
 import org.tltv.gantt.client.shared.GanttState;
 import org.tltv.gantt.client.shared.Resolution;
@@ -59,14 +58,6 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.util.ReflectTools;
-import com.vaadin.v7.ui.Table;
-import com.vaadin.v7.ui.Table.ColumnResizeEvent;
-import com.vaadin.v7.ui.Table.ColumnResizeListener;
-import com.vaadin.v7.ui.Tree.CollapseEvent;
-import com.vaadin.v7.ui.Tree.CollapseListener;
-import com.vaadin.v7.ui.Tree.ExpandEvent;
-import com.vaadin.v7.ui.Tree.ExpandListener;
-import com.vaadin.v7.ui.TreeTable;
 
 /**
  * Gantt Chart server side component.
@@ -125,30 +116,6 @@ public class Gantt extends AbstractComponent implements HasComponents {
                 return;
             }
             firePredecessorChangeEvent(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid);
-        }
-    };
-
-    protected ExpandListener scrollDelegateTargetExpandListener = new ExpandListener() {
-
-        @Override
-        public void nodeExpand(ExpandEvent event) {
-            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
-        }
-    };
-
-    protected CollapseListener scrollDelegateTargetCollapseListener = new CollapseListener() {
-
-        @Override
-        public void nodeCollapse(CollapseEvent event) {
-            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
-        }
-    };
-
-    protected ColumnResizeListener scrollDelegateTargetColumnResizeListener = new ColumnResizeListener() {
-
-        @Override
-        public void columnResize(ColumnResizeEvent event) {
-            getRpcProxy(GanttClientRpc.class).updateDelegateTargetHeight();
         }
     };
 
@@ -774,43 +741,6 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     /**
-     * Set target Table component that will scroll vertically with the Gantt
-     * component and vice versa.
-     * <p>
-     * Table height is maintained by Gantt after this call. Table header height
-     * is changed to match the Gantt header. Table rows have to have exactly
-     * same heights as the Gantt steps have.
-     * <p>
-     * Given Table is set to immediate mode.
-     * <p>
-     * Component resize events of the Table and Gantt widgets are handled by
-     * this component. Column resizing (and row expanding and collapsing if
-     * given component is {@link TreeTable}) are listened to keep content
-     * heights equal. As long as the row heights match each others.
-     * <p>
-     * Table's internal column reordering and sorting are not listened by Gantt
-     * and can be handled explicitly via Table's server side event listeners.
-     *
-     * @param table
-     *            Target Table component.
-     */
-    public void setVerticalScrollDelegateTarget(Table table) {
-        if (table != null) {
-            table.setHeight(getHeight(), getHeightUnits());
-        }
-        if (getState().verticalScrollDelegateTarget != null && getState().verticalScrollDelegateTarget != table) {
-            // target has changed. Remove value change listener from the old
-            // target.
-            cleanScrollDelegateTargetListeners();
-        }
-        getState().verticalScrollDelegateTarget = table;
-        if (table != null) {
-            table.setImmediate(true);
-            addScrollDelegateTargetListeners(table);
-        }
-    }
-
-    /**
      * Set target Grid component that will scroll vertically with the Gantt
      * component and vice versa.
      * <p>
@@ -846,29 +776,11 @@ public class Gantt extends AbstractComponent implements HasComponents {
         return new StepComponent(this, step);
     }
 
-    protected void addScrollDelegateTargetListeners(Table table) {
-        table.addColumnResizeListener(scrollDelegateTargetColumnResizeListener);
-        if (table instanceof TreeTable) {
-            ((TreeTable) table).addExpandListener(scrollDelegateTargetExpandListener);
-            ((TreeTable) table).addCollapseListener(scrollDelegateTargetCollapseListener);
-        }
-    }
-
     protected void addScrollDelegateTargetListeners(Grid grid) {
 
     }
 
     protected void cleanScrollDelegateTargetListeners() {
-        if (getState().verticalScrollDelegateTarget instanceof Table) {
-            ((Table) getState().verticalScrollDelegateTarget)
-                    .removeColumnResizeListener(scrollDelegateTargetColumnResizeListener);
-        }
-        if (getState().verticalScrollDelegateTarget instanceof TreeTable) {
-            ((TreeTable) getState().verticalScrollDelegateTarget)
-                    .removeExpandListener(scrollDelegateTargetExpandListener);
-            ((TreeTable) getState().verticalScrollDelegateTarget)
-                    .removeCollapseListener(scrollDelegateTargetCollapseListener);
-        }
     }
 
     @Override

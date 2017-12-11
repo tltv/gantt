@@ -60,7 +60,7 @@ import com.google.gwt.user.client.ui.Widget;
  * <p>
  * There's always a minimum width calculated and updated to the timeline
  * element. Percentage values set some limitation for the component's width.
- * Wider the component (&gt; 4000px), bigger the change to get year, month and
+ * Wider the component (&gt; 4000px), bigger the chance to get year, month and
  * date blocks not being vertically in-line with each others.
  * <p>
  * Supports setting a scroll left position.

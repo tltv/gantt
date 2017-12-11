@@ -1,7 +1,7 @@
 <module>
 
 	<!-- Inherit DefaultWidgetSet -->
-	<inherits name="com.vaadin.v7.Vaadin7WidgetSet" /> 
+	<inherits name="com.vaadin.DefaultWidgetSet" /> 
 
 	<replace-with class="org.tltv.gantt.client.BgGridSvgElement">
     	<when-type-is class="org.tltv.gantt.client.BgGridCssElement" />
