@@ -117,6 +117,7 @@
 							<Vaadin-License-Title>${Vaadin-License-Title}</Vaadin-License-Title>
 							<Vaadin-Widgetsets>org.tltv.gantt.WidgetSet</Vaadin-Widgetsets>
 							<Vaadin-Stylesheets>${Vaadin-Stylesheets}</Vaadin-Stylesheets>
+							<Implementation-Vendor>${Implementation-Vendor}</Implementation-Vendor>
 						</manifestEntries>
 					</archive>
 				</configuration>
