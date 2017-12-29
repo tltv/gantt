@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Gantt Demo</title>
+
+	<link rel="import" href="bower_components/polymer/polymer.html">
+	<link rel="import" href="gantt-lib.html">
+</head>
+
+<body>
+
+
+	<dom-module id="gantt-demo">
+
+		<template>
+			<gantt-widget id="gantt">
+
+			</gantt-widget>
+		</template>
+
+		<script>
+				class GanttDemo extends Polymer.Element {
+					static get is() { return 'gantt-demo'; }
+
+					constructor() {
+						super();
+						window.addEventListener('gantt-ready', e => this._onGanttReady(e));
+					}
+
+					connectedCallback() {
+						super.connectedCallback();
+					}
+
+					_onGanttReady(e) {
+						this.$.gantt.ganttElement = new gantt.GanttElement(this.$.gantt);
+
+						// set data
+						var g = this.$.gantt.ganttElement;
+						var steps = [
+							{
+								uid: "1", // required unique step id
+								identifier: 1, // optional ID
+								caption: "Step A",
+								description: "Description of Step A",
+								backgroundColor: "#A8D9FF",
+								startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+								endDate: new Date('2017-01-31T23:59:59Z').getTime(),
+								resizable: true,
+								movable: true
+							}
+						];
+
+						g.setState(
+							{
+								startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+								endDate: new Date('2017-12-31T23:59:59Z').getTime(),
+								locale: "en_US",
+								resolution: "Day",
+								backgroundGridEnabled: true
+							});
+
+							g.getGanttElement().steps = steps;
+
+							// step click handling
+							g.getGanttElement().handleStepClicked = function(stepUid, details) {
+								var step = g.getStepByUid(stepUid);
+								alert(step.caption + ': ' + details.toString());
+							}
+
+							// step move handling
+							g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
+								var step = g.getStepByUid(stepUid);
+								if(step.substep) {
+									step.startDate = startDate;
+									step.endDate = endDate;
+									g.updateSubStep(step);
+								} else {
+									step.startDate = startDate;
+									step.endDate = endDate;
+									g.updateStep(step);
+								}
+							}
+
+							// step resize handling
+							g.getGanttElement().handleOnResize = function(stepUid, startDate, endDate, details) {
+								var step = g.getStepByUid(stepUid);
+								step.startDate = startDate;
+								step.endDate = endDate;
+								g.update(step);
+							}
+
+							// step predecessor change handling
+							g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+
+							}
+					}
+
+				}
+				customElements.define(GanttDemo.is, GanttDemo);
+	</script>
+	</dom-module>
+
+<gantt-demo></gantt-demo>
+
+</body>
+</html>

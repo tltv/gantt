@@ -29,9 +29,7 @@ import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
-//@Export
-//@ExportPackage(value = "gantt")
-public class Step extends AbstractStep /* implements Exportable */ {
+public class Step extends AbstractStep {
 
     private Step predecessor;
     private List<SubStep> subSteps = new LinkedList<SubStep>();

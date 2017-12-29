@@ -5,10 +5,11 @@
 	<script src="org.tltv.gantt.GanttLib.nocache.js"></script>
 
 	<script>
-	function myInit() {
+	function ganttLibReady() {
 		var element = document.getElementById("test-wrapper");
 
 		var g = new gantt.GanttElement();
+		g.getGanttElement().ganttElement = g;
 		// element MUST be attached to DOM before setState call
 		element.appendChild(g.getWidget().element);
 
@@ -70,7 +71,7 @@
 			}
 		];
 
-		g.setState(g,
+		g.setState(
 			{
 				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
 				endDate: new Date('2017-12-31T23:59:59Z').getTime(),
@@ -79,16 +80,16 @@
 				backgroundGridEnabled: true
 			}, [ ]);
 
-			g.getWidget().element.steps = steps;
+			g.getGanttElement().steps = steps;
 
 			// step click handling
-			g.getWidget().element.handleStepClicked = function(stepUid, details) {
+			g.getGanttElement().handleStepClicked = function(stepUid, details) {
 				var step = g.getStepByUid(stepUid);
 				alert(step.caption + ': ' + details.toString());
 			}
 
 			// step move handling
-			g.getWidget().element.handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
+			g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
 				var step = g.getStepByUid(stepUid);
 				if(step.substep) {
 					step.startDate = startDate;
@@ -102,7 +103,7 @@
 			}
 
 			// step resize handling
-			g.getWidget().element.handleOnResize = function(stepUid, startDate, endDate, details) {
+			g.getGanttElement().handleOnResize = function(stepUid, startDate, endDate, details) {
 				var step = g.getStepByUid(stepUid);
 				step.startDate = startDate;
 				step.endDate = endDate;
@@ -110,7 +111,7 @@
 			}
 
 			// step predecessor change handling
-			g.getWidget().element.handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+			g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
 
 			}
   	}

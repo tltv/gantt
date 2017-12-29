@@ -522,7 +522,15 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     public GanttWidget() {
         super("gantt-widget", "../gantt-widget.html");
+        init();
+    }
 
+    public GanttWidget(JavaScriptObject jselement) {
+        super(jselement);
+        init();
+    }
+
+    private void init() {
         timeline = GWT.create(TimelineWidget.class);
 
         ready(new Function<Object, Object>() {

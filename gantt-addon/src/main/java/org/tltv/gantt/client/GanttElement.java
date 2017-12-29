@@ -156,12 +156,25 @@ public class GanttElement implements Exportable, StepProvider {
     public static GanttElement constructor() {
         if (instance == null) {
             instance = new GanttElement();
+            instance.init(null);
+        }
+        return instance;
+    }
+
+    @ExportConstructor
+    public static GanttElement constructor(JavaScriptObject jselement) {
+        if (instance == null) {
+            instance = new GanttElement();
+            instance.init(jselement);
         }
         return instance;
     }
 
     private GanttElement() {
-        createWidget();
+    }
+
+    protected void init(JavaScriptObject jselement) {
+        createWidget(jselement);
 
         getWidget().ready(new Function<Object, Object>() {
             @Override
@@ -172,9 +185,9 @@ public class GanttElement implements Exportable, StepProvider {
         });
     }
 
-    protected Widget createWidget() {
+    protected Widget createWidget(JavaScriptObject jselement) {
         if (ganttWidget == null) {
-            ganttWidget = new GanttWidget();
+            ganttWidget = (jselement != null) ? new GanttWidget(jselement) : new GanttWidget();
             internalHandler = new StepHierarchyHandler(ganttWidget);
         }
         return ganttWidget;
@@ -182,6 +195,10 @@ public class GanttElement implements Exportable, StepProvider {
 
     public GanttWidget getWidget() {
         return ganttWidget;
+    }
+
+    public Element getGanttElement() {
+        return getWidget().getGanttElement();
     }
 
     void doInit() {
@@ -196,12 +213,6 @@ public class GanttElement implements Exportable, StepProvider {
         getWidget().notifyHeightChanged((int) GanttUtil.getBoundingClientRectHeight(getWidget().getElement()));
         getWidget().notifyWidthChanged((int) GanttUtil.getBoundingClientRectWidth(getWidget().getElement()));
     }
-
-    public static native void setGanttElement(com.google.gwt.dom.client.Element elem,
-            JavaScriptObject ganttElementWrapper)
-    /*-{
-        elem.ganttElement = ganttElementWrapper;
-    }-*/;
 
     public static native JavaScriptObject[] getSteps(com.google.gwt.dom.client.Element elem)
     /*-{
@@ -275,10 +286,11 @@ public class GanttElement implements Exportable, StepProvider {
         }
     }
 
-    public void setState(JavaScriptObject ganttElementWrapper, JavaScriptObject newState,
-            JavaScriptObject[] newStepsJson) {
-        setGanttElement(getWidget().getGanttElement(), ganttElementWrapper);
+    public void setState(JavaScriptObject newState) {
+        setState(newState, null);
+    }
 
+    public void setState(JavaScriptObject newState, JavaScriptObject[] newStepsJson) {
         doSetState(GanttElementState.toState(newState), newStepsJson);
     }
 
@@ -288,8 +300,9 @@ public class GanttElement implements Exportable, StepProvider {
             public Object call(Object args) {
                 boolean initialState = state == null;
                 state = newState;
-                List<Step> steps = new ArrayList<>();
+                List<Step> steps = null;
                 if (newStepsJson != null) {
+                    steps = new ArrayList<>();
                     steps.addAll(toSteps(Arrays.asList(newStepsJson)));
                 }
                 setLocale(state.locale);
@@ -325,7 +338,9 @@ public class GanttElement implements Exportable, StepProvider {
                 // need to call onAttach explicitly
                 getWidget().onAttach();
 
-                doSetSteps(steps);
+                if (steps != null) {
+                    doSetSteps(steps);
+                }
 
                 Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 
@@ -418,7 +433,7 @@ public class GanttElement implements Exportable, StepProvider {
                 StepWidget stepWidget = stepsMap.get(s);
                 internalHandler.requestRemoveStep(stepWidget);
                 stepsMap.remove(stepWidget.getStep());
-                uidMap.remove(stepWidget.getStep().getUid());
+                uidMap.remove(s.getUid());
             }
         }
     }

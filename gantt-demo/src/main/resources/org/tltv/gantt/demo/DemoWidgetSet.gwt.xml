@@ -30,4 +30,10 @@
      <set-configuration-property name="devModeRedirectEnabled" value="true" /> 
 
     <inherits name="com.vaadin.DefaultWidgetSet" />
+    
+    <!-- exporter here only needed for debugging purposes -->
+    <set-property name="export" value="yes"/>
+    <source path="client" />
+    <entry-point class="org.tltv.gantt.demo.client.GanttLib"/>
+    
 </module>

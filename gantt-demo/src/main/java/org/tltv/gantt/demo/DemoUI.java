@@ -707,6 +707,14 @@ public class DemoUI extends UI {
                 getPage().reload();
             }
         });
+        item = viewItem.addItem("Show Gantt Element", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                getPage().setLocation("#element");
+                getPage().reload();
+            }
+        });
 
         return menu;
     }

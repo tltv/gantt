@@ -1,9 +1,10 @@
-package org.tltv.gantt.client;
+package org.tltv.gantt.demo.client;
 
 import org.timepedia.exporter.client.ExporterUtil;
 
 import com.google.gwt.core.client.EntryPoint;
 
+/** GanttLib exporter for debugging. */
 public class GanttLib implements EntryPoint {
 
     @Override

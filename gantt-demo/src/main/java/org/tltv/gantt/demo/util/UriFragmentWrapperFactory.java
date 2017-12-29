@@ -1,6 +1,7 @@
 package org.tltv.gantt.demo.util;
 
 import org.tltv.gantt.Gantt;
+import org.tltv.gantt.demo.GanttElementLayout;
 import org.tltv.gantt.demo.GridGanttLayout;
 import org.tltv.gantt.demo.TreeGridGanttLayout;
 
@@ -38,6 +39,9 @@ public class UriFragmentWrapperFactory {
 
         } else if (uriragment.startsWith("treegrid")) {
             return new TreeGridGanttLayout(gantt);
+
+        } else if (uriragment.startsWith("element")) {
+            return new GanttElementLayout();
         }
 
         return gantt;

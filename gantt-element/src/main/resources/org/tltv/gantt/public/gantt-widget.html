@@ -236,6 +236,7 @@
 
 			constructor() {
 				super();
+				window.addEventListener('gantt-lib-ready', e => this._onGanttLibReady(e, this));
 			}
 
 			connectedCallback() {
@@ -244,12 +245,27 @@
 					this.addEventListener('register-step', e => this._onRegisterStep(e));
 				}
 				this.readyAndConnected = true;
+
+				//this.dispatchEvent(new CustomEvent('gantt-ready', {bubbles: true, composed: true, detail: {ganttElement: this}}));
 			}
 
 			static get observers() {
 			  return [
 			    'stepsAddedOrRemoved(steps.splices)'
 			  ]
+			}
+
+			_onGanttLibReady(e, gantt) {
+				function nextTimeout(delayms) {
+           setTimeout(function() {
+                if (gantt.readyAndConnected) {
+                  window.dispatchEvent(new Event('gantt-ready'));
+                } else {
+                    nextTimeout(10);
+                }
+              }, delayms);
+        }
+        nextTimeout(0);
 			}
 
 			stepsAddedOrRemoved(changeRecord) {

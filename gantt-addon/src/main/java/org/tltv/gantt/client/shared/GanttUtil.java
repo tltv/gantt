@@ -275,7 +275,7 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
@@ -285,7 +285,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-
+    
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -316,7 +316,7 @@ public class GanttUtil {
 
     public static native void whenReadyAndConnected(Function f, Element e)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (e.readyAndConnected) {
@@ -326,7 +326,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-
+    
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -334,12 +334,17 @@ public class GanttUtil {
               if (f) f();
           }
         }
-        registered();
+
+        if (e.readyAndConnected) {
+            if (f) f(e);
+        } else {
+            registered();
+        }
     }-*/;
 
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {
