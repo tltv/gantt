@@ -412,15 +412,11 @@ public class Gantt extends AbstractComponent implements HasComponents {
         if (uid == null) {
             return null;
         }
-        AbstractStep key = new Step();
-        key.setUid(uid);
 
         StepComponent sc = stepComponents.get(uid);
         if (sc != null) {
             return sc.getState().step;
         }
-        key = new SubStep();
-        key.setUid(uid);
         SubStepComponent sub = subStepMap.get(uid);
         if (sub != null) {
             return sub.getState().step;
