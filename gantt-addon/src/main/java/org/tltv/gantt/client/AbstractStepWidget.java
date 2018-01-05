@@ -104,8 +104,10 @@ public class AbstractStepWidget extends ComplexPanel {
                 }
                 getElement().addClassName(step.getStyleName());
             }
+            extraStyle = step.getStyleName();
         } else if (!isEmpty(extraStyle)) {
             getElement().removeClassName(extraStyle);
+            extraStyle = null;
         }
     }
 
