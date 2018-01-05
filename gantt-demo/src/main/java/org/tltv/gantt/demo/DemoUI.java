@@ -728,6 +728,11 @@ public class DemoUI extends UI {
         descriptionField.setVisible(false);
         hidden.add(descriptionField);
 
+        TextField styleField = new TextField("Style name");
+        binder.bind(styleField, "styleName");
+        styleField.setVisible(false);
+        hidden.add(styleField);
+
         NativeSelect<Step.CaptionMode> captionMode = new NativeSelect<Step.CaptionMode>("Caption Mode");
         captionMode.setItems(Step.CaptionMode.TEXT, Step.CaptionMode.HTML);
         binder.bind(captionMode, "captionMode");
@@ -819,6 +824,7 @@ public class DemoUI extends UI {
         content.addComponent(captionField);
         content.addComponent(captionMode);
         content.addComponent(descriptionField);
+        content.addComponent(styleField);
         content.addComponent(resizable);
         content.addComponent(showProgress);
         content.addComponent(progress);
