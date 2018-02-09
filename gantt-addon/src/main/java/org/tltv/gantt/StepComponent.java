@@ -75,19 +75,19 @@ public class StepComponent extends AbstractStepComponent implements
     public void onAddSubStep(SubStep subStep) {
         SubStepComponent component = createSubStepComponent(this, subStep);
         getState(true).subSteps.add(component);
-        gantt.subStepMap.put(subStep.getUid(), component);
+        gantt.subStepMap.put(subStep, component);
         gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 
     /** Detach sub-step component from the UI. */
     @Override
     public void onRemoveSubStep(SubStep subStep) {
-        SubStepComponent component = gantt.subStepMap.get(subStep.getUid());
+        SubStepComponent component = gantt.subStepMap.get(subStep);
         if (component != null) {
             component.setParent(null);
             getState(true).subSteps.remove(component);
         }
-        gantt.subStepMap.remove(subStep.getUid());
+        gantt.subStepMap.remove(subStep);
         gantt.adjustDatesByAbstractStep(subStep.getOwner());
     }
 

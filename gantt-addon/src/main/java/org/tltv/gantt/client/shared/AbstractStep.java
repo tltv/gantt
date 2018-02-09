@@ -218,7 +218,7 @@ public abstract class AbstractStep implements Serializable {
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (!(this instanceof AbstractStep) || !(obj instanceof AbstractStep)) {
             return false;
         }
         AbstractStep other = (AbstractStep) obj;
