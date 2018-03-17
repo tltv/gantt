@@ -28,7 +28,7 @@ window.org_tltv_gantt_demo_GanttElementDemo = function() {
 			{
 				startDate: new Date('2017-01-01T00:00:00Z').getTime(),
 				endDate: new Date('2017-12-31T23:59:59Z').getTime(),
-				locale: "en_US",
+				locale: "fi_FI", // must match to UI instance's locale!
 				resolution: "Day",
 				backgroundGridEnabled: true
 			});

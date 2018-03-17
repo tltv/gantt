@@ -18,6 +18,8 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- If there are no local customisations, this can also be "fetch" or "cdn" -->
 		<vaadin.widgetset.mode>local</vaadin.widgetset.mode>
+		
+		<war.excludes>**/node_modules/,**/node/,**/build/,**/etc/</war.excludes>
 	</properties>
 
 	<licenses>
@@ -115,8 +117,14 @@
 						**/WEB-INF/lib/gwt-dev-*.jar,
 						**/WEB-INF/classes/gwt-unitCache/**,
 						**/WEB-INF/classes/themes/**,
-						**/WEB-INF/classes/widgetsets/**
+						**/WEB-INF/classes/widgetsets/**,
+						**/node_modules/,
+						**/node/,
+						**/build/,
+						**/etc/
 					</packagingExcludes>
+					<warSourceExcludes>${war.excludes}</warSourceExcludes>
+                    <!-- <packagingExcludes>${war.excludes}</packagingExcludes> -->
 				</configuration>
 			</plugin>
 			<plugin>

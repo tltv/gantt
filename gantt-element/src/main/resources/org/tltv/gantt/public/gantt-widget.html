@@ -8,9 +8,12 @@
 		<style>
 
 			:host {
+				--gantt-width: 100%;
+				--gantt-height: 100%;
+
 				display: block;
-				height: [[height]];
-				width: [[width]];
+				height: var(--gantt-height);
+				width: var(--gantt-width);
 				background: #fff;
 				overflow: hidden;
 
@@ -79,8 +82,8 @@
 			}
 
 			.col {
-				position: [[colPosition]];
-				left: [[colLeft]]px;
+				position: var(--gantt-col-position);
+				left: var(--gantt-col-left);
 				height: 100%;
 				float: left;
 				overflow: hidden;
@@ -96,15 +99,15 @@
 			}
 
 			.c-col {
-				width: [[colCenterWidth]];
+				width: var(--gantt-col-center-width);
 			}
 
 			.f-col {
-				width: [[colFirstWidth]];
+				width: var(--gantt-col-first-width);
 			}
 
 			.l-col {
-				width: [[colLastWidth]];
+				width: var(--gantt-col-last-width);
 			}
 
 			.col.w {
@@ -206,27 +209,46 @@
 			static get properties() {
 				return {
 						ganttElement: Object,
-						height: String,
-						width: String,
+						height: {
+							type: String,
+							observer: '_onHeightChanged',
+						},
+						width: {
+							type: String,
+							observer: '_onWidthChanged',
+						},
 						colLeft: {
 							type: Number,
 							value: 0,
+							reflectToAttribute: true,
+							notify: true,
+							observer: '_onColLeftChanged',
 						},
 						colPosition: {
 							type: String,
 							value: "static",
+							reflectToAttribute: true,
+							notify: true,
+							observer: '_onColPositionChanged',
 						},
 						colCenterWidth: {
 							type: String,
 							value: "auto",
+							observer: '_onColCenterWidthChanged',
 						},
 						colFirstWidth: {
 							type: String,
 							value: "auto",
+							reflectToAttribute: true,
+							notify: true,
+							observer: '_onColFirstWidthChanged',
 						},
 						colLastWidth: {
 							type: String,
 							value: "auto",
+							reflectToAttribute: true,
+							notify: true,
+							observer: '_onColLastWidthChanged',
 						},
 						steps: {
 							type: Array,
@@ -234,9 +256,21 @@
 				};
 			}
 
+			_onWidthChanged(width) { this.updateStyles({'--gantt-width': width }); }
+			_onHeightChanged(height) { this.updateStyles({'--gantt-height': height }); }
+			_onColPositionChanged(colPosition) { this.updateStyles({'--gantt-col-position': colPosition }); }
+			_onColLeftChanged(colLeft) { this.updateStyles({ '--gantt-col-left': colLeft + "px" }); }
+			_onColCenterWidthChanged(colCenterWidth) { this.updateStyles({'--gantt-col-center-width': colCenterWidth }); }
+			_onColFirstWidthChanged(colFirstWidth) { this.updateStyles({'--gantt-col-first-width': colFirstWidth }); }
+			_onColLastWidthChanged(colLastWidth) { this.updateStyles({'--gantt-col-last-width': colLastWidth }); }
+
 			constructor() {
 				super();
 				window.addEventListener('gantt-lib-ready', e => this._onGanttLibReady(e, this));
+			}
+
+			ready() {
+				super.ready();
 			}
 
 			connectedCallback() {

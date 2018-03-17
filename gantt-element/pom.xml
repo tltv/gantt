@@ -13,6 +13,18 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		
+		<!-- Frontend -->
+		<frontend.maven.plugin.version>1.5</frontend.maven.plugin.version>
+		
+        <node.version>v7.10.1</node.version>
+        <npm.version>5.3.0</npm.version>
+
+        <!-- <frontend.working.directory>${project.basedir}/src/main/webapp/frontend</frontend.working.directory> -->
+        <frontend.working.directory>${project.basedir}/src/main/resources/org/tltv/gantt/public</frontend.working.directory>
+        <npm.build.goal>run devMode</npm.build.goal>
+        <war.excludes>**/node_modules/,**/node/,**/build/,**/etc/</war.excludes>
+        
 	</properties>
 
 	<licenses>
@@ -31,6 +43,22 @@
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>3.0.0</version>
 				<configuration>
+				
+                    <filesets>
+                        <fileset>
+                            <directory>${frontend.working.directory}/bower_components</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${frontend.working.directory}/build</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${frontend.working.directory}/node</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>${frontend.working.directory}/node_modules</directory>
+                        </fileset>
+                    </filesets>
+                
 					<resources>
 						<resource>
 							<directory>${project.basedir}/src/main/resources/org/tltv/gantt/public</directory>
@@ -42,6 +70,36 @@
 					</resources>
 				</configuration>
 			</plugin>
+			
+			 <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <version>${frontend.maven.plugin.version}</version>
+                <configuration>
+                    <nodeVersion>${node.version}</nodeVersion>
+                    <npmVersion>${npm.version}</npmVersion>
+                    <workingDirectory>${frontend.working.directory}</workingDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>install-node-and-npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                            <goal>npm</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>npm run</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>${npm.build.goal}</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+			
 		</plugins>
 	</build>
 	

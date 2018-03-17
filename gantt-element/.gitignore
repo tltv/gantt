@@ -2,3 +2,11 @@
 /.settings/
 /.project
 /.classpath
+/src/main/resources/org/tltv/gantt/public/bower_components/
+/src/main/resources/org/tltv/gantt/public/node/
+/src/main/resources/org/tltv/gantt/public/node_modules/
+/src/main/resources/org/tltv/gantt/public/package.json
+/src/main/resources/org/tltv/gantt/public/polymer.json
+/src/main/resources/org/tltv/gantt/public/package-lock.json
+/src/main/resources/org/tltv/gantt/public/*.cache.js
+/src/main/resources/org/tltv/gantt/public/*.nocache.js

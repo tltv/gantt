@@ -7,15 +7,13 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.user.client.ui.HTMLPanel;
 import com.vaadin.polymer.Polymer;
 import com.vaadin.polymer.elemental.Function;
 
-public class PolymerWidget extends HTMLPanel {
+public class PolymerWidget extends CustomHTMLPanel {
 
     public PolymerWidget(JavaScriptObject jselement) {
-        super(""); // does nothing
-        setElement(Element.as(jselement));
+        super(Element.as(jselement));
     }
 
     public PolymerWidget(String tag) {
