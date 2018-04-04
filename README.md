@@ -1,6 +1,6 @@
-# Gantt Chart Web Component
+# Gantt Chart for Flow
 
-Gantt is an UI component add-on created for Vaadin 8 Framework. This project creates gantt-widget web component based on Polymer (2.0) library. Goal is to make Gantt add-on available in any web project either by using javacript API or just html elements.
+Gantt is an UI component add-on created for Vaadin 8 Framework. This project creates gantt component for Flow based on web component (see 'polymer-impl' branch).
 
 You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
 
