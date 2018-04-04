@@ -1,4 +1,4 @@
-package org.tltv.gantt.demo;
+package org.tltv.gantt;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Tag;

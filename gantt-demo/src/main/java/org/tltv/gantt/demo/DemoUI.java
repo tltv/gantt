@@ -15,6 +15,8 @@
  */
 package org.tltv.gantt.demo;
 
+import org.tltv.gantt.GanttView;
+
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;

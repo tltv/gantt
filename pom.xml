@@ -17,6 +17,7 @@
 		<module>gantt-element</module>
 		<module>gantt-addon</module>
 		<module>gantt-exporter</module>
+		<module>gantt-flow-addon</module>
 		<module>gantt-demo</module>
 	</modules>
 

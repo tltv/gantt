@@ -56,11 +56,11 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- <dependency>
+		<dependency>
 			<groupId>org.tltv.gantt</groupId>
-			<artifactId>gantt-addon</artifactId>
+			<artifactId>gantt-flow-addon</artifactId>
 			<version>${project.version}</version>
-		</dependency> -->
+		</dependency>
 		<dependency>
             <groupId>com.vaadin</groupId>
             <artifactId>vaadin</artifactId>
@@ -115,98 +115,6 @@
 					<scanIntervalSeconds>-1</scanIntervalSeconds>
 					<contextPath>/</contextPath>
 				</configuration>
-			</plugin>
-
-			<!-- Clean gantt web component resources -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<version>3.0.0</version>
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>${project.basedir}/src/main/webapp/frontend</directory>
-							<includes>
-								<include>gantt-widget.html</include>
-								<include>*.nocache.js</include>
-							</includes>
-						</fileset>
-						<fileset>
-							<directory>${project.basedir}/src/main/webapp/frontend/elements</directory>
-							<includes>
-								<include>*.*</include>
-							</includes>
-						</fileset>
-						<fileset>
-							<directory>${project.basedir}/src/main/webapp</directory>
-							<includes>
-								<include>*.cache.js</include>
-							</includes>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin>
-			
-			<!-- Copy web component resources from gantt-element -->
-			<plugin>
-				<artifactId>maven-resources-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>copy-resources-1</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/frontend/</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/</directory>
-									<includes>
-										<include>gantt-widget.html</include>
-										<include>*.nocache.js</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-resources-2</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/frontend/elements/</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/elements</directory>
-									<includes>
-										<include>*.*</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-					<execution>
-						<id>copy-resources-3</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/</directory>
-									<includes>
-										<include>*.cache.js</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
-				</executions>
 			</plugin>
 			
 		</plugins>
