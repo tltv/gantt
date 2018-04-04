@@ -36,10 +36,10 @@ Web component demo is not available in public yet.
 * git clone <url of the Gantt repository>
 * mvn clean
 * mvn install
-* cd gantt-element/src/main/resources/org/tltv/gantt/public/
-* polymer serve
+* cd gantt-demo
+* mvn jetty:run
 
-To see the demo(s), navigate to http://localhost:8081/ or http://localhost:8081/demo.html
+To see the demo, navigate to http://localhost:8080/
  
 
 ## License & Author
