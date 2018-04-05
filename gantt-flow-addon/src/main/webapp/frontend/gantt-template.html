@@ -1,0 +1,83 @@
+
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="gantt-lib.html">
+<link rel="import" href="gantt-widget.html">
+
+<dom-module id="gantt-template">
+    <template>
+    	<slot></slot>
+    </template>
+
+    <script>
+        class GanttTemplate extends Polymer.Element {
+            static get is() {
+                return 'gantt-template'
+            }
+            
+            constructor() {
+				super();
+				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
+			}
+            
+            _onGanttReady(e) {
+            	this.firstChild.ganttElement = new gantt.GanttElement(this.firstChild);
+
+				// set data
+				var g = this.firstChild.ganttElement;
+				var steps = [
+					{
+						uid: "1", // required unique step id
+						identifier: 1, // optional ID
+						caption: "Step A",
+						description: "Description of Step A",
+						backgroundColor: "#A8D9FF",
+						startDate: new Date('2017-01-01T00:00:00Z').getTime(),
+						endDate: new Date('2017-01-31T23:59:59Z').getTime(),
+						resizable: true,
+						movable: true
+					}
+				];
+
+				if(this.state) {
+					g.setState(this.state);
+				}
+
+				g.getGanttElement().steps = steps;
+
+				// step click handling
+				g.getGanttElement().handleStepClicked = function(stepUid, details) {
+					var step = g.getStepByUid(stepUid);
+					alert(step.caption + ': ' + details.toString());
+				}
+
+				// step move handling
+				g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
+					var step = g.getStepByUid(stepUid);
+					if(step.substep) {
+						step.startDate = startDate;
+						step.endDate = endDate;
+						g.updateSubStep(step);
+					} else {
+						step.startDate = startDate;
+						step.endDate = endDate;
+						g.updateStep(step);
+					}
+				}
+
+				// step resize handling
+				g.getGanttElement().handleOnResize = function(stepUid, startDate, endDate, details) {
+					var step = g.getStepByUid(stepUid);
+					step.startDate = startDate;
+					step.endDate = endDate;
+					g.update(step);
+				}
+
+				// step predecessor change handling
+				g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+
+				}
+			}
+        }
+        customElements.define(GanttTemplate.is, GanttTemplate);
+    </script>
+</dom-module>

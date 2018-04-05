@@ -15,7 +15,11 @@
  */
 package org.tltv.gantt.demo;
 
-import org.tltv.gantt.GanttView;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+import org.tltv.gantt.GanttTemplate;
+import org.tltv.gantt.model.State;
 
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -30,12 +34,17 @@ public class DemoUI extends Div {
 
         Div controls = new Div();
 
+        State state = new State();
+        Double end = (double) LocalDateTime.of(2017, 12, 31, 23, 59, 59).toInstant(ZoneOffset.UTC).toEpochMilli();
+        state.setStartDate((double) LocalDateTime.of(2017, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli());
+        state.setEndDate(end);
+
         final VerticalLayout layout = new VerticalLayout();
         layout.setClassName("demoContentLayout");
         layout.setMargin(false);
         layout.setSizeFull();
         layout.add(controls);
-        layout.add(new GanttView());
+        layout.add(new GanttTemplate(state));
 
         add(layout);
     }

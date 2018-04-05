@@ -6,8 +6,8 @@ import com.vaadin.flow.component.dependency.HtmlImport;
 
 @Tag("gantt-widget")
 @HtmlImport("frontend://gantt-widget.html")
-public class GanttComponent extends Component {
+public class GanttWidget extends Component {
 
-    public GanttComponent() {
+    public GanttWidget() {
     }
 }
