@@ -16,37 +16,64 @@
 package org.tltv.gantt.demo;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
-import org.tltv.gantt.GanttTemplate;
+import org.tltv.gantt.Gantt;
+import org.tltv.gantt.model.Resolution;
 import org.tltv.gantt.model.State;
 
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.theme.Theme;
+import com.vaadin.flow.theme.lumo.Lumo;
 
+@Theme(Lumo.class)
 @Route("")
 @SuppressWarnings("serial")
 public class DemoUI extends Div {
 
+    private Binder<State> stateBinder;
+
     public DemoUI() {
         setSizeFull();
 
-        Div controls = new Div();
+        Gantt gantt = new Gantt();
 
-        State state = new State();
-        Double end = (double) LocalDateTime.of(2017, 12, 31, 23, 59, 59).toInstant(ZoneOffset.UTC).toEpochMilli();
-        state.setStartDate((double) LocalDateTime.of(2017, 1, 1, 0, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli());
-        state.setEndDate(end);
+        gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
+        gantt.setEndDateTime(LocalDateTime.of(2018, 1, 1, 0, 0, 0));
+
+        stateBinder = new Binder<>();
 
         final VerticalLayout layout = new VerticalLayout();
         layout.setClassName("demoContentLayout");
         layout.setMargin(false);
         layout.setSizeFull();
-        layout.add(controls);
-        layout.add(new GanttTemplate(state));
+        layout.add(createControls(stateBinder, gantt));
+        layout.add(gantt);
 
         add(layout);
+
+        stateBinder.setBean(gantt.getState());
+    }
+
+    private Div createControls(Binder<State> binder, final Gantt gantt) {
+        Div controls = new Div();
+
+        ComboBox<Resolution> resolutionField = new ComboBox<>();
+        resolutionField.setItems(Resolution.values());
+        resolutionField.setValue(gantt.getResolution());
+        resolutionField.addValueChangeListener(e -> gantt.setResolution(e.getValue()));
+        // binder.forField(resolutionField)
+        /*-.withConverter(
+                r -> Optional.ofNullable(r).map(Resolution::name).orElse(""),
+                name -> Optional.ofNullable(name).map(Resolution::valueOf).orElse(null))-*/
+        /*-.bind(state -> gantt.getResolution(),
+                 (state, r) -> gantt.setResolution(r));-*/
+
+        controls.add(resolutionField);
+        return controls;
     }
 
 }

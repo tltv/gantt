@@ -3,7 +3,7 @@ var __gwtModuleFunction = $wnd.org_tltv_gantt_GanttLib;
 var $sendStats = __gwtModuleFunction.__sendStats;
 $sendStats('moduleStartup', 'moduleEvalStart');
 var $gwt_version = "8.1.7";
-var $strongName = 'EC8353941F89F770CF55286517781E70';
+var $strongName = '3553B5CD80AEB583785B03E1E29840B4';
 var $gwt = {};
 var $doc = $wnd.document;
 var $moduleName, $moduleBase;
@@ -10172,7 +10172,7 @@ _.call_0 = function call_7(args){
   $setDefaultContextMenuEnabled_0(this.this$01.ganttWidget, this.this$01.state.defaultContextMenuEnabled);
   $setForceUpdateTimeline(this.this$01.ganttWidget);
   $resetListeners(this.this$01.ganttWidget);
-  $onAttach(this.this$01.ganttWidget);
+  this.this$01.ganttWidget.attached || $onAttach(this.this$01.ganttWidget);
   !!steps && $doSetSteps(this.this$01, steps);
   $scheduleDeferred(($clinit_SchedulerImpl() , INSTANCE), new GanttElement$3$1(this));
   return null;

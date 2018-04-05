@@ -7,11 +7,16 @@ public class State {
     private String locale = "en_US";
     private String resolution = "Day";
     private boolean backgroundGridEnabled = true;
+    private String timeZoneJson;
+    private String timeZoneId;
+    public int firstDayOfRange;
+    public int firstHourOfRange;
 
     public Double getStartDate() {
         return startDate;
     }
 
+    /** Set inclusive start date. */
     public void setStartDate(Double startDate) {
         this.startDate = startDate;
     }
@@ -20,6 +25,7 @@ public class State {
         return endDate;
     }
 
+    /** Set inclusive end date. */
     public void setEndDate(Double endDate) {
         this.endDate = endDate;
     }
@@ -46,5 +52,37 @@ public class State {
 
     public void setBackgroundGridEnabled(boolean backgroundGridEnabled) {
         this.backgroundGridEnabled = backgroundGridEnabled;
+    }
+
+    public String getTimeZoneJson() {
+        return timeZoneJson;
+    }
+
+    public void setTimeZoneJson(String timeZoneJson) {
+        this.timeZoneJson = timeZoneJson;
+    }
+
+    public String getTimeZoneId() {
+        return timeZoneId;
+    }
+
+    public void setTimeZoneId(String timeZoneId) {
+        this.timeZoneId = timeZoneId;
+    }
+
+    public int getFirstDayOfRange() {
+        return firstDayOfRange;
+    }
+
+    public void setFirstDayOfRange(int firstDayOfRange) {
+        this.firstDayOfRange = firstDayOfRange;
+    }
+
+    public int getFirstHourOfRange() {
+        return firstHourOfRange;
+    }
+
+    public void setFirstHourOfRange(int firstHourOfRange) {
+        this.firstHourOfRange = firstHourOfRange;
     }
 }

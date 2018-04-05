@@ -19,6 +19,10 @@
 				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
 			}
             
+           	_ganttStateChanged(resolution,startDate,endDate) {
+            	this.firstChild.ganttElement.setState(this.state);
+           	};
+           	
             _onGanttReady(e) {
             	this.firstChild.ganttElement = new gantt.GanttElement(this.firstChild);
 
@@ -41,9 +45,9 @@
 				if(this.state) {
 					g.setState(this.state);
 				}
-
+				
 				g.getGanttElement().steps = steps;
-
+				
 				// step click handling
 				g.getGanttElement().handleStepClicked = function(stepUid, details) {
 					var step = g.getStepByUid(stepUid);
@@ -76,6 +80,9 @@
 				g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
 
 				}
+				
+				// register observer for state changes to delegate new state to gantt
+				this._createMethodObserver('_ganttStateChanged(state.resolution,state.startDate,state.endDate)', true);
 			}
         }
         customElements.define(GanttTemplate.is, GanttTemplate);
