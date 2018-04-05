@@ -336,7 +336,9 @@ public class GanttElement implements Exportable, StepProvider {
                 getWidget().resetListeners();
 
                 // need to call onAttach explicitly
-                getWidget().onAttach();
+                if (!getWidget().isAttached()) {
+                    getWidget().onAttach();
+                }
 
                 if (steps != null) {
                     doSetSteps(steps);
