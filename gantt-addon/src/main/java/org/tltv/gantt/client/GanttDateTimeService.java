@@ -1,55 +1,50 @@
 package org.tltv.gantt.client;
 
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.TimeZone;
-import com.vaadin.client.DateTimeService;
 import com.vaadin.client.LocaleNotLoadedException;
+import com.vaadin.client.LocaleService;
 
-public class GanttDateTimeService extends DateTimeService {
+public class GanttDateTimeService {
 
     private TimeZone gmt = TimeZone.createTimeZone(0);
-
-    /**
-     * Creates a new date time service with the application default locale.
-     */
-    public GanttDateTimeService() {
-        super();
-    }
+    private String currentLocale;
 
     /**
      * Creates a new date time service with a given locale.
-     * 
+     *
      * @param locale
      *            e.g. fi, en etc.
      * @throws LocaleNotLoadedException
      */
-    public GanttDateTimeService(String locale) throws LocaleNotLoadedException {
-        super(locale);
+    public GanttDateTimeService(String locale) {
+        currentLocale = locale;
     }
 
     /**
      * <p>
-     * Copy of super.formatDate. Only difference is that TimeZone is fixed to
-     * GMT.
+     * Copy of DateTimeService.formatDate. Only difference is that TimeZone is
+     * fixed to GMT.
      * <p>
      * Check if format contains the month name. If it does we manually convert
      * it to the month name since DateTimeFormat.format always uses the current
      * locale and will replace the month name wrong if current locale is
      * different from the locale set for the DateField.
-     * 
+     *
      * MMMM is converted into long month name, MMM is converted into short month
      * name. '' are added around the name to avoid that DateTimeFormat parses
      * the month name as a pattern.
-     * 
+     *
      * @param date
      *            The date to convert
      * @param formatStr
      *            The format string that might contain MMM or MMMM
      * @return
      */
-    @Override
     public String formatDate(Date date, String formatStr) {
         return formatDate(date, formatStr, null);
     }
@@ -69,6 +64,46 @@ public class GanttDateTimeService extends DateTimeService {
             return format.format(date, timeZone);
         } else {
             return format.format(date, gmt);
+        }
+    }
+
+    public String getDay(int day) {
+        try {
+            // TODO replace
+            return LocaleService.getDayNames(currentLocale)[day];
+        } catch (final LocaleNotLoadedException e) {
+            getLogger().log(Level.SEVERE, "Error in getDay", e);
+            return null;
+        }
+    }
+
+    public String getShortDay(int day) {
+        try {
+            // TODO replace
+            return LocaleService.getShortDayNames(currentLocale)[day];
+        } catch (final LocaleNotLoadedException e) {
+            getLogger().log(Level.SEVERE, "Error in getShortDay", e);
+            return null;
+        }
+    }
+
+    public String getMonth(int month) {
+        try {
+            // TODO replace
+            return LocaleService.getMonthNames(currentLocale)[month];
+        } catch (final LocaleNotLoadedException e) {
+            getLogger().log(Level.SEVERE, "Error in getMonth", e);
+            return null;
+        }
+    }
+
+    public String getShortMonth(int month) {
+        try {
+            // TODO replace
+            return LocaleService.getShortMonthNames(currentLocale)[month];
+        } catch (final LocaleNotLoadedException e) {
+            getLogger().log(Level.SEVERE, "Error in getShortMonth", e);
+            return null;
         }
     }
 
@@ -160,4 +195,7 @@ public class GanttDateTimeService extends DateTimeService {
         return formatStr;
     }
 
+    private static Logger getLogger() {
+        return Logger.getLogger(GanttDateTimeService.class.getName());
+    }
 }
