@@ -21,8 +21,11 @@ import java.time.ZoneId;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.model.Resolution;
@@ -99,7 +102,14 @@ public class DemoUI extends Div {
             }
         }));
 
-        controls.add(resolutionField, startDateField, endDateField, timeZoneField);
+        ComboBox<Locale> localeField = new ComboBox<>("Locale",
+                Stream.of(Locale.getAvailableLocales()).collect(Collectors.toList()));
+        localeField.setWidth("350px");
+        localeField.setItemLabelGenerator((l) -> l.getDisplayName(UI.getCurrent().getLocale()));
+        localeField.setValue(gantt.getLocale());
+        localeField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(l -> gantt.setLocale(l)));
+
+        controls.add(resolutionField, startDateField, endDateField, localeField, timeZoneField);
         return controls;
     }
 
