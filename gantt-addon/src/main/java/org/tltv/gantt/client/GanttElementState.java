@@ -11,7 +11,7 @@ import com.google.gwt.json.client.JSONObject;
 
 @Export
 @ExportPackage(value = "gantt")
-public class GanttElementState implements Exportable {
+public class GanttElementState implements Exportable, LocaleProvider {
 
     public String width = "100%";
 
@@ -58,6 +58,15 @@ public class GanttElementState implements Exportable {
     public String yearFormat;
 
     public boolean defaultContextMenuEnabled = false;
+
+    private String[] localeDayNames = { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+    private String[] localeShortDayNames = { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
+    private String[] localeMonthNames = { "January", "February", "March", "April", "May", "June", "July", "August",
+            "September", "October", "November", "December" };
+    private String[] localeShortMonthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec" };
+    private int localeFirstDayOfWeek = 0;
+    private boolean localeTwelveHourClock = false;
 
     private static GanttElementState instance;
 
@@ -246,6 +255,60 @@ public class GanttElementState implements Exportable {
 
     public void setHeight(String height) {
         this.height = height;
+    }
+
+    @Override
+    public String[] getLocaleDayNames() {
+        return localeDayNames;
+    }
+
+    public void setLocaleDayNames(String[] localeDayNames) {
+        this.localeDayNames = localeDayNames;
+    }
+
+    @Override
+    public String[] getLocaleShortDayNames() {
+        return localeShortDayNames;
+    }
+
+    public void setLocaleShortDayNames(String[] localeShortDayNames) {
+        this.localeShortDayNames = localeShortDayNames;
+    }
+
+    @Override
+    public String[] getLocaleMonthNames() {
+        return localeMonthNames;
+    }
+
+    public void setLocaleMonthNames(String[] localeMonthNames) {
+        this.localeMonthNames = localeMonthNames;
+    }
+
+    @Override
+    public String[] getLocaleShortMonthNames() {
+        return localeShortMonthNames;
+    }
+
+    public void setLocaleShortMonthNames(String[] localeShortMonthNames) {
+        this.localeShortMonthNames = localeShortMonthNames;
+    }
+
+    @Override
+    public int getLocaleFirstDayOfWeek() {
+        return localeFirstDayOfWeek;
+    }
+
+    public void setLocaleFirstDayOfWeek(int localeFirstDayOfWeek) {
+        this.localeFirstDayOfWeek = localeFirstDayOfWeek;
+    }
+
+    @Override
+    public boolean isLocaleTwelveHourClock() {
+        return localeTwelveHourClock;
+    }
+
+    public void setLocaleTwelveHourClock(boolean localeTwelveHourClock) {
+        this.localeTwelveHourClock = localeTwelveHourClock;
     }
 
     public static GanttElementState toState(JavaScriptObject o) {

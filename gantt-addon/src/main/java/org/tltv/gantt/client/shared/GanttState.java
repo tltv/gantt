@@ -67,6 +67,15 @@ public class GanttState extends AbstractComponentState {
     @DelegateToWidget
     public boolean defaultContextMenuEnabled = false;
 
+    public String[] localeDayNames = { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+    public String[] localeShortDayNames = { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
+    public String[] localeMonthNames = { "January", "February", "March", "April", "May", "June", "July", "August",
+            "September", "October", "November", "December" };
+    public String[] localeShortMonthNames = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec" };
+    public int localeFirstDayOfWeek = 0;
+    public boolean localeTwelveHourClock = false;
+
     public List<Connector> steps = new LinkedList<Connector>();
 
     public Connector verticalScrollDelegateTarget;

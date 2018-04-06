@@ -73,7 +73,7 @@ import com.vaadin.shared.ui.Connect;
  *
  */
 @Connect(Gantt.class)
-public class GanttConnector extends AbstractHasComponentsConnector implements StepProvider {
+public class GanttConnector extends AbstractHasComponentsConnector implements StepProvider, LocaleProvider {
 
     GanttServerRpc rpc = RpcProxy.create(GanttServerRpc.class, this);
 
@@ -341,6 +341,7 @@ public class GanttConnector extends AbstractHasComponentsConnector implements St
 
     public GanttConnector() {
         registerRpc(GanttClientRpc.class, ganttClientRpc);
+        localeDataProvider.localeProvider = this;
     }
 
     @Override
@@ -746,4 +747,35 @@ public class GanttConnector extends AbstractHasComponentsConnector implements St
     public StepWidget getStepWidget(Step target) {
         return getStepsMap().get(target);
     }
+
+    @Override
+    public String[] getLocaleDayNames() {
+        return getState().localeDayNames;
+    }
+
+    @Override
+    public String[] getLocaleShortDayNames() {
+        return getState().localeShortDayNames;
+    }
+
+    @Override
+    public String[] getLocaleMonthNames() {
+        return getState().localeMonthNames;
+    }
+
+    @Override
+    public String[] getLocaleShortMonthNames() {
+        return getState().localeShortMonthNames;
+    }
+
+    @Override
+    public int getLocaleFirstDayOfWeek() {
+        return getState().localeFirstDayOfWeek;
+    }
+
+    @Override
+    public boolean isLocaleTwelveHourClock() {
+        return getState().localeTwelveHourClock;
+    }
+
 }

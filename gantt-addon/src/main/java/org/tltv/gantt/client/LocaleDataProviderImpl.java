@@ -5,8 +5,6 @@ import java.util.Date;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.TimeZone;
 import com.google.gwt.i18n.shared.DateTimeFormat;
-import com.vaadin.client.LocaleNotLoadedException;
-import com.vaadin.client.LocaleService;
 
 public class LocaleDataProviderImpl implements LocaleDataProvider {
 
@@ -14,13 +12,13 @@ public class LocaleDataProviderImpl implements LocaleDataProvider {
     public String timeZoneId;
     public TimeZone timeZone;
     public GanttDateTimeService dateTimeService;
+    public LocaleProvider localeProvider;
 
     @Override
     public String[] getWeekdayNames() {
         try {
-            // TODO replace
-            return LocaleService.getDayNames(locale);
-        } catch (LocaleNotLoadedException e) {
+            return localeProvider.getLocaleDayNames();
+        } catch (Exception e) {
             GWT.log(e.getMessage(), e);
         }
         // return default
@@ -30,9 +28,8 @@ public class LocaleDataProviderImpl implements LocaleDataProvider {
     @Override
     public String[] getMonthNames() {
         try {
-            // TODO replace
-            return LocaleService.getMonthNames(locale);
-        } catch (LocaleNotLoadedException e) {
+            return localeProvider.getLocaleMonthNames();
+        } catch (Exception e) {
             GWT.log(e.getMessage(), e);
         }
         // return default
@@ -43,11 +40,11 @@ public class LocaleDataProviderImpl implements LocaleDataProvider {
     @Override
     public int getFirstDayOfWeek() {
         try {
-            // TODO replace
             // Gantt uses 1-based index, just as the server-side Java
-            // Locale does. Vaadin locale state has 0-based value.
-            return LocaleService.getFirstDayOfWeek(locale) + 1;
-        } catch (LocaleNotLoadedException e) {
+            // Locale does. LocaleProvider (and Vaadin Framework) locale state
+            // has 0-based value.
+            return localeProvider.getLocaleFirstDayOfWeek() + 1;
+        } catch (Exception e) {
             GWT.log(e.getMessage(), e);
         }
         // return default
@@ -57,7 +54,7 @@ public class LocaleDataProviderImpl implements LocaleDataProvider {
     @Override
     public String formatDate(Date zonedDate, String formatStr) {
         if (dateTimeService == null) {
-            dateTimeService = new GanttDateTimeService(getLocale());
+            dateTimeService = new GanttDateTimeService(getLocale(), localeProvider);
         }
         return dateTimeService.formatDate(zonedDate, formatStr, getTimeZone());
     }
@@ -70,9 +67,8 @@ public class LocaleDataProviderImpl implements LocaleDataProvider {
     @Override
     public boolean isTwelveHourClock() {
         try {
-            // TODO replace
-            return LocaleService.isTwelveHourClock(locale);
-        } catch (LocaleNotLoadedException e) {
+            return localeProvider.isLocaleTwelveHourClock();
+        } catch (Exception e) {
             GWT.log(e.getMessage(), e);
         }
         return false;

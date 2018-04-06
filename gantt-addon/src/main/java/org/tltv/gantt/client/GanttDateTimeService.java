@@ -6,23 +6,24 @@ import java.util.logging.Logger;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.TimeZone;
-import com.vaadin.client.LocaleNotLoadedException;
-import com.vaadin.client.LocaleService;
 
 public class GanttDateTimeService {
 
     private TimeZone gmt = TimeZone.createTimeZone(0);
     private String currentLocale;
+    private LocaleProvider localeProvider;
 
     /**
      * Creates a new date time service with a given locale.
      *
      * @param locale
      *            e.g. fi, en etc.
-     * @throws LocaleNotLoadedException
+     * @param localeProvider
+     *            Provides locale specific week day and month names etc.
      */
-    public GanttDateTimeService(String locale) {
+    public GanttDateTimeService(String locale, LocaleProvider localeProvider) {
         currentLocale = locale;
+        this.localeProvider = localeProvider;
     }
 
     /**
@@ -69,9 +70,8 @@ public class GanttDateTimeService {
 
     public String getDay(int day) {
         try {
-            // TODO replace
-            return LocaleService.getDayNames(currentLocale)[day];
-        } catch (final LocaleNotLoadedException e) {
+            return localeProvider.getLocaleDayNames()[day];
+        } catch (final Exception e) {
             getLogger().log(Level.SEVERE, "Error in getDay", e);
             return null;
         }
@@ -79,9 +79,8 @@ public class GanttDateTimeService {
 
     public String getShortDay(int day) {
         try {
-            // TODO replace
-            return LocaleService.getShortDayNames(currentLocale)[day];
-        } catch (final LocaleNotLoadedException e) {
+            return localeProvider.getLocaleShortDayNames()[day];
+        } catch (final Exception e) {
             getLogger().log(Level.SEVERE, "Error in getShortDay", e);
             return null;
         }
@@ -89,9 +88,8 @@ public class GanttDateTimeService {
 
     public String getMonth(int month) {
         try {
-            // TODO replace
-            return LocaleService.getMonthNames(currentLocale)[month];
-        } catch (final LocaleNotLoadedException e) {
+            return localeProvider.getLocaleMonthNames()[month];
+        } catch (final Exception e) {
             getLogger().log(Level.SEVERE, "Error in getMonth", e);
             return null;
         }
@@ -99,9 +97,8 @@ public class GanttDateTimeService {
 
     public String getShortMonth(int month) {
         try {
-            // TODO replace
-            return LocaleService.getShortMonthNames(currentLocale)[month];
-        } catch (final LocaleNotLoadedException e) {
+            return localeProvider.getLocaleShortMonthNames()[month];
+        } catch (final Exception e) {
             getLogger().log(Level.SEVERE, "Error in getShortMonth", e);
             return null;
         }

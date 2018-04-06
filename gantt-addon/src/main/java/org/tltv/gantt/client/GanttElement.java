@@ -300,6 +300,7 @@ public class GanttElement implements Exportable, StepProvider {
             public Object call(Object args) {
                 boolean initialState = state == null;
                 state = newState;
+                localeDataProvider.localeProvider = state;
                 List<Step> steps = null;
                 if (newStepsJson != null) {
                     steps = new ArrayList<>();
