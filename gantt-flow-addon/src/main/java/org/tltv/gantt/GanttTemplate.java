@@ -1,7 +1,7 @@
 package org.tltv.gantt;
 
 import org.tltv.gantt.GanttTemplate.GanttTemplateModel;
-import org.tltv.gantt.model.State;
+import org.tltv.gantt.model.Settings;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
@@ -12,26 +12,26 @@ import com.vaadin.flow.templatemodel.TemplateModel;
 @HtmlImport("frontend://gantt-template.html")
 public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
-    public GanttTemplate(State initialState) {
-        getModel().setState(initialState);
+    public GanttTemplate(Settings initialSettings) {
+        getModel().setSettings(initialSettings);
 
         GanttWidget gantt = new GanttWidget();
         getElement().appendChild(gantt.getElement());
     }
 
-    public State getState() {
-        return getModel().getState();
+    public Settings getSettings() {
+        return getModel().getSettings();
     }
 
-    public void setState(State state) {
-        getModel().setState(state);
+    public void setSettings(Settings state) {
+        getModel().setSettings(state);
     }
 
     public static interface GanttTemplateModel extends TemplateModel {
 
-        State getState();
+        Settings getSettings();
 
-        void setState(State state);
+        void setSettings(Settings settings);
 
     }
 }

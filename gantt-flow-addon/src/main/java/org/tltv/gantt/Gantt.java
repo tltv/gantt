@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.tltv.gantt.model.Resolution;
-import org.tltv.gantt.model.State;
+import org.tltv.gantt.model.Settings;
 
 public class Gantt extends GanttTemplate {
 
@@ -37,7 +37,7 @@ public class Gantt extends GanttTemplate {
     protected Map<String, String> timezoneJsonCache = new HashMap<String, String>();
 
     public Gantt() {
-        super(new State());
+        super(new Settings());
     }
 
     public LocalDateTime getStartDateTime() {
@@ -92,24 +92,24 @@ public class Gantt extends GanttTemplate {
     }
 
     public void setResolution(Resolution resolution) {
-        getModel().getState().setResolution(Optional.ofNullable(resolution).map(Resolution::name).orElse(Resolution.Day.name()));
+        getModel().getSettings().setResolution(Optional.ofNullable(resolution).map(Resolution::name).orElse(Resolution.Day.name()));
     }
 
     public Resolution getResolution() {
-        return Resolution.valueOf(getModel().getState().getResolution());
+        return Resolution.valueOf(getModel().getSettings().getResolution());
     }
 
     void resetStartDateTime() {
-        getModel().getState().setStartDate(toEpochMilli(resetTimeToMin(getStartDateTime())));
+        getModel().getSettings().setStartDate(toEpochMilli(resetTimeToMin(getStartDateTime())));
     }
 
     void resetEndDateTime() {
-        getModel().getState().setEndDate(toEpochMilli(resetTimeToMax(getEndDateTime(), true)));
+        getModel().getSettings().setEndDate(toEpochMilli(resetTimeToMax(getEndDateTime(), true)));
     }
 
     private void updateLocale() {
         Locale locale = getLocale();
-        getModel().getState().setLocale(locale.toString());
+        getModel().getSettings().setLocale(locale.toString());
     }
 
     Double toEpochMilli(LocalDateTime dateTime) {
@@ -127,7 +127,7 @@ public class Gantt extends GanttTemplate {
         if (Objects.isNull(dateTime)) {
             return null;
         }
-        if (Resolution.Hour.name().equals(getModel().getState().getResolution())) {
+        if (Resolution.Hour.name().equals(getModel().getSettings().getResolution())) {
             return dateTime.truncatedTo(ChronoUnit.HOURS);
         }
         return dateTime.truncatedTo(ChronoUnit.DAYS);
@@ -137,7 +137,7 @@ public class Gantt extends GanttTemplate {
         if (Objects.isNull(dateTime)) {
             return null;
         }
-        if (Resolution.Hour.name().equals(getModel().getState().getResolution())) {
+        if (Resolution.Hour.name().equals(getModel().getSettings().getResolution())) {
             if (exclusive) {
                 dateTime = dateTime.minusHours(1);
             }
@@ -165,16 +165,16 @@ public class Gantt extends GanttTemplate {
         if (!Objects.isNull(getEndDateTime())) {
             resetEndDateTime();
         }
-        getModel().getState().setTimeZoneId(getZoneId().getId());
-        getModel().getState().setTimeZoneJson(getTimeZoneJson(getZoneId().getId()));
+        getModel().getSettings().setTimeZoneId(getZoneId().getId());
+        getModel().getSettings().setTimeZoneJson(getTimeZoneJson(getZoneId().getId()));
     }
 
     private void updateFirstHourOfRange() {
-        getModel().getState().setFirstHourOfRange(getStartDateTime().getHour());
+        getModel().getSettings().setFirstHourOfRange(getStartDateTime().getHour());
     }
 
     private void updateFirstDayOfRange() {
-        getModel().getState().setFirstDayOfRange(translateDayOfWeek(getStartDateTime().getDayOfWeek()));
+        getModel().getSettings().setFirstDayOfRange(translateDayOfWeek(getStartDateTime().getDayOfWeek()));
     }
 
     private BufferedReader createTimeZonePropertiesReader(InputStream inputStream) {

@@ -20,7 +20,7 @@
 			}
             
            	_ganttStateChanged(resolution,startDate,endDate) {
-            	this.firstChild.ganttElement.setState(this.state);
+            	this.firstChild.ganttElement.setState(this.settings);
            	};
            	
             _onGanttReady(e) {
@@ -42,8 +42,8 @@
 					}
 				];
 
-				if(this.state) {
-					g.setState(this.state);
+				if(this.settings) {
+					g.setState(this.settings);
 				}
 				
 				g.getGanttElement().steps = steps;
@@ -82,7 +82,7 @@
 				}
 				
 				// register observer for state changes to delegate new state to gantt
-				this._createMethodObserver('_ganttStateChanged(state.resolution,state.startDate,state.endDate)', true);
+				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate)', true);
 			}
         }
         customElements.define(GanttTemplate.is, GanttTemplate);

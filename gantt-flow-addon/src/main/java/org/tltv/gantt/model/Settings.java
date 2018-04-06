@@ -1,6 +1,6 @@
 package org.tltv.gantt.model;
 
-public class State {
+public class Settings {
 
     private Double startDate;
     private Double endDate;

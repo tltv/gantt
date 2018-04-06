@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.model.Resolution;
-import org.tltv.gantt.model.State;
+import org.tltv.gantt.model.Settings;
 
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
@@ -34,7 +34,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 @SuppressWarnings("serial")
 public class DemoUI extends Div {
 
-    private Binder<State> stateBinder;
+    private Binder<Settings> stateBinder;
 
     public DemoUI() {
         setSizeFull();
@@ -55,22 +55,16 @@ public class DemoUI extends Div {
 
         add(layout);
 
-        stateBinder.setBean(gantt.getState());
+        stateBinder.setBean(gantt.getSettings());
     }
 
-    private Div createControls(Binder<State> binder, final Gantt gantt) {
+    private Div createControls(Binder<Settings> binder, final Gantt gantt) {
         Div controls = new Div();
 
         ComboBox<Resolution> resolutionField = new ComboBox<>();
         resolutionField.setItems(Resolution.values());
         resolutionField.setValue(gantt.getResolution());
         resolutionField.addValueChangeListener(e -> gantt.setResolution(e.getValue()));
-        // binder.forField(resolutionField)
-        /*-.withConverter(
-                r -> Optional.ofNullable(r).map(Resolution::name).orElse(""),
-                name -> Optional.ofNullable(name).map(Resolution::valueOf).orElse(null))-*/
-        /*-.bind(state -> gantt.getResolution(),
-                 (state, r) -> gantt.setResolution(r));-*/
 
         controls.add(resolutionField);
         return controls;
