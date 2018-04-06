@@ -23,7 +23,9 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.text.DateFormat;
 import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -924,7 +927,52 @@ public class Gantt extends AbstractComponent implements HasComponents {
     private void updateLocale() {
         Locale locale = getLocale();
         getState().locale = locale.toString();
+        updateLocaleData();
         calendar = null;
+    }
+
+    private void updateLocaleData() {
+        // stripped from LocaleService.createLocaleData
+        Calendar c = Calendar.getInstance(getLocale());
+        c.set(2015, 0, 1);
+        SimpleDateFormat shortMonthFormat = new SimpleDateFormat("MMM", getLocale());
+        SimpleDateFormat longMonthFormat = new SimpleDateFormat("MMMM", getLocale());
+
+        int monthsInYear = c.getMaximum(Calendar.MONTH) + 1;
+        getState(false).localeShortMonthNames = new String[monthsInYear];
+        getState(false).localeMonthNames = new String[monthsInYear];
+        for (int month = 0; month < monthsInYear; month++) {
+            c.set(Calendar.MONTH, month);
+            String shortMonth = shortMonthFormat.format(c.getTime());
+            String longMonth = longMonthFormat.format(c.getTime());
+            getState(false).localeShortMonthNames[month] = shortMonth;
+            getState(false).localeMonthNames[month] = longMonth;
+        }
+
+        final DateFormatSymbols dfs = new DateFormatSymbols(getLocale());
+
+        // Client expects 0 based indexing, DateFormatSymbols use 1 based
+        getState(false).localeShortDayNames = new String[7];
+        getState(false).localeDayNames = new String[7];
+        String[] sDayNames = dfs.getShortWeekdays();
+        String[] lDayNames = dfs.getWeekdays();
+        for (int i = 0; i < 7; i++) {
+            getState(false).localeShortDayNames[i] = sDayNames[i + 1];
+            getState(false).localeDayNames[i] = lDayNames[i + 1];
+        }
+
+        // First day of week (0 = sunday, 1 = monday)
+        final java.util.Calendar cal = new GregorianCalendar(getLocale());
+        getState(false).localeFirstDayOfWeek = cal.getFirstDayOfWeek() - 1;
+
+        DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT,
+                getLocale());
+        if (!(timeFormat instanceof SimpleDateFormat)) {
+            // Unable to get default time pattern for locale
+            timeFormat = new SimpleDateFormat();
+        }
+        final String timePattern = ((SimpleDateFormat) timeFormat).toPattern();
+        getState(false).localeTwelveHourClock = timePattern.indexOf("a") > -1;
     }
 
     private String trimFormat(String format) {
