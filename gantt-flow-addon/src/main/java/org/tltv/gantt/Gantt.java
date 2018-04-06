@@ -5,12 +5,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -20,9 +25,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.tltv.gantt.model.Resolution;
 import org.tltv.gantt.model.Settings;
+
+import com.vaadin.flow.component.AttachEvent;
 
 public class Gantt extends GanttTemplate {
 
@@ -38,6 +47,13 @@ public class Gantt extends GanttTemplate {
 
     public Gantt() {
         super(new Settings());
+    }
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+
+        updateLocaleData();
     }
 
     public LocalDateTime getStartDateTime() {
@@ -92,7 +108,8 @@ public class Gantt extends GanttTemplate {
     }
 
     public void setResolution(Resolution resolution) {
-        getModel().getSettings().setResolution(Optional.ofNullable(resolution).map(Resolution::name).orElse(Resolution.Day.name()));
+        getModel().getSettings()
+                .setResolution(Optional.ofNullable(resolution).map(Resolution::name).orElse(Resolution.Day.name()));
     }
 
     public Resolution getResolution() {
@@ -110,6 +127,54 @@ public class Gantt extends GanttTemplate {
     private void updateLocale() {
         Locale locale = getLocale();
         getModel().getSettings().setLocale(locale.toString());
+        updateLocaleData();
+    }
+
+    private void updateLocaleData() {
+        Calendar c = Calendar.getInstance(getLocale());
+        c.set(2015, 0, 1);
+        SimpleDateFormat shortMonthFormat = new SimpleDateFormat("MMM", getLocale());
+        SimpleDateFormat longMonthFormat = new SimpleDateFormat("MMMM", getLocale());
+
+        int monthsInYear = c.getMaximum(Calendar.MONTH) + 1;
+        String[] monthNames = new String[monthsInYear];
+        String[] shortMonthNames = new String[monthsInYear];
+        for (int month = 0; month < monthsInYear; month++) {
+            c.set(Calendar.MONTH, month);
+            String shortMonth = shortMonthFormat.format(c.getTime());
+            String longMonth = longMonthFormat.format(c.getTime());
+            shortMonthNames[month] = shortMonth;
+            monthNames[month] = longMonth;
+        }
+        getSettings().setLocaleMonthNames(Stream.of(monthNames).collect(Collectors.toList()));
+        getSettings().setLocaleShortMonthNames(Stream.of(shortMonthNames).collect(Collectors.toList()));
+
+        final DateFormatSymbols dfs = new DateFormatSymbols(getLocale());
+
+        // Client expects 0 based indexing, DateFormatSymbols use 1 based
+        String[] shortDayNames = new String[7];
+        String[] dayNames = new String[7];
+        String[] sDayNames = dfs.getShortWeekdays();
+        String[] lDayNames = dfs.getWeekdays();
+        for (int i = 0; i < 7; i++) {
+            shortDayNames[i] = sDayNames[i + 1];
+            dayNames[i] = lDayNames[i + 1];
+        }
+        getSettings().setLocaleShortDayNames(Stream.of(shortDayNames).collect(Collectors.toList()));
+        getSettings().setLocaleDayNames(Stream.of(dayNames).collect(Collectors.toList()));
+
+        // First day of week (0 = sunday, 1 = monday)
+        final java.util.Calendar cal = new GregorianCalendar(getLocale());
+        getSettings().setLocaleFirstDayOfWeek(cal.getFirstDayOfWeek() - 1);
+
+        DateFormat timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT,
+                getLocale());
+        if (!(timeFormat instanceof SimpleDateFormat)) {
+            // Unable to get default time pattern for locale
+            timeFormat = new SimpleDateFormat();
+        }
+        final String timePattern = ((SimpleDateFormat) timeFormat).toPattern();
+        getSettings().setLocaleTwelveHourClock(timePattern.indexOf("a") > -1);
     }
 
     Double toEpochMilli(LocalDateTime dateTime) {

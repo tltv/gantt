@@ -1,5 +1,8 @@
 package org.tltv.gantt.model;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Settings {
 
     private Double startDate;
@@ -9,8 +12,18 @@ public class Settings {
     private boolean backgroundGridEnabled = true;
     private String timeZoneJson;
     private String timeZoneId;
-    public int firstDayOfRange;
-    public int firstHourOfRange;
+    private int firstDayOfRange;
+    private int firstHourOfRange;
+    private List<String> localeDayNames = Arrays.asList("sunday", "monday", "tuesday", "wednesday", "thursday",
+            "friday", "saturday");
+    private List<String> localeShortDayNames = Arrays.asList("sun", "mon", "tue", "wed", "thu", "fri", "sat");
+    private List<String> localeMonthNames = Arrays.asList("January", "February", "March", "April", "May", "June",
+            "July", "August",
+            "September", "October", "November", "December");
+    private List<String> localeShortMonthNames = Arrays.asList("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec");
+    private int localeFirstDayOfWeek = 0;
+    private boolean localeTwelveHourClock = false;
 
     public Double getStartDate() {
         return startDate;
@@ -84,5 +97,53 @@ public class Settings {
 
     public void setFirstHourOfRange(int firstHourOfRange) {
         this.firstHourOfRange = firstHourOfRange;
+    }
+
+    public List<String> getLocaleDayNames() {
+        return localeDayNames;
+    }
+
+    public void setLocaleDayNames(List<String> localeDayNames) {
+        this.localeDayNames = localeDayNames;
+    }
+
+    public List<String> getLocaleShortDayNames() {
+        return localeShortDayNames;
+    }
+
+    public void setLocaleShortDayNames(List<String> localeShortDayNames) {
+        this.localeShortDayNames = localeShortDayNames;
+    }
+
+    public List<String> getLocaleMonthNames() {
+        return localeMonthNames;
+    }
+
+    public void setLocaleMonthNames(List<String> localeMonthNames) {
+        this.localeMonthNames = localeMonthNames;
+    }
+
+    public List<String> getLocaleShortMonthNames() {
+        return localeShortMonthNames;
+    }
+
+    public void setLocaleShortMonthNames(List<String> localeShortMonthNames) {
+        this.localeShortMonthNames = localeShortMonthNames;
+    }
+
+    public int getLocaleFirstDayOfWeek() {
+        return localeFirstDayOfWeek;
+    }
+
+    public void setLocaleFirstDayOfWeek(int localeFirstDayOfWeek) {
+        this.localeFirstDayOfWeek = localeFirstDayOfWeek;
+    }
+
+    public boolean isLocaleTwelveHourClock() {
+        return localeTwelveHourClock;
+    }
+
+    public void setLocaleTwelveHourClock(boolean localeTwelveHourClock) {
+        this.localeTwelveHourClock = localeTwelveHourClock;
     }
 }
