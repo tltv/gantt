@@ -19,7 +19,7 @@
 				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
 			}
             
-           	_ganttStateChanged(resolution,startDate,endDate) {
+           	_ganttStateChanged(resolution,startDate,endDate,locale,timeZoneId) {
             	this.firstChild.ganttElement.setState(this.settings);
            	};
            	
@@ -82,7 +82,7 @@
 				}
 				
 				// register observer for state changes to delegate new state to gantt
-				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate)', true);
+				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId)', true);
 			}
         }
         customElements.define(GanttTemplate.is, GanttTemplate);
