@@ -141,7 +141,7 @@
 				<executions>
 					<execution>
 						<id>copy-resources-1</id>
-						<phase>package</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>copy-resources</goal>
 						</goals>
@@ -160,7 +160,7 @@
 					</execution>
 					<execution>
 						<id>copy-resources-2</id>
-						<phase>package</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>copy-resources</goal>
 						</goals>
@@ -178,7 +178,7 @@
 					</execution>
 					<execution>
 						<id>copy-resources-3</id>
-						<phase>package</phase>
+						<phase>generate-resources</phase>
 						<goals>
 							<goal>copy-resources</goal>
 						</goals>
