@@ -4,6 +4,7 @@ import org.timepedia.exporter.client.Export;
 import org.timepedia.exporter.client.ExportConstructor;
 import org.timepedia.exporter.client.ExportPackage;
 import org.timepedia.exporter.client.Exportable;
+import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Resolution;
 
 import com.google.gwt.core.client.JavaScriptObject;
@@ -380,6 +381,25 @@ public class GanttElementState implements Exportable, LocaleProvider {
         }
         if (json.containsKey("firstHourOfRange")) {
             s.setFirstHourOfRange(Double.valueOf(json.get("firstHourOfRange").isNumber().doubleValue()).intValue());
+        }
+        if (json.containsKey("localeDayNames")) {
+            s.setLocaleDayNames(GanttUtil.toStringArray(json.get("localeDayNames").isArray()));
+        }
+        if (json.containsKey("localeShortDayNames")) {
+            s.setLocaleShortDayNames(GanttUtil.toStringArray(json.get("localeShortDayNames").isArray()));
+        }
+        if (json.containsKey("localeMonthNames")) {
+            s.setLocaleMonthNames(GanttUtil.toStringArray(json.get("localeMonthNames").isArray()));
+        }
+        if (json.containsKey("localeShortMonthNames")) {
+            s.setLocaleShortMonthNames(GanttUtil.toStringArray(json.get("localeShortMonthNames").isArray()));
+        }
+        if (json.containsKey("localeFirstDayOfWeek")) {
+            s.setLocaleFirstDayOfWeek(
+                    Double.valueOf(json.get("localeFirstDayOfWeek").isNumber().doubleValue()).intValue());
+        }
+        if (json.containsKey("localeTwelveHourClock")) {
+            s.setLocaleTwelveHourClock(json.get("localeTwelveHourClock").isBoolean().booleanValue());
         }
         return s;
     }

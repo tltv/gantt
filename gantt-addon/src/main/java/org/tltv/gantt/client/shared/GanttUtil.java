@@ -6,6 +6,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.i18n.client.TimeZone;
+import com.google.gwt.json.client.JSONArray;
 import com.vaadin.polymer.elemental.Function;
 
 import elemental.html.ClientRect;
@@ -275,7 +276,7 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
@@ -285,7 +286,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -316,7 +317,7 @@ public class GanttUtil {
 
     public static native void whenReadyAndConnected(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (e.readyAndConnected) {
@@ -326,7 +327,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -334,7 +335,7 @@ public class GanttUtil {
               if (f) f();
           }
         }
-
+    
         if (e.readyAndConnected) {
             if (f) f(e);
         } else {
@@ -344,7 +345,7 @@ public class GanttUtil {
 
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {
@@ -373,4 +374,11 @@ public class GanttUtil {
         return null;
     }-*/;
 
+    public static String[] toStringArray(JSONArray array) {
+        String[] value = new String[array.size()];
+        for (int i = 0; i < array.size(); i++) {
+            value[i] = array.get(i).isString().stringValue();
+        }
+        return value;
+    }
 }
