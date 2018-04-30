@@ -197,4 +197,11 @@ public class GanttUtil {
     /*-{
         return escalator.@com.vaadin.client.widgets.Escalator::tableWrapper;
     }-*/;
+
+    public static native boolean isHorizontalScrollbarVisible(Escalator escalator)
+    /*-{
+        var scrollbar = escalator.@com.vaadin.client.widgets.Escalator::horizontalScrollbar;
+        return scrollbar.@com.vaadin.client.widget.escalator.ScrollbarBundle::scrollHandleIsVisible;
+    }-*/;
+
 }

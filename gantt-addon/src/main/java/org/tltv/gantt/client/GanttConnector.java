@@ -58,10 +58,12 @@ import com.vaadin.client.communication.StateChangeEvent;
 import com.vaadin.client.communication.StateChangeEvent.StateChangeHandler;
 import com.vaadin.client.connectors.grid.GridConnector;
 import com.vaadin.client.ui.AbstractHasComponentsConnector;
-import com.vaadin.client.ui.FocusableScrollPanel;
 import com.vaadin.client.ui.layout.ElementResizeEvent;
 import com.vaadin.client.ui.layout.ElementResizeListener;
-import com.vaadin.client.widget.escalator.ScrollbarBundle.Direction;
+import com.vaadin.client.widget.grid.events.ColumnResizeEvent;
+import com.vaadin.client.widget.grid.events.ColumnResizeHandler;
+import com.vaadin.client.widget.grid.events.ColumnVisibilityChangeEvent;
+import com.vaadin.client.widget.grid.events.ColumnVisibilityChangeHandler;
 import com.vaadin.client.widgets.Grid;
 import com.vaadin.shared.Connector;
 import com.vaadin.shared.MouseEventDetails;
@@ -86,7 +88,6 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     boolean notifyHeight = false;
 
     ComponentConnector delegateScrollConnector;
-    FocusableScrollPanel delegateScrollPanelTarget;
     Grid<?> delegateScrollGridTarget;
     HandlerRegistration ganttScrollHandlerRegistration;
     HandlerRegistration scrollDelegateHandlerRegistration;
@@ -130,10 +131,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                     ganttDelegatingVerticalScroll = true;
                     int scrollTop = getWidget().getScrollContainer().getScrollTop();
                     try {
-                        if (delegateScrollPanelTarget != null) {
-                            delegateScrollPanelTarget.setScrollPosition(scrollTop);
-
-                        } else if (delegateScrollGridTarget != null) {
+                        if (delegateScrollGridTarget != null) {
                             delegateScrollGridTarget.setScrollTop(scrollTop);
                         }
 
@@ -531,9 +529,7 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     private void onDelegateScroll() {
         scrollDelay.cancel();
         double scrollPosition = 0.0;
-        if (delegateScrollPanelTarget != null) {
-            scrollPosition = delegateScrollPanelTarget.getScrollPosition();
-        } else if (delegateScrollGridTarget != null) {
+        if (delegateScrollGridTarget != null) {
             scrollPosition = delegateScrollGridTarget.getScrollTop();
         }
         delegatingVerticalScroll = true;
@@ -578,7 +574,6 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         unRegisterScrollDelegateHandlers();
 
         delegateScrollConnector = null;
-        delegateScrollPanelTarget = null;
         if (c instanceof GridConnector) {
             delegateScrollConnector = (GridConnector) c;
             delegateScrollGridTarget = ((GridConnector) c).getWidget();
@@ -603,15 +598,12 @@ public class GanttConnector extends AbstractHasComponentsConnector {
     }
 
     void updateVerticalScrollDelegation() {
-        if (delegateScrollPanelTarget != null) {
-
-            updateVerticalScrollTableDelegation();
-
-        } else if (delegateScrollGridTarget != null) {
+        if (delegateScrollGridTarget != null) {
             updateVerticalScrollGridDelegation();
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void updateVerticalScrollGridDelegation() {
         // register scroll handler to Gantt widget
         ganttScrollHandlerRegistration = getWidget().addDomHandler(ganttScrollHandler, ScrollEvent.getType());
@@ -629,24 +621,16 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 }
             }
         });
-    }
-
-    private void updateVerticalScrollTableDelegation() {
-        // register scroll handler to Gantt widget
-        ganttScrollHandlerRegistration = getWidget().addDomHandler(ganttScrollHandler, ScrollEvent.getType());
-
-        // register a scroll handler to 'delegation' scroll panel.
-        scrollDelegateHandlerRegistration = delegateScrollPanelTarget.addScrollHandler(scrollDelegateTargetHandler);
-
-        // add detach listener to unregister scroll handler when its
-        // detached.
-        delegateScrollPanelTarget.addAttachHandler(new Handler() {
-
+        delegateScrollGridTarget.addColumnResizeHandler(new ColumnResizeHandler() {
             @Override
-            public void onAttachOrDetach(AttachEvent event) {
-                if (!event.isAttached() && scrollDelegateHandlerRegistration != null) {
-                    scrollDelegateHandlerRegistration.removeHandler();
-                }
+            public void onColumnResize(ColumnResizeEvent event) {
+                updateScrollDelegateScrollContainerHeight();
+            }
+        });
+        delegateScrollGridTarget.addColumnVisibilityChangeHandler(new ColumnVisibilityChangeHandler() {
+            @Override
+            public void onVisibilityChange(ColumnVisibilityChangeEvent event) {
+                updateScrollDelegateScrollContainerHeight();
             }
         });
     }
@@ -656,20 +640,27 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             return;
         }
 
-        boolean tableHorScrollbarVisible = false;
         int headerHeight = 0;
-        if (delegateScrollGridTarget != null && delegateScrollGridTarget.getHeaderRowCount() == 1) {
+        if (delegateScrollGridTarget.getHeaderRowCount() > 0) {
             // update Grid header height to match the Gantt widget's header
-            // height when there is only one header row.
             int tHeadBorder = WidgetUtil.measureVerticalBorder(
                     delegateScrollGridTarget.getEscalator().getHeader().getRowElement(0).getFirstChildElement());
             headerHeight = getWidget().getTimelineHeight();
-            delegateScrollGridTarget.getEscalator().getHeader()
-                    .setDefaultRowHeight(Math.max(0, headerHeight - tHeadBorder));
-
-            tableHorScrollbarVisible = delegateScrollGridTarget.getEscalator().isScrollLocked(Direction.HORIZONTAL);
+            int hRowHeight = Math.max(0, headerHeight - tHeadBorder);
+            if (delegateScrollGridTarget.getEscalator().getHeader().getRowCount() > 1) {
+                hRowHeight = hRowHeight
+                        / delegateScrollGridTarget.getEscalator().getHeader().getRowCount();
+            }
+            delegateScrollGridTarget.getEscalator().getHeader().setDefaultRowHeight(hRowHeight);
         }
 
+        updateScrollDelegateScrollContainerHeight();
+    }
+
+    private void updateScrollDelegateScrollContainerHeight() {
+        boolean tableHorScrollbarVisible = GanttUtil
+                .isHorizontalScrollbarVisible(delegateScrollGridTarget.getEscalator());
+        int headerHeight = getWidget().getTimelineHeight();
         // Adjust table's scroll container height to match the Gantt widget's
         // scroll container height.
         int newTableScrollContainerHeight = getWidget().getScrollContainerHeight();
@@ -686,16 +677,12 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
         }
 
-        if (delegateScrollPanelTarget != null) {
-            delegateScrollPanelTarget.setHeight(Math.max(0, newTableScrollContainerHeight) + "px");
-        } else if (delegateScrollGridTarget != null) {
-            GanttUtil.getTableWrapper(delegateScrollGridTarget.getEscalator()).getStyle().setProperty("height",
-                    Math.max(0, headerHeight + newTableScrollContainerHeight) + "px");
-            delegateScrollGridTarget.getEscalator().getBody().getElement().getStyle().setProperty("height",
-                    Math.max(0, newTableScrollContainerHeight) + "px");
-            delegateScrollGridTarget.getEscalator()
-                    .setHeight(Math.max(0, headerHeight + newTableScrollContainerHeight) + "px");
-        }
+        GanttUtil.getTableWrapper(delegateScrollGridTarget.getEscalator()).getStyle().setProperty("height",
+                Math.max(0, headerHeight + newTableScrollContainerHeight) + "px");
+        delegateScrollGridTarget.getEscalator().getBody().getElement().getStyle().setProperty("height",
+                Math.max(0, newTableScrollContainerHeight) + "px");
+        delegateScrollGridTarget.getEscalator()
+                .setHeight(Math.max(0, headerHeight + newTableScrollContainerHeight) + "px");
 
         getLayoutManager().setNeedsMeasure((ComponentConnector) getState().verticalScrollDelegateTarget);
     }
