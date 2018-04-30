@@ -1,4 +1,7 @@
 /.settings
 /.project
+/gantt-element
+/gantt-exporter
+/gantt-flow-addon
 *.iml
 .idea
