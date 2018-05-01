@@ -485,7 +485,8 @@ public class GanttConnector extends AbstractHasComponentsConnector {
                 || stateChangeEvent.hasPropertyChanged("monthFormat")
                 || stateChangeEvent.hasPropertyChanged("yearFormat")
                 || stateChangeEvent.hasPropertyChanged("weekFormat")
-                || stateChangeEvent.hasPropertyChanged("dayFormat")) {
+                || stateChangeEvent.hasPropertyChanged("dayFormat")
+                || stateChangeEvent.hasPropertyChanged("hourFormat")) {
             notifyHeight = !stateChangeEvent.isInitialStateChange();
             getWidget().setForceUpdateTimeline();
         }

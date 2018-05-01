@@ -627,6 +627,26 @@ public class Gantt extends AbstractComponent implements HasComponents {
     }
 
     /**
+     * Set timeline's hour row's hour format for {@link Resolution#Hour}
+     * resolution. Default is 'HH' or 'h' depending on active locale.
+     *
+     * @param weekFormat
+     *            Format string like 'dd'
+     */
+    public void setTimelineHourFormat(String hourFormat) {
+        getState().hourFormat = hourFormat;
+    }
+
+    /**
+     * Timeline's hour row's hour format for {@link Resolution#Hour} resolution.
+     *
+     * @return
+     */
+    public String getTimelineHourFormat() {
+        return getState().hourFormat;
+    }
+
+    /**
      * Return true when Default Context Menu will show up on "Right click". It's
      * disabled by default.
      */

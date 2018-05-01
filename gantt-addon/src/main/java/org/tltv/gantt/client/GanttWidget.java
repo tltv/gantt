@@ -1086,6 +1086,14 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         timeline.setDayFormat(dayFormat);
     }
 
+    public void setHourFormat(String hourFormat) {
+        timeline.setHourFormat(hourFormat);
+    }
+
+    public String getHourFormat() {
+        return timeline.getHourFormat();
+    }
+
     public boolean isDefaultContextMenuEnabled() {
         return defaultContextMenuEnabled;
     }

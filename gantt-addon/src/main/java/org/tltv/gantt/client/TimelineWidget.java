@@ -114,6 +114,7 @@ public class TimelineWidget extends Widget {
     private DateTimeFormat dayDateTimeFormat;
     private DateTimeFormat hour12DateTimeFormat;
     private DateTimeFormat hour24DateTimeFormat;
+    private DateTimeFormat customHourDateTimeFormat;
 
     private String locale;
     private Resolution resolution;
@@ -158,6 +159,7 @@ public class TimelineWidget extends Widget {
     private String yearFormat;
     private String weekFormat;
     private String dayFormat;
+    private String hourFormat;
 
     /*
      * resolutionDiv contains the resolution specific elements that represents a
@@ -807,6 +809,17 @@ public class TimelineWidget extends Widget {
         this.dayFormat = dayFormat;
     }
 
+    public void setHourFormat(String hourFormat) {
+        if (hourFormat == null || !hourFormat.equals(this.hourFormat)) {
+            customHourDateTimeFormat = null;
+        }
+        this.hourFormat = hourFormat;
+    }
+
+    public String getHourFormat() {
+        return hourFormat;
+    }
+
     /**
      * Sets force update flag up. Next
      * {@link #update(Resolution, long, long, int, int, LocaleDataProvider)}
@@ -856,6 +869,13 @@ public class TimelineWidget extends Widget {
             hour24DateTimeFormat = DateTimeFormat.getFormat("HH");
         }
         return hour24DateTimeFormat;
+    }
+
+    public DateTimeFormat getCustomHourDateTimeFormat() {
+        if (customHourDateTimeFormat == null) {
+            customHourDateTimeFormat = DateTimeFormat.getFormat(hourFormat);
+        }
+        return customHourDateTimeFormat;
     }
 
     /**
@@ -1568,6 +1588,16 @@ public class TimelineWidget extends Widget {
         return getLocaleDataProvider().formatDate(date, monthFormat);
     }
 
+    private String formatHourCaption(Date date) {
+        if (hourFormat == null || hourFormat.isEmpty()) {
+            if (getLocaleDataProvider().isTwelveHourClock()) {
+                return getLocaleDataProvider().formatDate(date, getHour12DateTimeFormat());
+            }
+            return getLocaleDataProvider().formatDate(date, getHour24DateTimeFormat());
+        }
+        return getLocaleDataProvider().formatDate(date, getCustomHourDateTimeFormat());
+    }
+
     /** Clears Daylight saving time adjustment from the given time. */
     private long toNormalDate(long zonedDate) {
         return zonedDate - getLocaleDataProvider().getDaylightAdjustment(new Date(zonedDate));
@@ -1792,11 +1822,7 @@ public class TimelineWidget extends Widget {
 
     private void fillHourResolutionBlock(DivElement resBlock, Date date, int index, int hourCounter, boolean lastBlock,
             int left, boolean even) {
-        if (getLocaleDataProvider().isTwelveHourClock()) {
-            resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getHour12DateTimeFormat()));
-        } else {
-            resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getHour24DateTimeFormat()));
-        }
+        resBlock.setInnerText(formatHourCaption(date));
 
         if (getLocaleDataProvider().formatDate(date, HOUR_CHECK_FORMAT).equals(currentDate + currentHour)) {
             resBlock.addClassName(STYLE_NOW);
@@ -2120,4 +2146,5 @@ public class TimelineWidget extends Widget {
     public long getNow() {
         return timestamp + (System.currentTimeMillis() - browserTimestamp);
     }
+
 }

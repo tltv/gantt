@@ -648,6 +648,13 @@ public class DemoUI extends UI {
                 gantt.setTimelineDayFormat("dd. EEEE");
             }
         });
+        item = formatItem.addItem("Set 'k' hour format for Hour resolution", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setTimelineHourFormat("k");
+            }
+        });
 
         item = viewItem.addItem("Show Control Panel", new Command() {
 

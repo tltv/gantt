@@ -53,6 +53,9 @@ public class GanttState extends AbstractComponentState {
     public boolean backgroundGridEnabled = true;
 
     @DelegateToWidget
+    public String hourFormat;
+
+    @DelegateToWidget
     public String weekFormat;
 
     @DelegateToWidget
