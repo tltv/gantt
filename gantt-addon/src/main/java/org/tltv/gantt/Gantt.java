@@ -28,6 +28,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -84,6 +85,9 @@ public class Gantt extends AbstractComponent implements HasComponents {
     private TimeZone timezone;
     private Calendar calendar;
 
+    protected final DateTimeFormatter currentDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.US);
+    protected final DateTimeFormatter currentHourFormatter = DateTimeFormatter.ofPattern("HH", Locale.US);
+
     protected final Map<Step, StepComponent> stepComponents = new HashMap<Step, StepComponent>();
     protected final Map<SubStep, SubStepComponent> subStepMap = new HashMap<SubStep, SubStepComponent>();
 
@@ -131,6 +135,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
 
         // update component state's locale.
         updateLocale();
+        updateCurrentDateAndTime();
     }
 
     @Override
@@ -633,6 +638,15 @@ public class Gantt extends AbstractComponent implements HasComponents {
         getState().defaultContextMenuEnabled = enabled;
     }
 
+    /** Is current time indicator shown in the gantt. */
+    public boolean isShowCurrentTime() {
+        return getState().showCurrentTime;
+    }
+
+    public void setShowCurrentTime(boolean showCurrentTime) {
+        getState().showCurrentTime = showCurrentTime;
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -738,6 +752,7 @@ public class Gantt extends AbstractComponent implements HasComponents {
             }
 
             updateTimelineStartTimeDetails();
+            updateCurrentDateAndTime();
             markAsDirty();
         }
     }
@@ -925,6 +940,14 @@ public class Gantt extends AbstractComponent implements HasComponents {
         Locale locale = getLocale();
         getState().locale = locale.toString();
         calendar = null;
+    }
+
+    private void updateCurrentDateAndTime() {
+        getState().currentDate = currentDateFormatter
+                .format(LocalDate.now(getTimeZone().toZoneId()));
+        getState().currentHour = currentHourFormatter
+                .format(LocalDateTime.now(getTimeZone().toZoneId()));
+        getState().timestamp = ZonedDateTime.now(getTimeZone().toZoneId()).toInstant().toEpochMilli();
     }
 
     private String trimFormat(String format) {

@@ -16,6 +16,20 @@
 
 package org.tltv.gantt.client;
 
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectLeft;
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectRight;
+import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.tltv.gantt.client.shared.GanttUtil;
+import org.tltv.gantt.client.shared.Resolution;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
@@ -31,25 +45,12 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AbstractNativeScrollbar;
 import com.google.gwt.user.client.ui.Widget;
-import org.tltv.gantt.client.shared.GanttUtil;
-import org.tltv.gantt.client.shared.Resolution;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectLeft;
-import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectRight;
-import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
 
 /**
  * GWT widget to build a scalable timeline that supports more than one
- * resolutions ({@link Resolution}). When timeline
- * element doesn't overflow horizontally in it's parent element, it scales the
- * content width up to fit in the space available.
+ * resolutions ({@link Resolution}). When timeline element doesn't overflow
+ * horizontally in it's parent element, it scales the content width up to fit in
+ * the space available.
  * <p>
  * When this component scales up, all widths are calculated as percentages.
  * Pixel widths are used otherwise. Some browsers may not support percentages
@@ -91,6 +92,10 @@ public class TimelineWidget extends Widget {
     public static final String STYLE_CENTER = "c-col";
     public static final String STYLE_LAST = "l-col";
     public static final String STYLE_MEASURE = "measure";
+    public static final String STYLE_NOW = "now";
+
+    public static final String DAY_CHECK_FORMAT = "yyyyMMdd";
+    public static final String HOUR_CHECK_FORMAT = "yyyyMMddHH";
 
     public static final int DAYS_IN_WEEK = 7;
     public static final int HOURS_IN_DAY = 24;
@@ -127,6 +132,10 @@ public class TimelineWidget extends Widget {
     private int firstHourOfRange;
     private String[] monthNames;
     private String[] weekdayNames;
+    private String currentDate = "";
+    private String currentHour = "";
+    private long timestamp;
+    private long browserTimestamp;
 
     /*
      * number of blocks in resolution range. Days for Day/Week resolution, Hours
@@ -248,7 +257,7 @@ public class TimelineWidget extends Widget {
      *
      */
     public void update(Resolution resolution, long startDate, long endDate, int firstDayOfRange, int firstHourOfRange,
-                       LocaleDataProvider localeDataProvider) {
+            LocaleDataProvider localeDataProvider) {
         if (localeDataProvider == null) {
             GWT.log(getClass().getSimpleName() + " requires LocaleDataProvider. Can't complete update(...) operation.");
             return;
@@ -417,7 +426,7 @@ public class TimelineWidget extends Widget {
     }
 
     public String getLeftPositionPercentageStringForDate(long date, double rangeWidth, long rangeStartDate,
-                                                         long rangeEndDate) {
+            long rangeEndDate) {
         double rangeLeft = getLeftPositionForDate(date, rangeWidth, rangeStartDate, rangeEndDate);
         double width = rangeWidth;
         String calc = createCalcCssValue(width, rangeLeft);
@@ -1160,6 +1169,7 @@ public class TimelineWidget extends Widget {
             int dayCounter = getFirstDayOfVisibleRange(startDate);
             boolean even = isEven(startDate, firstDayOfRange);
             boolean firstWeek = true;
+            int currentMarkedWeek = -1;
             int weekIndex = 0;
             Weekday weekday;
 
@@ -1198,16 +1208,24 @@ public class TimelineWidget extends Widget {
                     firstWeek = false;
                     even = !even;
                 }
-                if (index == 0 || weekday == Weekday.First) {
-                    int childCount = getResolutionDiv().getChildCount();
-                    if (isValidChildIndex(weekIndex, childCount)) {
-                        resBlock = DivElement.as(Element.as(getResolutionDiv().getChild(weekIndex)));
-                    } else {
-                        logIndexOutOfBounds("week", weekIndex, childCount);
-                        return;
-                    }
+                boolean fillWeekBlock = index == 0 || weekday == Weekday.First;
+                int childCount = getResolutionDiv().getChildCount();
+                if (isValidChildIndex(weekIndex, childCount)) {
+                    resBlock = DivElement.as(Element.as(getResolutionDiv().getChild(weekIndex)));
+                } else {
+                    logIndexOutOfBounds("week", weekIndex, childCount);
+                    return;
                 }
-                fillWeekResolutionBlock(resBlock, date, weekIndex, weekday, firstWeek, lastTimelineBlock, left, even);
+
+                if (getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
+                    resBlock.addClassName(STYLE_NOW);
+                    currentMarkedWeek = weekIndex;
+                } else if (currentMarkedWeek != weekIndex) {
+                    resBlock.removeClassName(STYLE_NOW);
+                }
+
+                fillWeekResolutionBlock(resBlock, fillWeekBlock, date, weekIndex, weekday, firstWeek,
+                        lastTimelineBlock, left, even);
             }
 
             private int calcDaysLeftInFirstWeek(int startDay) {
@@ -1261,7 +1279,7 @@ public class TimelineWidget extends Widget {
     }
 
     private void prepareTimelineForHourResolution(long interval, long startDate, long endDate,
-                                                  ResolutionBlockRegisterer resBlockRegisterer) {
+            ResolutionBlockRegisterer resBlockRegisterer) {
         blocksInRange = 0;
         resolutionBlockCount = 0;
         firstResBlockCount = 0;
@@ -1297,7 +1315,7 @@ public class TimelineWidget extends Widget {
     }
 
     private void prepareTimelineForResolution(long interval, long startDate, long endDate,
-                                              ResolutionBlockRegisterer resBlockRegisterer) {
+            ResolutionBlockRegisterer resBlockRegisterer) {
         blocksInRange = 0;
         resolutionBlockCount = 0;
         firstResBlockCount = 0;
@@ -1338,7 +1356,7 @@ public class TimelineWidget extends Widget {
     }
 
     private void fillTimelineForResolution(long interval, long startDate, long endDate,
-                                           ResolutionBlockFiller resBlockFiller) {
+            ResolutionBlockFiller resBlockFiller) {
         String currentYear = null;
         long pos = startDate;
         pos = adjustToMiddleOfDay(pos);
@@ -1365,7 +1383,7 @@ public class TimelineWidget extends Widget {
     }
 
     private void fillTimelineForHourResolution(long interval, long startDate, long endDate,
-                                               ResolutionBlockFiller resBlockFiller) {
+            ResolutionBlockFiller resBlockFiller) {
         String currentYear = null;
         long pos = startDate;
         final long end = endDate;
@@ -1701,6 +1719,12 @@ public class TimelineWidget extends Widget {
 
     private void fillDayResolutionBlock(DivElement resBlock, Date date, int index, boolean weekend, int left) {
         resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getDayDateTimeFormat()));
+
+        if (getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
+            resBlock.addClassName(STYLE_NOW);
+        } else {
+            resBlock.removeClassName(STYLE_NOW);
+        }
         if (weekend) {
             resBlock.addClassName(STYLE_WEEKEND);
         } else {
@@ -1727,9 +1751,10 @@ public class TimelineWidget extends Widget {
         blocksInRange++;
     }
 
-    private void fillWeekResolutionBlock(DivElement resBlock, Date date, int index, Weekday weekDay, boolean firstWeek,
-                                         boolean lastBlock, int left, boolean even) {
-        if (resBlock != null) {
+    private void fillWeekResolutionBlock(DivElement resBlock, boolean fillWeekBlock, Date date, int index,
+            Weekday weekDay, boolean firstWeek,
+            boolean lastBlock, int left, boolean even) {
+        if (fillWeekBlock) {
             resBlock.setInnerText(formatWeekCaption(date));
 
             if (even) {
@@ -1766,13 +1791,18 @@ public class TimelineWidget extends Widget {
     }
 
     private void fillHourResolutionBlock(DivElement resBlock, Date date, int index, int hourCounter, boolean lastBlock,
-                                         int left, boolean even) {
+            int left, boolean even) {
         if (getLocaleDataProvider().isTwelveHourClock()) {
             resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getHour12DateTimeFormat()));
         } else {
             resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getHour24DateTimeFormat()));
         }
 
+        if (getLocaleDataProvider().formatDate(date, HOUR_CHECK_FORMAT).equals(currentDate + currentHour)) {
+            resBlock.addClassName(STYLE_NOW);
+        } else {
+            resBlock.removeClassName(STYLE_NOW);
+        }
         if (even) {
             resBlock.addClassName(STYLE_EVEN);
         } else {
@@ -1820,7 +1850,7 @@ public class TimelineWidget extends Widget {
     }
 
     private boolean isChanged(Resolution resolution, long startDate, long endDate, int firstDayOfWeek,
-                              int firstDayOfRange, int firstHourOfRange, String locale) {
+            int firstDayOfRange, int firstHourOfRange, String locale) {
         boolean resolutionChanged = this.resolution != resolution;
         if (resolutionChanged) {
             minResolutionWidth = -1;
@@ -1928,7 +1958,7 @@ public class TimelineWidget extends Widget {
     }
 
     private double getScrollOverflowForResolutionBlock(double positionLeftSnapshot, int left,
-                                                       boolean firstResBlockShort) {
+            boolean firstResBlockShort) {
         double overflow;
         if (firstResBlockShort && left <= getFirstResolutionElementWidth()) {
             overflow = getScrollOverflowForShortFirstResolutionBlock(positionLeftSnapshot);
@@ -1997,15 +2027,15 @@ public class TimelineWidget extends Widget {
         DivElement element = null;
         for (int i = 0; i < blocks; i++) {
             switch (resolution) {
-                case Hour:
-                    element = createHourResolutionBlock();
-                    break;
-                case Day:
-                    element = createDayResolutionBlock();
-                    break;
-                case Week:
-                    element = createWeekResolutionBlock();
-                    break;
+            case Hour:
+                element = createHourResolutionBlock();
+                break;
+            case Day:
+                element = createDayResolutionBlock();
+                break;
+            case Week:
+                element = createWeekResolutionBlock();
+                break;
             }
             resolutionDiv.appendChild(element);
         }
@@ -2071,5 +2101,23 @@ public class TimelineWidget extends Widget {
 
     public void setResolutionWeekDayblockWidth(int resolutionWeekDayblockWidth) {
         this.resolutionWeekDayblockWidth = resolutionWeekDayblockWidth;
+    }
+
+    public void setCurrentDateAndTime(String currentDate, String currentHour, long timestamp) {
+        this.currentDate = currentDate;
+        this.currentHour = currentHour;
+        if (timestamp != this.timestamp) {
+            this.timestamp = timestamp;
+            browserTimestamp = System.currentTimeMillis();
+        }
+    }
+
+    /**
+     * Get current time epoch.
+     * {@link #setCurrentDateAndTime(String, String, long)} must be called once
+     * to setup 'clock' properly.
+     */
+    public long getNow() {
+        return timestamp + (System.currentTimeMillis() - browserTimestamp);
     }
 }

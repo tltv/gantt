@@ -139,6 +139,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private static final String STYLE_MOVING = "moving";
     private static final String STYLE_RESIZING = "resizing";
     private static final String STYLE_MOVE_ELEMENT = "mv-el";
+    private static final String STYLE_NOW_ELEMENT = "now-el";
 
     private HandlerRegistration pointerDownHandlerRegistration;
     private HandlerRegistration pointerUpHandlerRegistration;
@@ -167,6 +168,10 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
     private boolean resizableSteps;
     private boolean backgroundGridEnabled;
     private boolean defaultContextMenuEnabled = false;
+    private boolean showCurrentTime;
+    private String currentDate;
+    private String currentHour;
+    private Long timestamp;
 
     private GanttRpc ganttRpc;
     private LocaleDataProvider localeDataProvider;
@@ -223,6 +228,21 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     // additional element that appears when moving or resizing
     protected DivElement moveElement = DivElement.as(DOM.createDiv());
+
+    // element that points current time in timeline.
+    protected DivElement nowElement = DivElement.as(DOM.createDiv());
+
+    // updates current time indicator
+    private Timer currentTimeTimer = new Timer() {
+
+        @Override
+        public void run() {
+            if (isShowCurrentTime()) {
+                updateNowElement();
+                currentTimeTimer.schedule(5 * 60000);
+            }
+        }
+    };
 
     // click is actually detected by 'mouseup'/'mousedown' events, not with
     // 'onclick'. click event is not used. disallowClickTimer helps to detect
@@ -527,6 +547,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         setElement(DivElement.as(DOM.createDiv()));
         setStyleName(STYLE_GANTT);
 
+        nowElement.setClassName(STYLE_NOW_ELEMENT);
+
         moveElement.setClassName(STYLE_MOVE_ELEMENT);
         // not visible by default
         moveElement.getStyle().setDisplay(Display.NONE);
@@ -541,6 +563,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         container.appendChild(content);
 
         content.appendChild(moveElement);
+        content.appendChild(nowElement);
 
         scrollbarSpacer = DivElement.as(DOM.createDiv());
         scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
@@ -654,6 +677,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         GWT.log("GanttWidget's active TimeZone: " + getLocaleDataProvider().getTimeZone().getID() + " (raw offset: "
                 + getLocaleDataProvider().getTimeZone().getStandardOffset() + ")");
 
+        timeline.setCurrentDateAndTime(getCurrentDate(), getCurrentHour(), getTimestamp());
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
         timeline.update(resolution, startDate, endDate, firstDayOfRange, firstHourOfRange, localeDataProvider);
@@ -664,6 +688,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         updateStepWidths(steps);
 
         wasTimelineOverflowingHorizontally = timeline.isTimelineOverflowingHorizontally();
+
+        updateCurrentTime();
     }
 
     /**
@@ -1066,6 +1092,38 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     public void setDefaultContextMenuEnabled(boolean defaultContextMenuEnabled) {
         this.defaultContextMenuEnabled = defaultContextMenuEnabled;
+    }
+
+    public void setShowCurrentTime(boolean showCurrentTime) {
+        this.showCurrentTime = showCurrentTime;
+    }
+
+    public boolean isShowCurrentTime() {
+        return showCurrentTime;
+    }
+
+    public String getCurrentDate() {
+        return currentDate;
+    }
+
+    public void setCurrentDate(String currentDate) {
+        this.currentDate = currentDate;
+    }
+
+    public String getCurrentHour() {
+        return currentHour;
+    }
+
+    public void setCurrentHour(String currentHour) {
+        this.currentHour = currentHour;
+    }
+
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Long timestamp) {
+        this.timestamp = timestamp;
     }
 
     /**
@@ -1886,6 +1944,36 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         moveElement.getStyle().setDisplay(Display.NONE);
     }
 
+    private void updateNowElement() {
+        if (timeline == null || nowElement == null) {
+            return;
+        }
+        if (timeline.isTimelineOverflowingHorizontally()) {
+            nowElement.getStyle().setLeft(timeline.getLeftPositionForDate(timeline.getNow()), Unit.PX);
+        } else {
+            nowElement.getStyle().setLeft(timeline.getLeftPositionPercentageForDate(timeline.getNow(),
+                    getContentWidth()), Unit.PCT);
+        }
+    }
+
+    private void updateCurrentTime() {
+        currentTimeTimer.cancel();
+        if (isShowCurrentTime()) {
+            currentTimeTimer.run();
+            showNowElement();
+        } else {
+            hideNowElement();
+        }
+    }
+
+    private void hideNowElement() {
+        nowElement.getStyle().setDisplay(Display.NONE);
+    }
+
+    private void showNowElement() {
+        nowElement.getStyle().clearDisplay();
+    }
+
     private void internalMoveOrResizeCompleted(Element bar, Element newPosition, boolean move, NativeEvent event) {
         String stepUid = getStepUid(bar);
         String newStepUid = stepUid;
@@ -1955,8 +2043,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         return moveElement.hasParentElement() ? 1 : 0;
     }
 
+    private int isNowElementAttached() {
+        return nowElement.hasParentElement() ? 1 : 0;
+    }
+
     private int getAdditionalNonWidgetContentElementCount() {
-        return isMoveElementAttached() + isBgGridAttached();
+        return isNowElementAttached() + isMoveElementAttached() + isBgGridAttached();
     }
 
     private int getAdditionalWidgetContentElementCount() {

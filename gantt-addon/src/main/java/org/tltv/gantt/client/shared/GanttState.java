@@ -67,6 +67,20 @@ public class GanttState extends AbstractComponentState {
     @DelegateToWidget
     public boolean defaultContextMenuEnabled = false;
 
+    @DelegateToWidget
+    public boolean showCurrentTime = true;
+
+    /** Current date in yyyyMMdd format. */
+    @DelegateToWidget
+    public String currentDate;
+
+    /** Current hour in HH format. */
+    @DelegateToWidget
+    public String currentHour;
+
+    @DelegateToWidget
+    public Long timestamp;
+
     public List<Connector> steps = new LinkedList<Connector>();
 
     public Connector verticalScrollDelegateTarget;

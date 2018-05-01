@@ -683,6 +683,17 @@ public class DemoUI extends UI {
         item.setCheckable(true);
         item.setChecked(gantt.isMonthsVisible());
 
+        item = viewItem.addItem("Show current time pointer", new Command() {
+
+            @Override
+            public void menuSelected(MenuItem selectedItem) {
+                gantt.setShowCurrentTime(!gantt.isShowCurrentTime());
+                selectedItem.setChecked(gantt.isShowCurrentTime());
+            }
+        });
+        item.setCheckable(true);
+        item.setChecked(gantt.isShowCurrentTime());
+
         item = viewItem.addItem("Show Gantt with Grid", new Command() {
 
             @Override
