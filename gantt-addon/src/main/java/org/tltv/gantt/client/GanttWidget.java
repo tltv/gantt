@@ -1914,12 +1914,22 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             content.getStyle().setWidth(timeline.getResolutionWidth(), Unit.PX);
         }
     }
-
+    
     private int getElementHeightWithMargin(Element div) {
-        int height = div.getClientHeight();
+    	String elementHeight = div.getStyle().getHeight();
+    	int height = 0;
+    	if(!isEmpty(elementHeight) ) {
+    		height =  Integer.valueOf( elementHeight.split(Unit.PX.getType())[0] );
+    	} else {
+    		height = div.getClientHeight();
+    	}
         double marginHeight = 0;
         marginHeight = getMarginByComputedStyle(div);
         return height + (int) Math.round(marginHeight);
+    }
+    
+    protected boolean isEmpty(String string) {
+        return string == null || string.trim().isEmpty();
     }
 
     private boolean isBetween(int v, int min, int max) {

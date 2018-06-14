@@ -6,7 +6,7 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-demo</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.3</version>
+	<version>1.0.3-vk-SNAPSHOT</version>
 	<name>Gantt Add-on Demo</name>
 
 	<properties>
@@ -124,7 +124,7 @@
 				<artifactId>vaadin-maven-plugin</artifactId>
 				<version>${vaadin.plugin.version}</version>
 				<configuration>
-					<extraJvmArgs>-Xmx1G  -Xss1G</extraJvmArgs>
+					<extraJvmArgs>-Xmx1G  -Xss1G -Djava.io.tmpdir=${project.build.directory}/../../../../</extraJvmArgs>
 					<webappDirectory>${basedir}/src/main/webapp/VAADIN/widgetsets</webappDirectory>
 					<hostedWebapp>${basedir}/src/main/webapp/VAADIN/widgetsets</hostedWebapp>
 					<noServer>true</noServer>
