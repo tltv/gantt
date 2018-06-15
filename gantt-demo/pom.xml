@@ -6,7 +6,7 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-demo</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.3-vk-SNAPSHOT</version>
+	<version>1.0.3-vk</version>
 	<name>Gantt Add-on Demo</name>
 
 	<properties>
