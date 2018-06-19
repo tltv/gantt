@@ -9,6 +9,6 @@
       		<when-property-is name="user.agent" value="safari"/>
     	</any>
   	</replace-with>
-  	<set-configuration-property name="devModeRedirectEnabled" value="true" />
+  	
 	<!-- set-property name="user.agent" value="gecko1_8"/-->
 </module>
