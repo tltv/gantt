@@ -112,11 +112,11 @@ public class AbstractStepWidget extends ComplexPanel {
             extraStyle = null;
         }
     }
-    
+
     protected void updateHeight() {
-        if ( step.getHeight() > 0 ) {
-        	getElement().getStyle().setHeight(step.getHeight(), Unit.PX);
-        } 
+        if (step.getHeight() > 0) {
+            getElement().getStyle().setHeight(step.getHeight(), Unit.PX);
+        }
     }
 
     protected boolean isEmpty(String string) {

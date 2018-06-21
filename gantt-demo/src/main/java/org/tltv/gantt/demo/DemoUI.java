@@ -223,7 +223,6 @@ public class DemoUI extends UI {
         step1.setDescription("Description tooltip");
         step1.setShowProgress(true);
         step1.setProgress(50.0);
-        step1.setHeight(37);
         step1.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.MONTH, 2);
 
@@ -238,7 +237,6 @@ public class DemoUI extends UI {
         cal.add(Calendar.MONTH, 4);
         step2.setEndDate(cal.getTime().getTime());
         step2.setPredecessor(step1);
-        step2.setHeight(37);
 
         Step step3 = new Step("Third step");
         step3.setDescription("<b>HTML</b> <i>content</i> is <u>supported</u> in tooltips.");
@@ -247,18 +245,15 @@ public class DemoUI extends UI {
         cal.add(Calendar.MONTH, 12);
         step3.setEndDate(cal.getTime().getTime());
         step3.setPredecessor(step2);
-        step3.setHeight(37);
 
         Step step4 = new Step("Fourth step");
         step4.setDescription("Tooltip is <b>VTooltip</b>. <p>Looks same for all Vaadin components.");
         step4.setStartDate(step2.getStartDate());
         step4.setEndDate(step2.getEndDate());
         step4.setPredecessor(step1);
-        step4.setHeight(37);
 
         Step stepWithSubSteps = new Step("Step with sub-steps");
         stepWithSubSteps.setDescription("Tooltip for Step with sub-steps");
-        stepWithSubSteps.setHeight(37);
 
         cal.setTime(new Date(step1.getStartDate()));
         cal.add(Calendar.DATE, 7);
@@ -299,7 +294,6 @@ public class DemoUI extends UI {
         for (int i = 0; i < 10; i++) {
             Step step = new Step("Step " + i);
             step.setStartDate(cal.getTime().getTime());
-            step.setHeight(37);
             cal.add(Calendar.DATE, 14);
             step.setEndDate(cal.getTime().getTime());
             step.setBackgroundColor(colors[i % colors.length]);

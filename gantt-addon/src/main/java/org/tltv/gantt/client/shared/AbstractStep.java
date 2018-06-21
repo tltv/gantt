@@ -198,6 +198,14 @@ public abstract class AbstractStep implements Serializable {
         this.movable = movable;
     }
 
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
     public enum CaptionMode {
         TEXT,
         HTML
@@ -232,13 +240,5 @@ public abstract class AbstractStep implements Serializable {
         }
         return true;
     }
-
-	public int getHeight() {
-		return height;
-	}
-
-	public void setHeight(int height) {
-		this.height = height;
-	}
 
 }

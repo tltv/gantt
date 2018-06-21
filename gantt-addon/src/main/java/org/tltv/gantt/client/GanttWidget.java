@@ -1900,11 +1900,6 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         if (firstStepIndex < content.getChildCount()) {
             Element firstBar = Element.as(content.getChild(firstStepIndex));
             gridBlockHeightPx = getElementHeightWithMargin(firstBar);
-            if ((contentHeight % gridBlockHeightPx) != 0) {
-                // height is not divided evenly for each bar.
-                // Can't use background grid with background-size trick.
-                gridBlockHeightPx = 0;
-            }
         }
         return gridBlockHeightPx;
     }
@@ -1914,22 +1909,12 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             content.getStyle().setWidth(timeline.getResolutionWidth(), Unit.PX);
         }
     }
-    
+
     private int getElementHeightWithMargin(Element div) {
-    	String elementHeight = div.getStyle().getHeight();
-    	int height = 0;
-    	if(!isEmpty(elementHeight) ) {
-    		height =  Integer.valueOf( elementHeight.split(Unit.PX.getType())[0] );
-    	} else {
-    		height = div.getClientHeight();
-    	}
+        int height = (int) Math.round(GanttUtil.getBoundingClientRectHeight(div));
         double marginHeight = 0;
         marginHeight = getMarginByComputedStyle(div);
         return height + (int) Math.round(marginHeight);
-    }
-    
-    protected boolean isEmpty(String string) {
-        return string == null || string.trim().isEmpty();
     }
 
     private boolean isBetween(int v, int min, int max) {
