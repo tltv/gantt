@@ -27,6 +27,7 @@ public abstract class AbstractStep implements Serializable {
     private String caption;
     private String description;
     private String backgroundColor = "#A8D9FF";
+    private int height;
     private double progress;
     private boolean showProgress;
     private boolean resizable = true;
@@ -231,4 +232,13 @@ public abstract class AbstractStep implements Serializable {
         }
         return true;
     }
+
+	public int getHeight() {
+		return height;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
 }

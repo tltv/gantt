@@ -6,6 +6,7 @@ import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.ComplexPanel;
@@ -71,6 +72,7 @@ public class AbstractStepWidget extends ComplexPanel {
         this.step = step;
         updateBackground();
         updateStyle();
+        updateHeight();
         updateCaption();
         updateProgress();
     }
@@ -109,6 +111,12 @@ public class AbstractStepWidget extends ComplexPanel {
             getElement().removeClassName(extraStyle);
             extraStyle = null;
         }
+    }
+    
+    protected void updateHeight() {
+        if ( step.getHeight() > 0 ) {
+        	getElement().getStyle().setHeight(step.getHeight(), Unit.PX);
+        } 
     }
 
     protected boolean isEmpty(String string) {
