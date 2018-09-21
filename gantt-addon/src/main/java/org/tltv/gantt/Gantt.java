@@ -123,6 +123,11 @@ public class Gantt extends AbstractComponent implements HasComponents {
             }
             firePredecessorChangeEvent(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid);
         }
+
+        @Override
+        public void requestCurrentTime() {
+            updateCurrentDateAndTime();
+        }
     };
 
     public Gantt() {

@@ -16,4 +16,6 @@ public interface GanttRpc {
 
     boolean onStepRelationSelected(StepWidget source,
             boolean startingPointChanged, Element newRelationStepElement);
+
+    void requestCurrentTime();
 }

@@ -15,4 +15,6 @@ public interface GanttServerRpc extends ServerRpc {
 
     public void onPredecessorChanged(String newPredecessorStepUid,
             String forTargetStepUid, String clearPredecessorForStepUid);
+
+    public void requestCurrentTime();
 }

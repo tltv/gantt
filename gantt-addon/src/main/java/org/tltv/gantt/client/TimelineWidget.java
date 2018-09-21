@@ -137,6 +137,7 @@ public class TimelineWidget extends Widget {
     private String currentHour = "";
     private long timestamp;
     private long browserTimestamp;
+    boolean showCurrentTime;
 
     /*
      * number of blocks in resolution range. Days for Day/Week resolution, Hours
@@ -1237,7 +1238,7 @@ public class TimelineWidget extends Widget {
                     return;
                 }
 
-                if (getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
+                if (showCurrentTime && getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
                     resBlock.addClassName(STYLE_NOW);
                     currentMarkedWeek = weekIndex;
                 } else if (currentMarkedWeek != weekIndex) {
@@ -1750,7 +1751,7 @@ public class TimelineWidget extends Widget {
     private void fillDayResolutionBlock(DivElement resBlock, Date date, int index, boolean weekend, int left) {
         resBlock.setInnerText(getLocaleDataProvider().formatDate(date, getDayDateTimeFormat()));
 
-        if (getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
+        if (showCurrentTime && getLocaleDataProvider().formatDate(date, DAY_CHECK_FORMAT).equals(currentDate)) {
             resBlock.addClassName(STYLE_NOW);
         } else {
             resBlock.removeClassName(STYLE_NOW);
@@ -1824,7 +1825,8 @@ public class TimelineWidget extends Widget {
             int left, boolean even) {
         resBlock.setInnerText(formatHourCaption(date));
 
-        if (getLocaleDataProvider().formatDate(date, HOUR_CHECK_FORMAT).equals(currentDate + currentHour)) {
+        if (showCurrentTime
+                && getLocaleDataProvider().formatDate(date, HOUR_CHECK_FORMAT).equals(currentDate + currentHour)) {
             resBlock.addClassName(STYLE_NOW);
         } else {
             resBlock.removeClassName(STYLE_NOW);
@@ -2129,7 +2131,8 @@ public class TimelineWidget extends Widget {
         this.resolutionWeekDayblockWidth = resolutionWeekDayblockWidth;
     }
 
-    public void setCurrentDateAndTime(String currentDate, String currentHour, long timestamp) {
+    public void setCurrentDateAndTime(boolean showCurrentTime, String currentDate, String currentHour, long timestamp) {
+        this.showCurrentTime = showCurrentTime;
         this.currentDate = currentDate;
         this.currentHour = currentHour;
         if (timestamp != this.timestamp) {

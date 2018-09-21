@@ -376,6 +376,11 @@ public class GanttConnector extends AbstractHasComponentsConnector {
             }
             return true;
         }
+
+        @Override
+        public void requestCurrentTime() {
+            rpc.requestCurrentTime();
+        }
     };
 
     GanttClientRpc ganttClientRpc = new GanttClientRpc() {

@@ -238,7 +238,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         @Override
         public void run() {
             if (isShowCurrentTime()) {
-                updateNowElement();
+                updateNowElement(true);
                 currentTimeTimer.schedule(5 * 60000);
             }
         }
@@ -677,7 +677,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         GWT.log("GanttWidget's active TimeZone: " + getLocaleDataProvider().getTimeZone().getID() + " (raw offset: "
                 + getLocaleDataProvider().getTimeZone().getStandardOffset() + ")");
 
-        timeline.setCurrentDateAndTime(getCurrentDate(), getCurrentHour(), getTimestamp());
+        timeline.setCurrentDateAndTime(isShowCurrentTime(), getCurrentDate(), getCurrentHour(), getTimestamp());
         // tell timeline to notice vertical scrollbar before updating it
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
         timeline.update(resolution, startDate, endDate, firstDayOfRange, firstHourOfRange, localeDataProvider);
@@ -1947,7 +1947,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         moveElement.getStyle().setDisplay(Display.NONE);
     }
 
-    private void updateNowElement() {
+    private void updateNowElement(boolean syncWithServerTime) {
         if (timeline == null || nowElement == null) {
             return;
         }
@@ -1957,12 +1957,16 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
             nowElement.getStyle().setLeft(timeline.getLeftPositionPercentageForDate(timeline.getNow(),
                     getContentWidth()), Unit.PCT);
         }
+        if (syncWithServerTime) {
+            ganttRpc.requestCurrentTime();
+        }
     }
 
     private void updateCurrentTime() {
         currentTimeTimer.cancel();
         if (isShowCurrentTime()) {
-            currentTimeTimer.run();
+            updateNowElement(false);
+            currentTimeTimer.schedule(5 * 60000);
             showNowElement();
         } else {
             hideNowElement();
