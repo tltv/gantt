@@ -26,6 +26,7 @@ List of features that are supported:
 * tooltips for steps
 * touch support
 * supports Valo theme
+* current time indicator
 
 Technical details:
 * server side class name is Gantt, it extends AbstractComponent

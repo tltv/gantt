@@ -6,13 +6,13 @@
 	<groupId>org.tltv.gantt</groupId>
 	<artifactId>gantt-addon</artifactId>
 	<packaging>bundle</packaging>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<name>Gantt</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<vaadin.version>8.4.0</vaadin.version>
-		<vaadin.plugin.version>8.4.0</vaadin.plugin.version>
+		<vaadin.version>8.5.2</vaadin.version>
+		<vaadin.plugin.version>8.5.2</vaadin.plugin.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<!-- ZIP Manifest fields -->
