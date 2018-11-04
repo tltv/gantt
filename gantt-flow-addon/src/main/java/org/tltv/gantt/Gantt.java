@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
@@ -47,6 +48,7 @@ public class Gantt extends GanttTemplate {
 
     public Gantt() {
         super(new Settings());
+        setSteps(new ArrayList<Step>());
     }
 
     @Override
@@ -90,6 +92,7 @@ public class Gantt extends GanttTemplate {
         }
     }
 
+    @Override
     public Locale getLocale() {
         return locale;
     }

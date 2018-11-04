@@ -13,41 +13,28 @@
             static get is() {
                 return 'gantt-template'
             }
-            
+
             constructor() {
-				super();
-				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
-			}
-            
+      				super();
+      				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
+      			}
+
            	_ganttStateChanged(resolution,startDate,endDate,locale,timeZoneId) {
             	this.firstChild.ganttElement.setState(this.settings);
            	};
-           	
+
             _onGanttReady(e) {
             	this.firstChild.ganttElement = new gantt.GanttElement(this.firstChild);
 
 				// set data
 				var g = this.firstChild.ganttElement;
-				var steps = [
-					{
-						uid: "1", // required unique step id
-						identifier: 1, // optional ID
-						caption: "Step A",
-						description: "Description of Step A",
-						backgroundColor: "#A8D9FF",
-						startDate: new Date('2017-01-01T00:00:00Z').getTime(),
-						endDate: new Date('2017-01-31T23:59:59Z').getTime(),
-						resizable: true,
-						movable: true
-					}
-				];
 
 				if(this.settings) {
 					g.setState(this.settings);
 				}
-				
-				g.getGanttElement().steps = steps;
-				
+
+				g.getGanttElement().steps = this.steps;
+
 				// step click handling
 				g.getGanttElement().handleStepClicked = function(stepUid, details) {
 					var step = g.getStepByUid(stepUid);
@@ -80,7 +67,7 @@
 				g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
 
 				}
-				
+
 				// register observer for state changes to delegate new state to gantt
 				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId)', true);
 			}

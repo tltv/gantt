@@ -11,7 +11,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<vaadin.version>10.0.0.beta1</vaadin.version>
+		<vaadin.version>11.0.1</vaadin.version>
 		
 		<jetty.plugin.version>9.3.9.v20160517</jetty.plugin.version>
 		<maven.war.plugin.version>3.1.0</maven.war.plugin.version>

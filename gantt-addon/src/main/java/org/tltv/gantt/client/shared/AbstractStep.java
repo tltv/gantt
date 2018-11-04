@@ -251,40 +251,40 @@ public abstract class AbstractStep implements Serializable {
         if (json.containsKey("uid")) {
             setUid(json.get("uid").isString().stringValue());
         }
-        if (json.containsKey("caption")) {
+        if (json.containsKey("caption") && json.get("caption").isNull() == null) {
             setCaption(json.get("caption").isString().stringValue());
         }
-        if (json.containsKey("description")) {
+        if (json.containsKey("description") && json.get("description").isNull() == null) {
             setDescription(json.get("description").isString().stringValue());
         }
-        if (json.containsKey("backgroundColor")) {
+        if (json.containsKey("backgroundColor") && json.get("backgroundColor").isNull() == null) {
             setBackgroundColor(json.get("backgroundColor").isString().stringValue());
         }
-        if (json.containsKey("styleName")) {
+        if (json.containsKey("styleName") && json.get("styleName").isNull() == null) {
             setStyleName(json.get("styleName").isString().stringValue());
         }
-        if (json.containsKey("identifier")) {
+        if (json.containsKey("identifier") && json.get("identifier").isNull() == null) {
             setIdentifier(Double.valueOf(json.get("identifier").isNumber().doubleValue()).longValue());
         }
-        if (json.containsKey("startDate")) {
+        if (json.containsKey("startDate") && json.get("startDate").isNull() == null) {
             setStartDate(Double.valueOf(json.get("startDate").isNumber().doubleValue()).longValue());
         }
-        if (json.containsKey("endDate")) {
+        if (json.containsKey("endDate") && json.get("endDate").isNull() == null) {
             setEndDate(Double.valueOf(json.get("endDate").isNumber().doubleValue()).longValue());
         }
-        if (json.containsKey("captionMode")) {
+        if (json.containsKey("captionMode") && json.get("captionMode").isNull() == null) {
             setCaptionMode(CaptionMode.valueOf(json.get("captionMode").isString().stringValue()));
         }
-        if (json.containsKey("resizable")) {
+        if (json.containsKey("resizable") && json.get("resizable").isNull() == null) {
             setResizable(json.get("resizable").isBoolean().booleanValue());
         }
-        if (json.containsKey("movable")) {
+        if (json.containsKey("movable") && json.get("movable").isNull() == null) {
             setMovable(json.get("movable").isBoolean().booleanValue());
         }
-        if (json.containsKey("showProgress")) {
+        if (json.containsKey("showProgress") && json.get("showProgress").isNull() == null) {
             setShowProgress(json.get("showProgress").isBoolean().booleanValue());
         }
-        if (json.containsKey("progress")) {
+        if (json.containsKey("progress") && json.get("progress").isNull() == null) {
             setProgress(json.get("progress").isNumber().doubleValue());
         }
     }

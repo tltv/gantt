@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.tltv.gantt.Gantt;
+import org.tltv.gantt.Step;
 import org.tltv.gantt.model.Resolution;
 
 import com.vaadin.flow.component.UI;
@@ -50,6 +51,30 @@ public class DemoUI extends Div {
         setSizeFull();
 
         Gantt gantt = new Gantt();
+
+        Step stepA = new Step();
+        stepA.setUid("1"); // required unique step id
+        stepA.setIdentifier(1);
+        stepA.setCaption("Step A");
+        stepA.setDescription("Description of Step A");
+        stepA.setBackgroundColor("#A8D946");
+        stepA.setStartZonedDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 31, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepA.setResizable(true);
+        stepA.setMovable(true);
+
+        Step stepB = new Step();
+        stepB.setUid("2"); // required unique step id
+        stepB.setIdentifier(2);
+        stepB.setCaption("Step B");
+        stepB.setDescription("Description of Step B");
+        stepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepB.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepB.setResizable(true);
+        stepB.setMovable(true);
+
+        gantt.getSteps().add(stepA);
+        gantt.getSteps().add(stepB);
 
         gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
         gantt.setEndDateTime(LocalDateTime.of(2018, 1, 1, 0, 0, 0));

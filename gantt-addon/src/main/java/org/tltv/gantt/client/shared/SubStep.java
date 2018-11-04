@@ -52,7 +52,7 @@ public class SubStep extends AbstractStep {
     @Override
     public void read(JSONObject json) {
         super.read(json);
-        if (json.containsKey("owner")) {
+        if (json.containsKey("owner") && json.get("owner").isNull() == null) {
             setOwner(Step.toStep(json.get("owner").isObject().getJavaScriptObject()));
         }
     }
