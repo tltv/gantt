@@ -102,7 +102,7 @@ public class TreeGridGanttLayout extends HorizontalLayout implements GanttListen
      * Add all child steps directed by the TreeGrid's hierarchical data source.
      */
     private void addChildStepRecursively(TreeGrid<Step> grid, Step itemId, MutableInt index) {
-        if (!dataProvider.hasChildren(itemId)) {
+        if (!dataProvider.hasChildren(itemId) || !grid.isExpanded(itemId)) {
             return;
         }
         if (index.getValue() == 0) {
