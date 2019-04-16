@@ -248,7 +248,7 @@ public abstract class AbstractStep implements Serializable {
     }
 
     public void read(JSONObject json) {
-        if (json.containsKey("uid")) {
+        if (json.containsKey("uid") && json.get("uid").isNull() == null) {
             setUid(json.get("uid").isString().stringValue());
         }
         if (json.containsKey("caption") && json.get("caption").isNull() == null) {
@@ -292,7 +292,9 @@ public abstract class AbstractStep implements Serializable {
     /** Returns JSON object with only uid for reference. */
     public JSONObject toJsonReference() {
         JSONObject json = new JSONObject();
-        json.put("uid", new JSONString(getUid()));
+        if (getUid() != null) {
+            json.put("uid", new JSONString(getUid()));
+        }
         return json;
     }
 

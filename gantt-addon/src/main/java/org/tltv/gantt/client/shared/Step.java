@@ -186,7 +186,7 @@ public class Step extends AbstractStep {
         super.read(json);
         if (json.containsKey("predecessor") && json.get("predecessor").isNull() == null) {
             JSONObject object = json.get("predecessor").isObject();
-            if (object.containsKey("uid")) {
+            if (object.containsKey("uid") && json.get("uid").isNull() == null) {
                 setPredecessor(toStep(object.getJavaScriptObject()));
             }
         }
@@ -201,7 +201,7 @@ public class Step extends AbstractStep {
     @Override
     public JSONObject toJson() {
         JSONObject json = super.toJson();
-        if (getPredecessor() != null) {
+        if (getPredecessor() != null && getPredecessor().getUid() != null) {
             json.put("predecessor", getPredecessor().toJson());
         }
         JSONArray subs = new JSONArray();

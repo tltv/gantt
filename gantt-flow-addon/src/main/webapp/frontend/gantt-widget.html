@@ -9,7 +9,7 @@
 
 			:host {
 				--gantt-width: 100%;
-				--gantt-height: 100%;
+				--gantt-height: auto;
 
 				display: block;
 				height: var(--gantt-height);
@@ -137,8 +137,6 @@
 				@apply --no-user-select;
 			}
 			.gantt-container {
-				width: 100%;
-				height: 100%;
 				overflow: auto;
 				@apply --no-user-select;
 				@apply --gantt-bg-grid;
@@ -148,8 +146,6 @@
 				background: transparent;
 				overflow: hidden;
 				position: relative;
-				width:	100%;
-				height: 100%;
 			}
 
 			.mv-el {
@@ -283,12 +279,6 @@
 				//this.dispatchEvent(new CustomEvent('gantt-ready', {bubbles: true, composed: true, detail: {ganttElement: this}}));
 			}
 
-			static get observers() {
-			  return [
-			    'stepsAddedOrRemoved(steps.splices)'
-			  ]
-			}
-
 			_onGanttLibReady(e, gantt) {
 				function nextTimeout(delayms) {
            setTimeout(function() {
@@ -300,22 +290,6 @@
               }, delayms);
         }
         nextTimeout(0);
-			}
-
-			stepsAddedOrRemoved(changeRecord) {
-				if (this.ganttElement && changeRecord) {
-		      changeRecord.indexSplices.forEach(function(s) {
-		        s.removed.forEach(function(step) {
-		          console.log(step.caption + ' was removed');
-
-		        });
-		        for (var i=0; i<s.addedCount; i++) {
-		          var index = s.index + i;
-		          var newStep = s.object[index];
-		          console.log('Step ' + newStep.caption + ' added at index ' + index);
-		        }
-		      }, this);
-		    }
 			}
 
 			_onRegisterStep(event) {

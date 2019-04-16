@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
@@ -33,8 +32,9 @@ import org.tltv.gantt.model.Resolution;
 import org.tltv.gantt.model.Settings;
 
 import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.HasSize;
 
-public class Gantt extends GanttTemplate {
+public class Gantt extends GanttTemplate implements HasSize {
 
     protected static final String TZ_PATTERN = "^[A-Za-z]+ = (.*\"id\": \"([A-Za-z_/]+)\".*)$";
     protected static Set<String> timezoneIdCache;
@@ -48,7 +48,7 @@ public class Gantt extends GanttTemplate {
 
     public Gantt() {
         super(new Settings());
-        setSteps(new ArrayList<Step>());
+        setWidth("100%");
     }
 
     @Override

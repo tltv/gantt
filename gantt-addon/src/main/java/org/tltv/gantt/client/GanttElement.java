@@ -382,10 +382,13 @@ public class GanttElement implements Exportable, StepProvider {
         Step s = Step.toStep(step);
         doAddStep(s, index);
         doUpdateStep(s);
+        deferredUpdate(Arrays.asList(s));
     }
 
     public void addSteps(List<JavaScriptObject> steps, int fromIndex) {
-        doAddSteps(toSteps(steps), fromIndex);
+        List<Step> stepList = toSteps(steps);
+        doAddSteps(stepList, fromIndex);
+        deferredUpdate(stepList);
     }
 
     private void doAddSteps(List<Step> steps, int fromIndex) {
@@ -563,6 +566,22 @@ public class GanttElement implements Exportable, StepProvider {
         });
     }
 
+    /**
+     * Calls getWidget().update(List<Step>).
+     */
+    private void deferredUpdate(List<Step> steps) {
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+            @Override
+            public void execute() {
+                List<StepWidget> stepWidgets = new ArrayList<>();
+                for (Step s : steps) {
+                    stepWidgets.add(getStepWidget(s));
+                }
+                getWidget().update(stepWidgets);
+            }
+        });
+    }
+
     public void update(JavaScriptObject stepOrSubstep) {
         if (stepOrSubstep == null) {
             return;
@@ -616,11 +635,11 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     public void notifySizeChanged() {
-        notifyHeightChanged();
-        notifyWidthChanged();
+        notifyHeightChanged(false);
+        notifyWidthChanged(false);
     }
 
-    public void notifyWidthChanged() {
+    public void notifyWidthChanged(boolean force) {
         final int width = getWidget().getElement().getClientWidth();
         if (previousWidth != width) {
             previousWidth = width;
@@ -635,9 +654,9 @@ public class GanttElement implements Exportable, StepProvider {
         }
     }
 
-    public void notifyHeightChanged() {
+    public void notifyHeightChanged(boolean force) {
         final int height = getWidget().getElement().getClientHeight();
-        if (previousHeight != height) {
+        if (force || previousHeight != height) {
             previousHeight = height;
 
             Scheduler.get().scheduleDeferred(new ScheduledCommand() {

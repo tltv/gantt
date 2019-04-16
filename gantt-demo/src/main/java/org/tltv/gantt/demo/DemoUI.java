@@ -28,10 +28,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.tltv.gantt.Gantt;
-import org.tltv.gantt.Step;
 import org.tltv.gantt.model.Resolution;
+import org.tltv.gantt.model.Step;
+import org.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
@@ -46,6 +48,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 public class DemoUI extends Div {
 
     private ZoneId defaultZoneId;
+    private int newId = 10000;
 
     public DemoUI() {
         setSizeFull();
@@ -54,7 +57,6 @@ public class DemoUI extends Div {
 
         Step stepA = new Step();
         stepA.setUid("1"); // required unique step id
-        stepA.setIdentifier(1);
         stepA.setCaption("Step A");
         stepA.setDescription("Description of Step A");
         stepA.setBackgroundColor("#A8D946");
@@ -65,7 +67,6 @@ public class DemoUI extends Div {
 
         Step stepB = new Step();
         stepB.setUid("2"); // required unique step id
-        stepB.setIdentifier(2);
         stepB.setCaption("Step B");
         stepB.setDescription("Description of Step B");
         stepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
@@ -73,8 +74,44 @@ public class DemoUI extends Div {
         stepB.setResizable(true);
         stepB.setMovable(true);
 
-        gantt.getSteps().add(stepA);
-        gantt.getSteps().add(stepB);
+        Step stepC = new Step();
+        stepC.setUid("3"); // required unique step id
+        stepC.setCaption("Step C");
+        stepC.setDescription("Description of Step C");
+        stepC.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepC.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepC.setResizable(true);
+        stepC.setMovable(true);
+
+        SubStep subStepA = new SubStep();
+        subStepA.setUid("4"); // required unique step id
+        subStepA.setCaption("SubStep A");
+        subStepA.setBackgroundColor("#A8D946");
+        subStepA.setDescription("Description of SubStep A");
+        subStepA.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0,
+                0).atZone(getDefaultTimeZone()));
+        subStepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 20, 23, 59,
+                59).atZone(getDefaultTimeZone()));
+        subStepA.setResizable(true);
+        subStepA.setMovable(true);
+        subStepA.setOwner(stepC);
+
+        SubStep subStepB = new SubStep();
+        subStepB.setUid("5"); // required unique step id
+        subStepB.setCaption("SubStep B");
+        subStepB.setDescription("Description of SubStep B");
+        subStepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 21, 0, 0,
+                0).atZone(getDefaultTimeZone()));
+        subStepB.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59,
+                59).atZone(getDefaultTimeZone()));
+        subStepB.setResizable(true);
+        subStepB.setMovable(true);
+        subStepB.setOwner(stepC);
+
+        gantt.addStep(stepA);
+        gantt.addStep(stepB);
+        gantt.addStep(stepC);
+        gantt.addSubSteps(subStepA, subStepB);
 
         gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
         gantt.setEndDateTime(LocalDateTime.of(2018, 1, 1, 0, 0, 0));
@@ -87,6 +124,13 @@ public class DemoUI extends Div {
         layout.add(gantt);
 
         add(layout);
+
+        addEventHandlers(gantt);
+    }
+
+    private void addEventHandlers(Gantt gantt) {
+        gantt.addStepClickListener(event -> gantt.remove(event.getTarget()));
+
     }
 
     private Div createControls(final Gantt gantt) {
@@ -134,7 +178,37 @@ public class DemoUI extends Div {
         localeField.setValue(gantt.getLocale());
         localeField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(l -> gantt.setLocale(l)));
 
+        Button addNewStepBtn = new Button("Add new step", event -> {
+            Step step = new Step();
+            step.setUid("" + newId++); // required unique step id
+            step.setCaption("Step " + step.getUid());
+            step.setDescription("Description of Step " + step.getUid());
+            step.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+            step.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+            step.setResizable(true);
+            step.setMovable(true);
+            gantt.addStep(step);
+        });
+
+        Button addNewSubStepBtn = new Button("Add new sub step", event -> {
+            SubStep substep = new SubStep();
+            substep.setUid("" + newId++); // required unique step id
+            substep.setCaption("Step " + substep.getUid());
+            substep.setDescription("Description of SubStep " + substep.getUid());
+            substep.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+            substep.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+            substep.setResizable(true);
+            substep.setMovable(true);
+            substep.setOwner(gantt.getStep(0));
+            gantt.addSubSteps(substep);
+        });
+
+        Button changeStepCaption = new Button("Change step caption", event -> {
+            gantt.getStep(0).setCaption(gantt.getStep(0).getCaption() + "!");
+        });
+
         controls.add(resolutionField, startDateField, endDateField, localeField, timeZoneField);
+        controls.add(addNewStepBtn, addNewSubStepBtn, changeStepCaption);
         return controls;
     }
 

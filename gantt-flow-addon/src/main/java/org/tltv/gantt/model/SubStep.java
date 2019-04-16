@@ -1,4 +1,6 @@
-package org.tltv.gantt;
+package org.tltv.gantt.model;
+
+import org.tltv.gantt.GanttStep;
 
 public class SubStep extends GanttStep {
 

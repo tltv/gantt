@@ -2054,7 +2054,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     }
 
     private int getElementHeightWithMargin(Element div) {
-        int height = div.getClientHeight();
+        int height = (int) Math.round(GanttUtil.getBoundingClientRectHeight(div));
         double marginHeight = 0;
         marginHeight = getMarginByComputedStyle(div);
         return height + (int) Math.round(marginHeight);

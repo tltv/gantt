@@ -1,5 +1,6 @@
 
 <link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="bower_components/iron-resizable-behavior/iron-resizable-behavior.html">
 <link rel="import" href="gantt-lib.html">
 <link rel="import" href="gantt-widget.html">
 
@@ -9,7 +10,7 @@
     </template>
 
     <script>
-        class GanttTemplate extends Polymer.Element {
+        class GanttTemplate extends Polymer.mixinBehaviors([Polymer.IronResizableBehavior], Polymer.Element) {
             static get is() {
                 return 'gantt-template'
             }
@@ -19,58 +20,198 @@
       				window.addEventListener('gantt-ready', e => this._onGanttReady(e));
       			}
 
+            static get observers() {
+      			  return [
+                '_stepPropertiesChanged(steps.*)',
+                '_subStepPropertiesChanged(subSteps.*)',
+                '_heightChanged(height)',
+      			  ]
+      			}
+
+            connectedCallback() {
+              super.connectedCallback();
+              this.addEventListener('iron-resize', this._onIronResize.bind(this));
+            }
+
+            _heightChanged(height) {
+              let g = this.firstChild.ganttElement;
+              if(g) {
+                g.height = this.height;
+                g.notifySizeChanged();
+              }
+            }
+
+            _onIronResize() {
+              console.log('Size changed to ' + this.offsetWidth + "x" + this.offsetHeight);
+              let g = this.firstChild.ganttElement;
+              if(g) {
+                  g.notifySizeChanged();
+              }
+            }
+
            	_ganttStateChanged(resolution,startDate,endDate,locale,timeZoneId) {
             	this.firstChild.ganttElement.setState(this.settings);
            	};
 
+            _stepPropertiesChanged(allChanges) {
+              let g = this.firstChild.ganttElement;
+              if (allChanges.path && g && allChanges) {
+                let arr = allChanges.path.split(".");
+                if(arr[0] === "steps") {
+                  if(arr.length == 2 && "splices" === arr[1]) {
+                    this._stepsChanged(allChanges.value);
+                  } else if(arr.length == 3 && !isNaN(arr[1])) {
+                    g.updateStep(allChanges.base[arr[1]]);
+                  }
+                }
+              }
+            }
+
+            _subStepPropertiesChanged(allChanges) {
+              let g = this.firstChild.ganttElement;
+              if (allChanges.path && g && allChanges) {
+                let arr = allChanges.path.split(".");
+                if(arr[0] === "subSteps") {
+                  if(arr.length == 2 && "splices" === arr[1]) {
+                    this._subStepsChanged(allChanges.value);
+                  } else if(arr.length == 3 && !isNaN(arr[1])) {
+                    g.updateSubStep(allChanges.base[arr[1]]);
+                  }
+                }
+              }
+            }
+
+            _stepsChanged(changeRecord) {
+              let g = this.firstChild.ganttElement;
+              if (g && changeRecord) {
+                // g.getGanttElement().notifySplices('steps');
+                // option B
+                // g.getGanttElement().steps = this.steps.slice();
+                // g.getGanttElement().notifyPath('steps');
+                changeRecord.indexSplices.forEach(function(s) {
+      		        s.removed.forEach(function(step) {
+                    g.removeStep(step);
+      		          console.log(step.caption + ' was removed');
+      		        });
+      		        for (let i=0; i<s.addedCount; i++) {
+      		          let index = s.index + i;
+      		          let step = s.object[index];
+                    g.addStep(step, index);
+      		          console.log('Step ' + step.caption + ' was added');
+      		        }
+      		      }, this);
+              }
+            }
+
+      			_subStepsChanged(changeRecord) {
+              let g = this.firstChild.ganttElement;
+
+      				if (g && changeRecord) {
+      					let updatedSteps = new Set();
+      		      changeRecord.indexSplices.forEach(function(s) {
+      		        s.removed.forEach(function(substep) {
+      							let step = g.getStepByUid(substep.owner.uid);
+      							updatedSteps.add(step);
+      							for (let i = 0; i < step.subSteps.length; i++) {
+      							   if (step.subSteps[i] === substep.uid) {
+      							     step.subSteps.splice(i, 1);
+      							     i--;
+      							   }
+      							}
+      		          console.log(substep.caption + ' substep was removed');
+
+      		        });
+      		        for (let i=0; i<s.addedCount; i++) {
+      		          let index = s.index + i;
+      		          let newSubStep = s.object[index];
+      							let step = g.getStepByUid(newSubStep.owner.uid);
+      							updatedSteps.add(step);
+                    step.subSteps.push(newSubStep);
+      		          console.log('SubStep ' + newSubStep.caption + ' added');
+      		        }
+      		      }, this);
+
+                updatedSteps.forEach(function(step) {
+                   g.updateStep(step);
+                });
+      		    }
+      			}
+
+            _fillStepWithSubSteps(step) {
+              for (let i=0; i<this.subSteps.length; i++) {
+                let subStep = this.subSteps[i];
+                if(subStep.owner.uid === step.uid) {
+                  step.subSteps.push(subStep);
+                }
+              }
+            }
+
             _onGanttReady(e) {
             	this.firstChild.ganttElement = new gantt.GanttElement(this.firstChild);
 
-				// set data
-				var g = this.firstChild.ganttElement;
+              let ganttTemplate = this;
 
-				if(this.settings) {
-					g.setState(this.settings);
-				}
+      				// set data
+      				let g = this.firstChild.ganttElement;
 
-				g.getGanttElement().steps = this.steps;
+              g.height = this.height;
 
-				// step click handling
-				g.getGanttElement().handleStepClicked = function(stepUid, details) {
-					var step = g.getStepByUid(stepUid);
-					alert(step.caption + ': ' + details.toString());
-				}
+      				if(this.settings) {
+      					g.setState(this.settings);
+      				}
 
-				// step move handling
-				g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
-					var step = g.getStepByUid(stepUid);
-					if(step.substep) {
-						step.startDate = startDate;
-						step.endDate = endDate;
-						g.updateSubStep(step);
-					} else {
-						step.startDate = startDate;
-						step.endDate = endDate;
-						g.updateStep(step);
-					}
-				}
+              // fill steps with substeps (because PolymerTemplate does not support 'steps.subSteps')
+              for (let i=0; i<this.steps.length; i++) {
+                let step = this.steps[i];
+                step.subSteps = step.subSteps || [];
+                this._fillStepWithSubSteps(step);
+              }
 
-				// step resize handling
-				g.getGanttElement().handleOnResize = function(stepUid, startDate, endDate, details) {
-					var step = g.getStepByUid(stepUid);
-					step.startDate = startDate;
-					step.endDate = endDate;
-					g.update(step);
-				}
+      				g.getGanttElement().steps = this.steps;
 
-				// step predecessor change handling
-				g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+      				// step click handling
+      				g.getGanttElement().handleStepClicked = function(stepUid, details) {
+      					var step = g.getStepByUid(stepUid);
+                if(step.substep) {
+                  ganttTemplate.$server.handleSubStepClicked(stepUid);
+                } else {
+                  ganttTemplate.$server.handleStepClicked(stepUid);
+                }
+      					// alert(step.caption + ': ' + details.toString());
+      				}
 
-				}
+      				// step move handling
+      				g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
+      					var step = g.getStepByUid(stepUid);
+      					if(step.substep) {
+      						step.startDate = startDate;
+      						step.endDate = endDate;
+      						g.updateSubStep(step);
+      					} else {
+      						step.startDate = startDate;
+      						step.endDate = endDate;
+      						g.updateStep(step);
+      					}
+                ganttTemplate.$server.handleOnMove(stepUid, newStepUid, startDate, endDate);
+      				}
 
-				// register observer for state changes to delegate new state to gantt
-				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId)', true);
-			}
+      				// step resize handling
+      				g.getGanttElement().handleOnResize = function(stepUid, startDate, endDate, details) {
+      					var step = g.getStepByUid(stepUid);
+      					step.startDate = startDate;
+      					step.endDate = endDate;
+      					g.update(step);
+                ganttTemplate.$server.handleOnResize(stepUid, startDate, endDate);
+      				}
+
+      				// step predecessor change handling
+      				g.getGanttElement().handleOnPredecessorChange = function(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid) {
+                ganttTemplate.$server.handleOnPredecessorChange(newPredecessorStepUid, forTargetStepUid, clearPredecessorForStepUid);
+      				}
+
+      				// register observer for state changes to delegate new state to gantt
+      				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId)', true);
+    			   }
         }
         customElements.define(GanttTemplate.is, GanttTemplate);
     </script>

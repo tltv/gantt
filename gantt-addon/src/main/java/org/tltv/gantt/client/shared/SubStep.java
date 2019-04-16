@@ -61,7 +61,7 @@ public class SubStep extends AbstractStep {
     public JSONObject toJson() {
         JSONObject json = super.toJson();
         json.put("substep", JSONBoolean.getInstance(isSubstep()));
-        if (getOwner() != null) {
+        if (getOwner() != null && getOwner().getUid() != null) {
             json.put("owner", getOwner().toJsonReference());
         }
         return json;
