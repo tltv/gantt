@@ -138,6 +138,11 @@ public class DemoUI extends Div {
                 Notification.show("Clicked RIGHT mouse button on " + event.getTarget().getCaption());
             }
         });
+
+        gantt.addMoveListener(event -> {
+            Notification.show("Moved " + event.getTarget().getCaption());
+        });
+
     }
 
     private Div createControls(final Gantt gantt) {

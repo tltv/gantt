@@ -1,5 +1,7 @@
 package org.tltv.gantt;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -7,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.tltv.gantt.GanttTemplate.GanttTemplateModel;
 import org.tltv.gantt.event.ClickEvent;
+import org.tltv.gantt.event.MoveEvent;
 import org.tltv.gantt.model.Settings;
 import org.tltv.gantt.model.Step;
 import org.tltv.gantt.model.SubStep;
@@ -26,11 +29,17 @@ import elemental.json.JsonObject;
 @HtmlImport("frontend://gantt-template.html")
 public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
+    protected ZoneId zoneId = ZoneId.systemDefault();
+
     public GanttTemplate(Settings initialSettings) {
         getModel().setSettings(initialSettings);
 
         GanttWidget gantt = new GanttWidget();
         getElement().appendChild(gantt.getElement());
+    }
+
+    public ZoneId getZoneId() {
+        return zoneId;
     }
 
     public Settings getSettings() {
@@ -118,6 +127,20 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
             return null;
         }
         return getModel().getSteps().stream().filter(step -> step.getUid().equals(uid)).findFirst().orElse(null);
+    }
+
+    /**
+     * Get SubStep by UID.
+     *
+     * @param uid
+     *            Unique Identifier of SubStep
+     * @return SubStep with given UID or null if substep doesn't exist.
+     */
+    public SubStep getSubStep(String uid) {
+        if (uid == null) {
+            return null;
+        }
+        return getModel().getSubSteps().stream().filter(step -> step.getUid().equals(uid)).findFirst().orElse(null);
     }
 
     /**
@@ -260,8 +283,43 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     }
 
     @ClientCallable
-    private void handleOnMove(String stepUid, String newStepUid, double startDate, double endDate) {
-        // TODO
+    private void handleOnMove(String stepUid, String newStepUid, double startDate, double endDate,
+            JsonObject detailsJson) {
+        GanttStep step = getStep(stepUid);
+        if (step == null) {
+            step = getSubStep(stepUid);
+        }
+        GanttStep newStep = getStep(newStepUid);
+        if (newStep == null) {
+            newStep = getSubStep(newStepUid);
+        }
+        int previousStepIndex = (step instanceof Step) ? getStepIndex((Step) step)
+                : getStepIndex(getStep(((SubStep) step).getOwner().getUid()));
+        long previousStartDate = (long) step.getStartDate();
+        long previousEndDate = (long) step.getEndDate();
+        ZonedDateTime previousZonedStartDate = step.getStartZonedDateTime(getZoneId());
+        ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
+        step.setStartDate(startDate);
+        step.setEndDate(endDate);
+        int newStepIndex;
+        if (getSettings().isMovableStepsBetweenRows() && newStep instanceof Step) {
+            newStepIndex = getStepIndex((Step) newStep);
+            if (step instanceof Step) {
+                // move to new row
+                moveStep(newStepIndex, (Step) step);
+            } else {
+                // move sub-step to new owner
+                moveSubStep((SubStep) step, (Step) newStep);
+            }
+        } else {
+            newStepIndex = previousStepIndex;
+        }
+        moveDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        adjustDatesByAbstractStep(step);
+        fireEvent(new MoveEvent((Gantt) this, true, step, step.getStartZonedDateTime(getZoneId()),
+                step.getEndZonedDateTime(getZoneId()), newStepIndex, previousZonedStartDate,
+                previousZonedEndDate, previousStepIndex,
+                GanttUtil.readMouseEventDetails(detailsJson)));
     }
 
     @ClientCallable
@@ -277,6 +335,68 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     public Registration addStepClickListener(ComponentEventListener<ClickEvent> listener) {
         return getEventBus().addListener(ClickEvent.class, listener);
+    }
+
+    public Registration addMoveListener(ComponentEventListener<MoveEvent> listener) {
+        return getEventBus().addListener(MoveEvent.class, listener);
+    }
+
+    protected void moveDatesByOwnerStep(GanttStep step, long previousStartDate, long previousEndDate) {
+        if (!(step instanceof Step)) {
+            return;
+        }
+        Step s = (Step) step;
+
+        long startDelta = ((long) step.getStartDate()) - previousStartDate;
+        long endDelta = ((long) step.getEndDate()) - previousEndDate;
+        List<SubStep> subSteps = getSubSteps(s);
+        if (!subSteps.isEmpty()) {
+            for (SubStep sub : subSteps) {
+                if (startDelta != 0) {
+                    sub.setStartDate(sub.getStartDate() + startDelta);
+                }
+                if (endDelta != 0) {
+                    sub.setEndDate(sub.getEndDate() + endDelta);
+                }
+            }
+        }
+    }
+
+    protected void adjustDatesByAbstractStep(GanttStep step) {
+        Step owner = null;
+        if (step instanceof SubStep) {
+            owner = ajustDatesBySubStep(step);
+
+        } else if (step instanceof Step) {
+            owner = (Step) step;
+        }
+
+        if (owner != null) {
+            // adjust owner start/end dates to fit with all sub-steps.
+            List<SubStep> subSteps = getSubSteps(owner);
+            if (!subSteps.isEmpty()) {
+                if (owner.getStartDate() < 0 || GanttUtil.getMinStartDateBySubSteps(subSteps) != owner.getStartDate()) {
+                    owner.setStartDate(GanttUtil.getMinStartDateBySubSteps(subSteps));
+                }
+                if (owner.getEndDate() < 0 || GanttUtil.getMaxEndDateBySubSteps(subSteps) != owner.getEndDate()) {
+                    owner.setEndDate(GanttUtil.getMaxEndDateBySubSteps(subSteps));
+                }
+            }
+        }
+    }
+
+    protected Step ajustDatesBySubStep(GanttStep step) {
+        // adjust parent step start/end date:
+        SubStep subStep = (SubStep) step;
+        Step owner = getStep(subStep.getOwner().getUid());
+        // Cut owner step's start/end date to fit sub-steps in.
+        if (owner.getStartDate() < 0 || subStep.getStartDate() < owner.getStartDate()) {
+            owner.setStartDate(subStep.getStartDate());
+        }
+        if (owner.getEndDate() < 0 || subStep.getEndDate() > owner.getEndDate()) {
+            owner.setEndDate(subStep.getEndDate());
+        }
+        return owner;
     }
 
     public static interface GanttTemplateModel extends TemplateModel {

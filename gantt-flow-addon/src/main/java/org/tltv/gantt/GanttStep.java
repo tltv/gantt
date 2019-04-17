@@ -1,5 +1,7 @@
 package org.tltv.gantt;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Objects;
@@ -134,11 +136,27 @@ public abstract class GanttStep {
     }
 
     public void setStartZonedDateTime(ZonedDateTime date) {
-        setStartDate(Date.from(date.toInstant()).getTime());
+        setStartInstant(date.toInstant());
     }
 
     public void setEndZonedDateTime(ZonedDateTime date) {
-        setEndDate(Date.from(date.toInstant()).getTime());
+        setEndInstant(date.toInstant());
+    }
+
+    public void setStartInstant(Instant instant) {
+        setStartDate(Date.from(instant).getTime());
+    }
+
+    public void setEndInstant(Instant instant) {
+        setEndDate(Date.from(instant).getTime());
+    }
+
+    public ZonedDateTime getStartZonedDateTime(ZoneId zoneId) {
+        return Instant.ofEpochMilli((long) getStartDate()).atZone(zoneId);
+    }
+
+    public ZonedDateTime getEndZonedDateTime(ZoneId zoneId) {
+        return Instant.ofEpochMilli((long) getEndDate()).atZone(zoneId);
     }
 
     @Override

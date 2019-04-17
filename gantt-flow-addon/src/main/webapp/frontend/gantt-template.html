@@ -181,16 +181,16 @@
 
       				// step move handling
       				g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
-      					var step = g.getStepByUid(stepUid);
-      					if(step.substep) {
-      						step.startDate = startDate;
-      						step.endDate = endDate;
-      						g.updateSubStep(step);
-      					} else {
-      						step.startDate = startDate;
-      						step.endDate = endDate;
-      						g.updateStep(step);
-      					}
+      					// var step = g.getStepByUid(stepUid);
+      					// if(step.substep) {
+      					// 	step.startDate = startDate;
+      					// 	step.endDate = endDate;
+      					// 	g.updateSubStep(step);
+      					// } else {
+      					// 	step.startDate = startDate;
+      					// 	step.endDate = endDate;
+      					// 	g.updateStep(step);
+      					// }
                 ganttTemplate.$server.handleOnMove(stepUid, newStepUid, startDate, endDate, details);
       				}
 
@@ -209,7 +209,7 @@
       				}
 
       				// register observer for state changes to delegate new state to gantt
-      				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId)', true);
+      				this._createMethodObserver('_ganttStateChanged(settings.resolution,settings.startDate,settings.endDate,settings.locale,settings.timeZoneId,settings.movableStepsBetweenRows)', true);
     			   }
         }
         customElements.define(GanttTemplate.is, GanttTemplate);

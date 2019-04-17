@@ -24,6 +24,7 @@ public class Settings {
             "Sep", "Oct", "Nov", "Dec");
     private int localeFirstDayOfWeek = 0;
     private boolean localeTwelveHourClock = false;
+    private boolean movableStepsBetweenRows = false;
 
     public Double getStartDate() {
         return startDate;
@@ -145,5 +146,13 @@ public class Settings {
 
     public void setLocaleTwelveHourClock(boolean localeTwelveHourClock) {
         this.localeTwelveHourClock = localeTwelveHourClock;
+    }
+
+    public boolean isMovableStepsBetweenRows() {
+        return movableStepsBetweenRows;
+    }
+
+    public void setMovableStepsBetweenRows(boolean movableStepsBetweenRows) {
+        this.movableStepsBetweenRows = movableStepsBetweenRows;
     }
 }

@@ -519,13 +519,7 @@ public class GanttElement implements Exportable, StepProvider {
             added = false;
         }
 
-        w.ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                doUpdateSubStep(substep, added);
-                return null;
-            }
-        });
+        doUpdateSubStep(substep, added);
     }
 
     private void doUpdateSubStep(SubStep substep, boolean added) {

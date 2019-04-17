@@ -41,7 +41,6 @@ public class Gantt extends GanttTemplate implements HasSize {
 
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
-    private ZoneId zoneId = ZoneId.systemDefault();
     private Locale locale = Locale.getDefault();
 
     protected Map<String, String> timezoneJsonCache = new HashMap<String, String>();
@@ -104,10 +103,6 @@ public class Gantt extends GanttTemplate implements HasSize {
             resetEndDateTime();
             updateTimelineStartTimeDetails();
         }
-    }
-
-    public ZoneId getZoneId() {
-        return zoneId;
     }
 
     public void setResolution(Resolution resolution) {
