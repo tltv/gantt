@@ -34,9 +34,11 @@ import org.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.charts.events.MouseEventDetails.MouseButton;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.Theme;
@@ -129,8 +131,13 @@ public class DemoUI extends Div {
     }
 
     private void addEventHandlers(Gantt gantt) {
-        gantt.addStepClickListener(event -> gantt.remove(event.getTarget()));
-
+        gantt.addStepClickListener(event -> {
+            if (event.getMouseDetails().getButton().equals(MouseButton.LEFT)) {
+                gantt.remove(event.getTarget());
+            } else if (event.getMouseDetails().getButton().equals(MouseButton.RIGHT)) {
+                Notification.show("Clicked RIGHT mouse button on " + event.getTarget().getCaption());
+            }
+        });
     }
 
     private Div createControls(final Gantt gantt) {

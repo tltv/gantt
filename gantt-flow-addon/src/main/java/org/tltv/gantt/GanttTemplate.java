@@ -20,6 +20,8 @@ import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.templatemodel.Include;
 import com.vaadin.flow.templatemodel.TemplateModel;
 
+import elemental.json.JsonObject;
+
 @Tag("gantt-template")
 @HtmlImport("frontend://gantt-template.html")
 public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
@@ -243,16 +245,18 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     }
 
     @ClientCallable
-    private void handleStepClicked(String stepUid) {
+    private void handleStepClicked(String stepUid, JsonObject detailsJson) {
         fireEvent(new ClickEvent((Gantt) this, true,
-                getModel().getSteps().stream().filter(step -> step.getUid().equals(stepUid)).findFirst().orElse(null)));
+                getModel().getSteps().stream().filter(step -> step.getUid().equals(stepUid)).findFirst().orElse(null),
+                GanttUtil.readMouseEventDetails(detailsJson)));
     }
 
     @ClientCallable
-    private void handleSubStepClicked(String subStepUid) {
+    private void handleSubStepClicked(String subStepUid, JsonObject detailsJson) {
         fireEvent(new ClickEvent((Gantt) this, true,
                 getModel().getSubSteps().stream().filter(substep -> substep.getUid().equals(subStepUid)).findFirst()
-                        .orElse(null)));
+                        .orElse(null),
+                GanttUtil.readMouseEventDetails(detailsJson)));
     }
 
     @ClientCallable

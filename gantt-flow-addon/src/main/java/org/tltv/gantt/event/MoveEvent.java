@@ -4,6 +4,7 @@ import org.tltv.gantt.Gantt;
 import org.tltv.gantt.model.Step;
 
 import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.charts.events.MouseEventDetails;
 
 public class MoveEvent extends ComponentEvent<Gantt> {
 
@@ -15,13 +16,19 @@ public class MoveEvent extends ComponentEvent<Gantt> {
     private long previousEndDate;
     private int previousStepIndex;
 
-    public MoveEvent(Gantt source, boolean fromClient, Step step) {
+    private final MouseEventDetails details;
+
+    public MoveEvent(Gantt source, boolean fromClient, Step step, MouseEventDetails details) {
         super(source, fromClient);
         this.step = step;
+        this.details = details;
     }
 
     public Step getStep() {
         return step;
     }
 
+    public MouseEventDetails getMouseDetails() {
+        return details;
+    }
 }

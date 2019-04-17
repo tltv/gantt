@@ -173,11 +173,10 @@
       				g.getGanttElement().handleStepClicked = function(stepUid, details) {
       					var step = g.getStepByUid(stepUid);
                 if(step.substep) {
-                  ganttTemplate.$server.handleSubStepClicked(stepUid);
+                  ganttTemplate.$server.handleSubStepClicked(stepUid, details);
                 } else {
-                  ganttTemplate.$server.handleStepClicked(stepUid);
+                  ganttTemplate.$server.handleStepClicked(stepUid, details);
                 }
-      					// alert(step.caption + ': ' + details.toString());
       				}
 
       				// step move handling
@@ -192,7 +191,7 @@
       						step.endDate = endDate;
       						g.updateStep(step);
       					}
-                ganttTemplate.$server.handleOnMove(stepUid, newStepUid, startDate, endDate);
+                ganttTemplate.$server.handleOnMove(stepUid, newStepUid, startDate, endDate, details);
       				}
 
       				// step resize handling
@@ -201,7 +200,7 @@
       					step.startDate = startDate;
       					step.endDate = endDate;
       					g.update(step);
-                ganttTemplate.$server.handleOnResize(stepUid, startDate, endDate);
+                ganttTemplate.$server.handleOnResize(stepUid, startDate, endDate, details);
       				}
 
       				// step predecessor change handling
