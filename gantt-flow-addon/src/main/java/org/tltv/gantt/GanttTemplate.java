@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.tltv.gantt.GanttTemplate.GanttTemplateModel;
 import org.tltv.gantt.event.ClickEvent;
 import org.tltv.gantt.event.MoveEvent;
+import org.tltv.gantt.event.PredecessorChangeEvent;
+import org.tltv.gantt.event.ResizeEvent;
 import org.tltv.gantt.model.Settings;
 import org.tltv.gantt.model.Step;
 import org.tltv.gantt.model.SubStep;
@@ -291,7 +293,6 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     @ClientCallable
     private void handleOnMove(String stepUid, String newStepUid, double startDate, double endDate,
             JsonObject detailsJson) {
-        log.debug("Step {} moved with details: {}", stepUid, detailsJson);
         GanttStep step = getStep(stepUid);
         if (step == null) {
             step = getSubStep(stepUid);
@@ -308,7 +309,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
         step.setStartDate(startDate);
         step.setEndDate(endDate);
-        log.debug("Moving from [{} - {}] to [{} - {}]", previousZonedStartDate, previousZonedEndDate,
+        log.debug("Moving step {} from [{} - {}] to [{} - {}]", stepUid, previousZonedStartDate, previousZonedEndDate,
                 step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()));
         int newStepIndex;
         if (getSettings().isMovableStepsBetweenRows() && newStep instanceof Step) {
@@ -327,15 +328,33 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         }
         moveDatesByOwnerStep(step, previousStartDate, previousEndDate);
         adjustDatesByAbstractStep(step);
-        fireEvent(new MoveEvent((Gantt) this, true, step, step.getStartZonedDateTime(getZoneId()),
-                step.getEndZonedDateTime(getZoneId()), newStepIndex, previousZonedStartDate,
+        fireEvent(new MoveEvent((Gantt) this, true, step,
+                step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()),
+                newStepIndex, previousZonedStartDate,
                 previousZonedEndDate, previousStepIndex,
                 GanttUtil.readMouseEventDetails(detailsJson)));
     }
 
     @ClientCallable
-    private void handleOnResize(String stepUid, double startDate, double endDate) {
-        // TODO
+    private void handleOnResize(String stepUid, double startDate, double endDate, JsonObject detailsJson) {
+        GanttStep step = getStep(stepUid);
+        if (step == null) {
+            step = getSubStep(stepUid);
+        }
+        long previousStartDate = (long) step.getStartDate();
+        long previousEndDate = (long) step.getEndDate();
+        ZonedDateTime previousZonedStartDate = step.getStartZonedDateTime(getZoneId());
+        ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
+        step.setStartDate(startDate);
+        step.setEndDate(endDate);
+        log.debug("Resizing step {} from [{} - {}] to [{} - {}]", stepUid, previousZonedStartDate, previousZonedEndDate,
+                step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()));
+        resizeDatesByOwnerStep(step, previousStartDate, previousEndDate);
+        adjustDatesByAbstractStep(step);
+        fireEvent(new ResizeEvent((Gantt) this, true, step,
+                step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()),
+                previousZonedStartDate, previousZonedEndDate,
+                GanttUtil.readMouseEventDetails(detailsJson)));
     }
 
     @ClientCallable
@@ -350,6 +369,14 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     public Registration addMoveListener(ComponentEventListener<MoveEvent> listener) {
         return getEventBus().addListener(MoveEvent.class, listener);
+    }
+
+    public Registration addResizeListener(ComponentEventListener<ResizeEvent> listener) {
+        return getEventBus().addListener(ResizeEvent.class, listener);
+    }
+
+    public Registration addPredecessorChangeListener(ComponentEventListener<PredecessorChangeEvent> listener) {
+        return getEventBus().addListener(PredecessorChangeEvent.class, listener);
     }
 
     protected void moveDatesByOwnerStep(GanttStep step, long previousStartDate, long previousEndDate) {
@@ -408,6 +435,10 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
             owner.setEndDate(subStep.getEndDate());
         }
         return owner;
+    }
+
+    protected void resizeDatesByOwnerStep(GanttStep step, long previousStartDate, long previousEndDate) {
+        // may be overridden to handle resizing parent step
     }
 
     public static interface GanttTemplateModel extends TemplateModel {

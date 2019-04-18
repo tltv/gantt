@@ -132,9 +132,9 @@ public class DemoUI extends Div {
 
     private void addEventHandlers(Gantt gantt) {
         gantt.addStepClickListener(event -> {
-            if (event.getMouseDetails().getButton().equals(MouseButton.LEFT)) {
+            if (event.getDetails().getButton().equals(MouseButton.LEFT)) {
                 gantt.remove(event.getTarget());
-            } else if (event.getMouseDetails().getButton().equals(MouseButton.RIGHT)) {
+            } else if (event.getDetails().getButton().equals(MouseButton.RIGHT)) {
                 Notification.show("Clicked RIGHT mouse button on " + event.getTarget().getCaption());
             }
         });
@@ -143,6 +143,9 @@ public class DemoUI extends Div {
             Notification.show("Moved " + event.getTarget().getCaption());
         });
 
+        gantt.addResizeListener(event -> {
+            Notification.show("Resized " + event.getTarget().getCaption());
+        });
     }
 
     private Div createControls(final Gantt gantt) {

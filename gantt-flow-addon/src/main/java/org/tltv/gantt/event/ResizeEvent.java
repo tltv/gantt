@@ -1,32 +1,42 @@
 package org.tltv.gantt.event;
 
-import org.tltv.gantt.Gantt;
-import org.tltv.gantt.model.Step;
+import java.time.ZonedDateTime;
 
-import com.vaadin.flow.component.ComponentEvent;
+import org.tltv.gantt.Gantt;
+import org.tltv.gantt.GanttStep;
+
 import com.vaadin.flow.component.charts.events.MouseEventDetails;
 
-public class ResizeEvent extends ComponentEvent<Gantt> {
+public class ResizeEvent extends StepMouseEvent {
 
-    private final Step step;
-    private long startDate;
-    private long endDate;
-    private long previousStartDate;
-    private long previousEndDate;
+    private final ZonedDateTime startDate;
+    private final ZonedDateTime endDate;
+    private final ZonedDateTime previousStartDate;
+    private final ZonedDateTime previousEndDate;
 
-    private final MouseEventDetails details;
-
-    public ResizeEvent(Gantt source, boolean fromClient, Step step, MouseEventDetails details) {
-        super(source, fromClient);
-        this.step = step;
-        this.details = details;
+    public ResizeEvent(Gantt source, boolean fromClient, GanttStep target, ZonedDateTime startDate,
+            ZonedDateTime endDate, ZonedDateTime previousStartDate, ZonedDateTime previousEndDate,
+            MouseEventDetails details) {
+        super(source, fromClient, target, details);
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.previousStartDate = previousStartDate;
+        this.previousEndDate = previousEndDate;
     }
 
-    public Step getStep() {
-        return step;
+    public ZonedDateTime getStartDate() {
+        return startDate;
     }
 
-    public MouseEventDetails getDetails() {
-        return details;
+    public ZonedDateTime getEndDate() {
+        return endDate;
+    }
+
+    public ZonedDateTime getPreviousStartDate() {
+        return previousStartDate;
+    }
+
+    public ZonedDateTime getPreviousEndDate() {
+        return previousEndDate;
     }
 }
