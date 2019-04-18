@@ -61,7 +61,7 @@
                   if(arr.length == 2 && "splices" === arr[1]) {
                     this._stepsChanged(allChanges.value);
                   } else if(arr.length == 3 && !isNaN(arr[1])) {
-                    g.updateStep(allChanges.base[arr[1]]);
+                    this._stepChanged(allChanges.base[arr[1]]);
                   }
                 }
               }
@@ -75,7 +75,7 @@
                   if(arr.length == 2 && "splices" === arr[1]) {
                     this._subStepsChanged(allChanges.value);
                   } else if(arr.length == 3 && !isNaN(arr[1])) {
-                    g.updateSubStep(allChanges.base[arr[1]]);
+                    this._subStepChanged(allChanges.base[arr[1]]);
                   }
                 }
               }
@@ -84,10 +84,6 @@
             _stepsChanged(changeRecord) {
               let g = this.firstChild.ganttElement;
               if (g && changeRecord) {
-                // g.getGanttElement().notifySplices('steps');
-                // option B
-                // g.getGanttElement().steps = this.steps.slice();
-                // g.getGanttElement().notifyPath('steps');
                 changeRecord.indexSplices.forEach(function(s) {
       		        s.removed.forEach(function(step) {
                     g.removeStep(step);
@@ -112,14 +108,8 @@
       		        s.removed.forEach(function(substep) {
       							let step = g.getStepByUid(substep.owner.uid);
       							updatedSteps.add(step);
-      							for (let i = 0; i < step.subSteps.length; i++) {
-      							   if (step.subSteps[i] === substep.uid) {
-      							     step.subSteps.splice(i, 1);
-      							     i--;
-      							   }
-      							}
+                    this._removeSubStepFromStep(step, substep);
       		          console.log(substep.caption + ' substep was removed');
-
       		        });
       		        for (let i=0; i<s.addedCount; i++) {
       		          let index = s.index + i;
@@ -137,13 +127,55 @@
       		    }
       			}
 
+            _stepChanged(step) {
+              let g = this.firstChild.ganttElement;
+              this._fillStepWithSubSteps(step);
+              g.updateStep(step);
+            }
+
+            _subStepChanged(subStep) {
+              let g = this.firstChild.ganttElement;
+              let step = g.getStepByUid(subStep.owner.uid);
+              if(!step) return;
+              if(!this._containsSubStep(step, subStep)) {
+                step.subSteps.push(subStep);
+                console.log('SubStep ' + subStep.caption + ' added/moved');
+              }
+              g.updateSubStep(subStep);
+            }
+
+            _containsSubStep(step, subStep) {
+              for (let i = 0; i < this._getSubSteps(step).length; i++) {
+                 if (step.subSteps[i] === subStep.uid) {
+                   return true;
+                 }
+              }
+              return false;
+            }
+
+            _removeSubStepFromStep(step, subStep) {
+              for (let i = 0; i < this._getSubSteps(step).length; i++) {
+                 if (step.subSteps[i] === subStep.uid) {
+                   step.subSteps.splice(i, 1);
+                   i--;
+                 }
+              }
+            }
+
             _fillStepWithSubSteps(step) {
               for (let i=0; i<this.subSteps.length; i++) {
                 let subStep = this.subSteps[i];
                 if(subStep.owner.uid === step.uid) {
-                  step.subSteps.push(subStep);
+                  this._getSubSteps(step).push(subStep);
                 }
               }
+            }
+
+            _getSubSteps(step) {
+              if(!step.subSteps) {
+                step.subSteps = [];
+              }
+              return step.subSteps;
             }
 
             _onGanttReady(e) {
@@ -181,16 +213,6 @@
 
       				// step move handling
       				g.getGanttElement().handleOnMove = function(stepUid, newStepUid, startDate, endDate, details) {
-      					// var step = g.getStepByUid(stepUid);
-      					// if(step.substep) {
-      					// 	step.startDate = startDate;
-      					// 	step.endDate = endDate;
-      					// 	g.updateSubStep(step);
-      					// } else {
-      					// 	step.startDate = startDate;
-      					// 	step.endDate = endDate;
-      					// 	g.updateStep(step);
-      					// }
                 ganttTemplate.$server.handleOnMove(stepUid, newStepUid, startDate, endDate, details);
       				}
 

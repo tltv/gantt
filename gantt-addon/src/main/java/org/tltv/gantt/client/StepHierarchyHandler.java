@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.tltv.gantt.client.shared.Step;
 
-import com.vaadin.polymer.elemental.Function;
-
 public class StepHierarchyHandler {
 
     private GanttWidget widget;
@@ -26,13 +24,7 @@ public class StepHierarchyHandler {
     }
 
     public void requestRemoveStep(final StepWidget stepWidget) {
-        stepWidget.ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                getWidget().removeStep(stepWidget);
-                return null;
-            }
-        });
+        getWidget().removeStep(stepWidget);
     }
 
     /** Updates all steps predecessor visualizations. */

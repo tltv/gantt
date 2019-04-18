@@ -374,10 +374,9 @@ public class GanttElement implements Exportable, StepProvider {
         });
     }
 
-    public void removeStep(JavaScriptObject step) {
-        removeSteps(Arrays.asList(step));
-    }
-
+    /**
+     * Add step to given index. Shifts existing steps forward.
+     */
     public void addStep(JavaScriptObject step, int index) {
         Step s = Step.toStep(step);
         doAddStep(s, index);
@@ -385,6 +384,9 @@ public class GanttElement implements Exportable, StepProvider {
         deferredUpdate(Arrays.asList(s));
     }
 
+    /**
+     * Add steps starting from given index. Shifts existing steps forward.
+     */
     public void addSteps(List<JavaScriptObject> steps, int fromIndex) {
         List<Step> stepList = toSteps(steps);
         doAddSteps(stepList, fromIndex);
@@ -402,10 +404,10 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     private void doAddStep(Step s, int index) {
-        doAddStep(null, s, index);
+        doAddStep(null, s, index, true);
     }
 
-    private void doAddStep(JavaScriptObject element, Step s, int index) {
+    private void doAddStep(JavaScriptObject element, Step s, int index, boolean updateAffectedSteps) {
         StepWidget stepWidget = stepsMap.get(s);
         if (stepWidget == null) {
             stepWidget = (element == null) ? new StepWidget() : new StepWidget(element);
@@ -414,7 +416,10 @@ public class GanttElement implements Exportable, StepProvider {
             uidMap.put(s.getUid(), s);
         }
         getWidget().insertStep(index, stepWidget);
-        getWidget().setStep(index, stepWidget, false);
+        // updateAffectedSteps set to true will update position for all steps
+        // below. It may be heavy operation depending on how may steps there
+        // are.
+        getWidget().setStep(index, stepWidget, updateAffectedSteps);
 
         stepWidget.setReadOnly(state.readOnly);
         Step predecessor = s.getPredecessor();
@@ -425,12 +430,22 @@ public class GanttElement implements Exportable, StepProvider {
         }
     }
 
+    /**
+     * Remove steps and all sub steps in them.
+     */
     public void removeSteps(List<JavaScriptObject> steps) {
         List<Step> remSteps = new ArrayList<>();
         for (JavaScriptObject o : steps) {
             remSteps.add(Step.toStep(o));
         }
         doRemoveSteps(remSteps);
+    }
+
+    /**
+     * Remove step and its sub steps.
+     */
+    public void removeStep(JavaScriptObject step) {
+        removeSteps(Arrays.asList(step));
     }
 
     private void doRemoveSteps(List<Step> steps) {
@@ -488,11 +503,11 @@ public class GanttElement implements Exportable, StepProvider {
         }
 
         for (SubStep substep : step.getSubSteps()) {
-            doSetSubStep(substep);
+            doAddUpdateSubStep(substep);
         }
     }
 
-    private void doSetSubStep(final SubStep substep) {
+    private void doAddUpdateSubStep(final SubStep substep) {
         if (substep.getOwner() == null) {
             return;
         }
@@ -576,6 +591,9 @@ public class GanttElement implements Exportable, StepProvider {
         });
     }
 
+    /**
+     * Update given step with sub steps or add/update given sub step.
+     */
     public void update(JavaScriptObject stepOrSubstep) {
         if (stepOrSubstep == null) {
             return;
@@ -588,12 +606,24 @@ public class GanttElement implements Exportable, StepProvider {
         }
     }
 
+    /**
+     * Update step and its sub steps.
+     */
     public void updateStep(JavaScriptObject step) {
         doUpdateStep(Step.toStep(step));
     }
 
+    /**
+     * Update existing sub step and add non-existing.
+     */
     public void updateSubStep(JavaScriptObject substep) {
-        doUpdateSubStep(SubStep.toStep(substep), false);
+        SubStep sub = SubStep.toStep(substep);
+        SubStepWidget w = getSubStepWidget(sub);
+        if (w == null) {
+            doAddUpdateSubStep(sub);
+        } else {
+            doUpdateSubStep(sub, false);
+        }
     }
 
     protected int getStepIndex(Step s) {
@@ -672,7 +702,7 @@ public class GanttElement implements Exportable, StepProvider {
             return;
         }
         Step s = Step.toStep(step);
-        doAddStep(stepElementObj, s, getStepIndex(s));
+        doAddStep(stepElementObj, s, getStepIndex(s), false);
         doUpdateStep(s);
     }
 }

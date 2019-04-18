@@ -117,6 +117,7 @@ public class DemoUI extends Div {
 
         gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
         gantt.setEndDateTime(LocalDateTime.of(2018, 1, 1, 0, 0, 0));
+        gantt.getSettings().setMovableStepsBetweenRows(true);
 
         final VerticalLayout layout = new VerticalLayout();
         layout.setClassName("demoContentLayout");

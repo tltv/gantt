@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -48,6 +49,11 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         return zoneId;
     }
 
+    /**
+     * Get Gantt's {@link Settings} model object. Object is part of template
+     * model state. Changes in this object will be reflected to client
+     * (browser).
+     */
     public Settings getSettings() {
         return getModel().getSettings();
     }
@@ -76,7 +82,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     public Step addStep(Step step) {
         if (!contains(step)) {
-            getModel().getSteps().add(step);
+            getModel().getSteps().add(ensureUID(step));
         }
         return step;
     }
@@ -85,7 +91,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         if (contains(step)) {
             moveStep(index, step);
         } else {
-            getModel().getSteps().add(index, step);
+            getModel().getSteps().add(index, ensureUID(step));
         }
     }
 
@@ -95,7 +101,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         }
         Step targetStep = getModel().getSteps().get(toIndex);
         Step moveStep = step;
-        if (targetStep.equals(moveStep)) {
+        if (targetStep.getUid().equals(moveStep.getUid())) {
             return;
         }
         getModel().getSteps().removeIf(item -> item.getUid().equals(moveStep.getUid()));
@@ -264,7 +270,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     public boolean onAddSubStep(SubStep subStep) {
         if (!contains(subStep)) {
-            return getModel().getSubSteps().add(subStep);
+            return getModel().getSubSteps().add(ensureUID(subStep));
         }
         return false;
     }
@@ -315,11 +321,11 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         if (getSettings().isMovableStepsBetweenRows() && newStep instanceof Step) {
             newStepIndex = getStepIndex((Step) newStep);
             if (step instanceof Step) {
-                log.debug("Moving step from row index {} to {}", previousStepIndex, newStepIndex);
+                log.debug("Moving step {} from row index {} to {}", stepUid, previousStepIndex, newStepIndex);
                 // move to new row
                 moveStep(newStepIndex, (Step) step);
             } else {
-                log.debug("Moving substep from row index {} to {}", previousStepIndex, newStepIndex);
+                log.debug("Moving substep {} from row index {} to {}", stepUid, previousStepIndex, newStepIndex);
                 // move sub-step to new owner
                 moveSubStep((SubStep) step, (Step) newStep);
             }
@@ -441,6 +447,19 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         // may be overridden to handle resizing parent step
     }
 
+    /**
+     * Ensures that given step has UID. If not, then generates one.
+     */
+    protected <T extends GanttStep> T ensureUID(T step) {
+        if (step == null) {
+            return null;
+        }
+        if (step.getUid() == null) {
+            step.setUid(UUID.randomUUID().toString());
+        }
+        return step;
+    }
+
     public static interface GanttTemplateModel extends TemplateModel {
 
         Settings getSettings();
@@ -449,9 +468,16 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
         @Include({ "uid", "caption", "description", "captionMode", "styleName", "startDate", "endDate",
                 "backgroundColor", "progress", "showProgress", "resizable", "movable", "substep", "predecessor.uid" })
-        // TODO substeps (Lists in beans are not supported currently)
         List<Step> getSteps();
 
+        /*
+         * Substeps used to be part of Step, but as bean Lists in beans are not
+         * supported at this time (2019 April), all substeps are stored in here.
+         * Be warned that client still uses Step.subSteps and will populate it
+         * back for each step based on this property.
+         */
+        // TODO consider moving substeps back to Step when Lists in Lists is
+        // supported.
         @Include({ "uid", "caption", "description", "captionMode", "styleName", "startDate", "endDate",
                 "backgroundColor", "progress", "showProgress", "resizable", "movable", "substep", "owner.uid" })
         List<SubStep> getSubSteps();
