@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.tltv.gantt.GanttTemplate.GanttTemplateModel;
 import org.tltv.gantt.event.ClickEvent;
 import org.tltv.gantt.event.MoveEvent;
@@ -28,6 +30,8 @@ import elemental.json.JsonObject;
 @Tag("gantt-template")
 @HtmlImport("frontend://gantt-template.html")
 public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
+
+    private final Logger log = LoggerFactory.getLogger(GanttTemplate.class);
 
     protected ZoneId zoneId = ZoneId.systemDefault();
 
@@ -269,6 +273,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     @ClientCallable
     private void handleStepClicked(String stepUid, JsonObject detailsJson) {
+        log.debug("Step {} clicked with details: {}", stepUid, detailsJson);
         fireEvent(new ClickEvent((Gantt) this, true,
                 getModel().getSteps().stream().filter(step -> step.getUid().equals(stepUid)).findFirst().orElse(null),
                 GanttUtil.readMouseEventDetails(detailsJson)));
@@ -276,6 +281,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     @ClientCallable
     private void handleSubStepClicked(String subStepUid, JsonObject detailsJson) {
+        log.debug("SubStep {} clicked with details: {}", subStepUid, detailsJson);
         fireEvent(new ClickEvent((Gantt) this, true,
                 getModel().getSubSteps().stream().filter(substep -> substep.getUid().equals(subStepUid)).findFirst()
                         .orElse(null),
@@ -285,6 +291,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     @ClientCallable
     private void handleOnMove(String stepUid, String newStepUid, double startDate, double endDate,
             JsonObject detailsJson) {
+        log.debug("Step {} moved with details: {}", stepUid, detailsJson);
         GanttStep step = getStep(stepUid);
         if (step == null) {
             step = getSubStep(stepUid);
@@ -301,13 +308,17 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
         step.setStartDate(startDate);
         step.setEndDate(endDate);
+        log.debug("Moving from [{} - {}] to [{} - {}]", previousZonedStartDate, previousZonedEndDate,
+                step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()));
         int newStepIndex;
         if (getSettings().isMovableStepsBetweenRows() && newStep instanceof Step) {
             newStepIndex = getStepIndex((Step) newStep);
             if (step instanceof Step) {
+                log.debug("Moving step from row index {} to {}", previousStepIndex, newStepIndex);
                 // move to new row
                 moveStep(newStepIndex, (Step) step);
             } else {
+                log.debug("Moving substep from row index {} to {}", previousStepIndex, newStepIndex);
                 // move sub-step to new owner
                 moveSubStep((SubStep) step, (Step) newStep);
             }

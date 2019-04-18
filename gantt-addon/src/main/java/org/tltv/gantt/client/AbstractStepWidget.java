@@ -211,6 +211,7 @@ public class AbstractStepWidget extends PolymerWidget {
         if (step.getStartDate() < 0 || step.getEndDate() < 0 || step.getEndDate() <= step.getStartDate()) {
             getBar().addClassName(STYLE_INVALID);
         } else {
+            getBar().removeClassName(STYLE_INVALID);
             updateStepCustomStyle(getBar(),
                     getLeftPositionPercentageStringForDate(getStep().getStartDate(), getStep().getEndDate()),
                     getWidthPercentageStringForDateInterval(getStep().getStartDate(), getStep().getEndDate()));
