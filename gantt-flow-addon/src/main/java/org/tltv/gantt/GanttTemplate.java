@@ -366,7 +366,17 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     @ClientCallable
     private void handleOnPredecessorChange(String newPredecessorStepUid, String forTargetStepUid,
             String clearPredecessorForStepUid) {
-        // TODO
+        Step newPredecessorStep = getStep(newPredecessorStepUid);
+        Step forTargetStep = getStep(forTargetStepUid);
+        Step clearPredecessorForStep = getStep(clearPredecessorForStepUid);
+        if (forTargetStep != null) {
+            forTargetStep.setPredecessor(newPredecessorStep);
+            fireEvent(new PredecessorChangeEvent((Gantt) this, true, forTargetStep, newPredecessorStep));
+        }
+        if (clearPredecessorForStep != null) {
+            clearPredecessorForStep.setPredecessor(null);
+            fireEvent(new PredecessorChangeEvent((Gantt) this, true, clearPredecessorForStep, null));
+        }
     }
 
     public Registration addStepClickListener(ComponentEventListener<ClickEvent> listener) {

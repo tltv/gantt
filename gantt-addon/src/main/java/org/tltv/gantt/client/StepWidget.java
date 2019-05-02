@@ -24,7 +24,8 @@ import org.tltv.gantt.client.shared.GanttUtil;
 import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.core.shared.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
@@ -88,51 +89,30 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public void requestUpdatePredecessor(final Step sourceRelatedStep) {
-        if (getStep() != null) {
-            if (sourceRelatedStep.equals(getStep().getPredecessor())) {
-                updatePredecessor();
-            }
-            return;
+        if (getStep() != null && sourceRelatedStep.equals(getStep().getPredecessor())) {
+            updatePredecessor();
         }
-
-        ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                GWT.log("requestUpdatePredecessor READY");
-                if (getStep() != null && sourceRelatedStep.equals(getStep().getPredecessor())) {
-                    updatePredecessor();
-                }
-                return null;
-            }
-        });
     }
 
     public void updatePredecessor() {
-        ready(new Function<Object, Object>() {
+        createPredecessorElements();
+
+        if (predecessorStepWidget == null) {
+            return;
+        }
+
+        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
-            public Object call(Object args) {
-                createPredecessorElements();
+            public void execute() {
+                ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
+                        getBar());
 
-                if (predecessorStepWidget == null) {
-                    return null;
-                }
+                predecessorArrow.setWidth(data.getWidth());
+                predecessorArrow.setHeight(data.getHeight());
+                predecessorArrow.setTop((int) data.getTop());
+                predecessorArrow.setLeft((int) data.getLeft());
 
-                predecessorArrow.whenReady(new Function<Object, Object>() {
-                    @Override
-                    public Object call(Object arg) {
-                        ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
-                                getBar());
-
-                        predecessorArrow.setWidth(data.getWidth());
-                        predecessorArrow.setHeight(data.getHeight());
-                        predecessorArrow.setTop((int) data.getTop());
-                        predecessorArrow.setLeft((int) data.getLeft());
-
-                        predecessorArrow.draw(data);
-                        return null;
-                    }
-                });
-                return null;
+                predecessorArrow.draw(data);
             }
         });
     }
@@ -229,17 +209,11 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     private void updateStylesForSubSteps(boolean hasSubSteps) {
-        ready(new Function<Object, Object>() {
-            @Override
-            public Object call(Object args) {
-                if (!hasSubSteps) {
-                    getBar().removeClassName(STYLE_HAS_SUB_STEPS);
-                } else {
-                    getBar().addClassName(STYLE_HAS_SUB_STEPS);
-                }
-                return null;
-            }
-        });
+        if (!hasSubSteps) {
+            getBar().removeClassName(STYLE_HAS_SUB_STEPS);
+        } else {
+            getBar().addClassName(STYLE_HAS_SUB_STEPS);
+        }
     }
 
     public void updateStylesForSubSteps() {
@@ -257,9 +231,10 @@ public class StepWidget extends AbstractStepWidget {
             oldPredecessor = getPredecessorStepWidget().getStep();
         }
 
-        if ((predecessor == null && oldPredecessor != null)
-                || (predecessor != null && !predecessor.equals(oldPredecessor))) {
+        if (predecessor != null && !predecessor.equals(oldPredecessor)) {
             setPredecessorStepWidget(stepProvider.getStepWidget(predecessor));
+        } else if (predecessor == null) {
+            setPredecessorStepWidget(null);
         }
     }
 }

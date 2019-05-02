@@ -63,7 +63,7 @@ public class DemoUI extends Div {
         stepA.setDescription("Description of Step A");
         stepA.setBackgroundColor("#A8D946");
         stepA.setStartZonedDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 31, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 29, 23, 59, 59).atZone(getDefaultTimeZone()));
         stepA.setResizable(true);
         stepA.setMovable(true);
 
@@ -71,22 +71,33 @@ public class DemoUI extends Div {
         stepB.setUid("2"); // required unique step id
         stepB.setCaption("Step B");
         stepB.setDescription("Description of Step B");
-        stepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepB.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepB.setStartZonedDateTime(LocalDateTime.of(2017, 2, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepB.setEndZonedDateTime(LocalDateTime.of(2017, 2, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
         stepB.setResizable(true);
         stepB.setMovable(true);
+        stepB.setPredecessor(stepA);
 
         Step stepC = new Step();
         stepC.setUid("3"); // required unique step id
         stepC.setCaption("Step C");
         stepC.setDescription("Description of Step C");
-        stepC.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepC.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepC.setStartZonedDateTime(LocalDateTime.of(2017, 3, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepC.setEndZonedDateTime(LocalDateTime.of(2017, 3, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
         stepC.setResizable(true);
         stepC.setMovable(true);
+        stepC.setPredecessor(stepB);
+
+        Step stepD = new Step();
+        stepD.setUid("4"); // required unique step id
+        stepD.setCaption("Step D");
+        stepD.setDescription("Description of Step D");
+        stepD.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepD.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepD.setResizable(true);
+        stepD.setMovable(true);
 
         SubStep subStepA = new SubStep();
-        subStepA.setUid("4"); // required unique step id
+        subStepA.setUid("5"); // required unique step id
         subStepA.setCaption("SubStep A");
         subStepA.setBackgroundColor("#A8D946");
         subStepA.setDescription("Description of SubStep A");
@@ -96,10 +107,10 @@ public class DemoUI extends Div {
                 59).atZone(getDefaultTimeZone()));
         subStepA.setResizable(true);
         subStepA.setMovable(true);
-        subStepA.setOwner(stepC);
+        subStepA.setOwner(stepD);
 
         SubStep subStepB = new SubStep();
-        subStepB.setUid("5"); // required unique step id
+        subStepB.setUid("6"); // required unique step id
         subStepB.setCaption("SubStep B");
         subStepB.setDescription("Description of SubStep B");
         subStepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 21, 0, 0,
@@ -108,11 +119,12 @@ public class DemoUI extends Div {
                 59).atZone(getDefaultTimeZone()));
         subStepB.setResizable(true);
         subStepB.setMovable(true);
-        subStepB.setOwner(stepC);
+        subStepB.setOwner(stepD);
 
         gantt.addStep(stepA);
         gantt.addStep(stepB);
         gantt.addStep(stepC);
+        gantt.addStep(stepD);
         gantt.addSubSteps(subStepA, subStepB);
 
         gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
@@ -146,6 +158,11 @@ public class DemoUI extends Div {
 
         gantt.addResizeListener(event -> {
             Notification.show("Resized " + event.getTarget().getCaption());
+        });
+
+        gantt.addPredecessorChangeListener(event -> {
+            Notification.show("Predecessor changed for " + event.getStep().getCaption() + " to  "
+                    + Optional.ofNullable(event.getPredecessorStep()).map(Step::getCaption).orElse("null"));
         });
     }
 

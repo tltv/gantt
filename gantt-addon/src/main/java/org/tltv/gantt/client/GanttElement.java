@@ -455,6 +455,7 @@ public class GanttElement implements Exportable, StepProvider {
                 internalHandler.requestRemoveStep(stepWidget);
                 stepsMap.remove(stepWidget.getStep());
                 uidMap.remove(s.getUid());
+                internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
             }
         }
     }
@@ -566,13 +567,9 @@ public class GanttElement implements Exportable, StepProvider {
         w.getBar().setAttribute("end-date", "" + s.getEndDate());
         doSetSubSteps(s);
         w.updateWidth();
-        Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-            @Override
-            public void execute() {
-                w.updatePredecessor();
-                internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
-            }
-        });
+
+        w.updatePredecessor();
+        internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
     }
 
     /**
