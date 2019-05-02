@@ -218,6 +218,12 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         return false;
     }
 
+    public void addSubStep(SubStep subStep) {
+        if (subStep != null) {
+            addSubSteps(subStep);
+        }
+    }
+
     public void addSubSteps(SubStep... subSteps) {
         if (subSteps != null) {
             addSubSteps(Arrays.asList(subSteps));

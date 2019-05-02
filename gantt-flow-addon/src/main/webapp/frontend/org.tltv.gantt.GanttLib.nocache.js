@@ -331,7 +331,7 @@ function org_tltv_gantt_GanttLib(){
     }
     var strongName;
     try {
-      strongName = '6326EDE71A7F69F1E93D56E22AD74BA7';
+      strongName = '5AC1E6FE6E3068A220ABAC5386FF7FB4';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

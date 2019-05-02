@@ -24,23 +24,38 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.tltv.gantt.Gantt;
+import org.tltv.gantt.GanttStep;
 import org.tltv.gantt.model.Resolution;
 import org.tltv.gantt.model.Step;
 import org.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.charts.events.MouseEventDetails.MouseButton;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.BinderValidationStatus;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 
@@ -52,10 +67,16 @@ public class DemoUI extends Div {
     private ZoneId defaultZoneId;
     private int newId = 10000;
 
+    private StepEditor stepEditor = new StepEditor(this::saveUpdate, this::deleteUpdate);
+
+    private SubStepEditor subStepEditor = new SubStepEditor(this::saveUpdate, this::deleteUpdate);
+
+    private final Gantt gantt;
+
     public DemoUI() {
         setSizeFull();
 
-        Gantt gantt = new Gantt();
+        gantt = new Gantt();
 
         Step stepA = new Step();
         stepA.setUid("1"); // required unique step id
@@ -135,6 +156,7 @@ public class DemoUI extends Div {
         layout.setClassName("demoContentLayout");
         layout.setMargin(false);
         layout.setSizeFull();
+        layout.add(addMenu(gantt));
         layout.add(createControls(gantt));
         layout.add(gantt);
 
@@ -146,7 +168,11 @@ public class DemoUI extends Div {
     private void addEventHandlers(Gantt gantt) {
         gantt.addStepClickListener(event -> {
             if (event.getDetails().getButton().equals(MouseButton.LEFT)) {
-                gantt.remove(event.getTarget());
+                if (event.getStep() != null) {
+                    openEditorForStep(event.getStep());
+                } else if (event.getSubStep() != null) {
+                    openEditorForSubStep(event.getSubStep());
+                }
             } else if (event.getDetails().getButton().equals(MouseButton.RIGHT)) {
                 Notification.show("Clicked RIGHT mouse button on " + event.getTarget().getCaption());
             }
@@ -245,6 +271,26 @@ public class DemoUI extends Div {
         return controls;
     }
 
+    private Button addMenu(final Gantt gantt) {
+        Button menuBtn = new Button("Settings");
+        menuBtn.setIcon(VaadinIcon.CARET_DOWN.create());
+        menuBtn.setIconAfterText(true);
+
+        ContextMenu menu = new ContextMenu(menuBtn);
+        menu.setOpenOnClick(true);
+
+        MenuItem movableStepsBetweenRows = menu.addItem("Movable Steps between rows");
+        movableStepsBetweenRows.setCheckable(true);
+        movableStepsBetweenRows.setChecked(gantt.getSettings().isMovableStepsBetweenRows());
+        movableStepsBetweenRows.addClickListener(
+                event -> gantt.getSettings().setMovableStepsBetweenRows(event.getSource().isChecked()));
+
+        MenuItem createStepItem = menu.addItem("Create new step...");
+        createStepItem.addClickListener(event -> openEditorForStep(null));
+
+        return menuBtn;
+    }
+
     private List<String> getSupportedTimeZoneIds() {
         List<String> items = new ArrayList<>();
         items.add("Default");
@@ -263,5 +309,202 @@ public class DemoUI extends Div {
             defaultZoneId = ZoneId.of("Europe/Helsinki");
         }
         return defaultZoneId;
+    }
+
+    private void openEditorForStep(Step step) {
+        if (step == null) {
+            Step newStep = new Step();
+            newStep.setCaption("New Step");
+            stepEditor.open(newStep, Operation.ADD);
+        } else {
+            stepEditor.open(step, Operation.EDIT);
+        }
+    }
+
+    private void openEditorForSubStep(SubStep substep) {
+        if (substep == null) {
+            SubStep newSubStep = new SubStep();
+            newSubStep.setCaption("New sub step");
+            subStepEditor.open(newSubStep, Operation.ADD);
+        } else {
+            subStepEditor.open(substep, Operation.EDIT);
+        }
+    }
+
+    public void saveUpdate(Step step,
+            Operation operation) {
+        if (operation == operation.ADD) {
+            gantt.addStep(step);
+            Notification.show("Added step " + step.getCaption());
+        } else {
+            Notification.show("Updated step " + step.getCaption());
+        }
+    }
+
+    public void deleteUpdate(Step step) {
+        gantt.removeStep(step);
+        Notification.show("Step " + step.getCaption() + " removed");
+    }
+
+    public void saveUpdate(SubStep substep,
+            Operation operation) {
+        if (operation == operation.ADD) {
+            gantt.addSubSteps(substep);
+            Notification.show("Added substep " + substep.getCaption());
+        } else {
+            Notification.show("Updated substep " + substep.getCaption());
+        }
+    }
+
+    public void deleteUpdate(SubStep substep) {
+        gantt.removeSubStep(substep);
+        Notification.show("SubStep " + substep.getCaption() + " removed");
+    }
+
+    public class StepEditor extends GanttStepEditor<Step> {
+
+        public StepEditor(
+                BiConsumer<Step, Operation> itemSaver,
+                Consumer<Step> itemDeleter) {
+            super("step", itemSaver, itemDeleter);
+        }
+    }
+
+    public class SubStepEditor extends GanttStepEditor<SubStep> {
+
+        public SubStepEditor(
+                BiConsumer<SubStep, Operation> itemSaver,
+                Consumer<SubStep> itemDeleter) {
+            super("substep", itemSaver, itemDeleter);
+        }
+
+    }
+
+    public class GanttStepEditor<T extends GanttStep> extends Dialog {
+
+        private final H3 titleField = new H3();
+        private final Button saveButton = new Button("Save");
+        private final Button cancelButton = new Button("Cancel");
+        private final Button deleteButton = new Button("Delete");
+        private Registration registrationForSave;
+
+        private final FormLayout formLayout = new FormLayout();
+        private final HorizontalLayout buttonBar = new HorizontalLayout(saveButton,
+                cancelButton, deleteButton);
+
+        private Binder<T> binder = new Binder<>();
+        private T currentItem;
+
+        private final String itemType;
+        private final BiConsumer<T, Operation> itemSaver;
+        private final Consumer<T> itemDeleter;
+
+        private TextField captionName = new TextField();
+
+        protected GanttStepEditor(String itemType,
+                BiConsumer<T, Operation> itemSaver, Consumer<T> itemDeleter) {
+            this.itemType = itemType;
+            this.itemSaver = itemSaver;
+            this.itemDeleter = itemDeleter;
+
+            initTitle();
+            initFormLayout();
+            initButtonBar();
+            setCloseOnEsc(true);
+            setCloseOnOutsideClick(false);
+
+            createCaptionField();
+        }
+
+        private void createCaptionField() {
+            captionName.setLabel("Caption");
+            captionName.setRequired(true);
+            getFormLayout().add(captionName);
+
+            getBinder().forField(captionName)
+                    .withConverter(String::trim, String::trim)
+                    .bind(T::getCaption, T::setCaption);
+        }
+
+        private void initTitle() {
+            add(titleField);
+        }
+
+        private void initFormLayout() {
+            formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
+                    new FormLayout.ResponsiveStep("25em", 2));
+            Div div = new Div(formLayout);
+            div.addClassName("has-padding");
+            add(div);
+        }
+
+        private void initButtonBar() {
+            saveButton.setAutofocus(true);
+            saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            cancelButton.addClickListener(e -> close());
+            deleteButton.addClickListener(e -> deleteClicked());
+            deleteButton.addThemeVariants(ButtonVariant.LUMO_ERROR);
+            buttonBar.setClassName("buttons");
+            buttonBar.setSpacing(true);
+            add(buttonBar);
+        }
+
+        protected final FormLayout getFormLayout() {
+            return formLayout;
+        }
+
+        protected final Binder<T> getBinder() {
+            return binder;
+        }
+
+        protected final T getCurrentItem() {
+            return currentItem;
+        }
+
+        public final void open(T item, Operation operation) {
+            currentItem = item;
+            titleField.setText(operation.getNameInTitle() + " " + itemType);
+            if (registrationForSave != null) {
+                registrationForSave.remove();
+            }
+            registrationForSave = saveButton
+                    .addClickListener(e -> saveClicked(operation));
+            binder.readBean(currentItem);
+
+            deleteButton.setEnabled(operation.isDeleteEnabled());
+
+            open();
+        }
+
+        private void saveClicked(Operation operation) {
+            boolean isValid = binder.writeBeanIfValid(currentItem);
+
+            if (isValid) {
+                itemSaver.accept(currentItem, operation);
+                close();
+            } else {
+                BinderValidationStatus<T> status = binder.validate();
+            }
+        }
+
+        private void deleteClicked() {
+            doDelete(currentItem);
+        }
+
+        /**
+         * Removes the {@code item} from the backend and close the dialog.
+         *
+         * @param item
+         *            the item to delete
+         */
+        protected void doDelete(T item) {
+            itemDeleter.accept(item);
+            close();
+        }
+
+        private void deleteConfirmed(T item) {
+            doDelete(item);
+        }
+
     }
 }

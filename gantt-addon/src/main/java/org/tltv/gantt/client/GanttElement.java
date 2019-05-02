@@ -554,6 +554,8 @@ public class GanttElement implements Exportable, StepProvider {
 
     private void doUpdateStep(Step s) {
         StepWidget w = getStepWidget(s);
+        uidMap.put(s.getUid(), s);
+        stepsMap.put(s, w);
         w.updatePredecessorWidgetReference(s, this);
         // need to be called before setStep
         w.getBar().setAttribute("background-color", s.getBackgroundColor());

@@ -239,6 +239,26 @@ public class AbstractStepWidget extends PolymerWidget {
         super.add(w, getShadowRoot());
     }
 
+    @Override
+    public boolean remove(Widget w) {
+        // Validate.
+        if (w.getParent() != this) {
+            return false;
+        }
+        // Orphan.
+        try {
+            orphan(w);
+        } finally {
+            // Physical detach.
+            Element elem = w.getElement();
+            getShadowRoot().removeChild(elem);
+
+            // Logical detach.
+            getChildren().remove(w);
+        }
+        return true;
+    }
+
     protected int countNonSubStepChilds() {
         return 1 /* <style> is first */ + ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
                 + ((progressElement != null && progressElement.getElement().hasParentElement()) ? 1 : 0);

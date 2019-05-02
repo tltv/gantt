@@ -100,7 +100,8 @@
             }
 
       			_subStepsChanged(changeRecord) {
-              let g = this.firstChild.ganttElement;
+              let ganttTemplate = this;
+              let g = ganttTemplate.firstChild.ganttElement;
 
       				if (g && changeRecord) {
       					let updatedSteps = new Set();
@@ -108,7 +109,7 @@
       		        s.removed.forEach(function(substep) {
       							let step = g.getStepByUid(substep.owner.uid);
       							updatedSteps.add(step);
-                    this._removeSubStepFromStep(step, substep);
+                    ganttTemplate._removeSubStepFromStep(step, substep);
       		          console.log(substep.caption + ' substep was removed');
       		        });
       		        for (let i=0; i<s.addedCount; i++) {
@@ -146,7 +147,7 @@
 
             _containsSubStep(step, subStep) {
               for (let i = 0; i < this._getSubSteps(step).length; i++) {
-                 if (step.subSteps[i] === subStep.uid) {
+                 if (step.subSteps[i].uid === subStep.uid) {
                    return true;
                  }
               }
@@ -155,18 +156,19 @@
 
             _removeSubStepFromStep(step, subStep) {
               for (let i = 0; i < this._getSubSteps(step).length; i++) {
-                 if (step.subSteps[i] === subStep.uid) {
+                 if (step.subSteps[i].uid === subStep.uid) {
                    step.subSteps.splice(i, 1);
-                   i--;
+                   return;
                  }
               }
             }
 
             _fillStepWithSubSteps(step) {
+              step.subSteps = [];
               for (let i=0; i<this.subSteps.length; i++) {
                 let subStep = this.subSteps[i];
                 if(subStep.owner.uid === step.uid) {
-                  this._getSubSteps(step).push(subStep);
+                  step.subSteps.push(subStep);
                 }
               }
             }
@@ -195,7 +197,7 @@
               // fill steps with substeps (because PolymerTemplate does not support 'steps.subSteps')
               for (let i=0; i<this.steps.length; i++) {
                 let step = this.steps[i];
-                step.subSteps = step.subSteps || [];
+                step.subSteps = [];
                 this._fillStepWithSubSteps(step);
               }
 
