@@ -30,13 +30,13 @@ public class StepHierarchyHandler {
     /** Updates all steps predecessor visualizations. */
     public void updateAllStepsPredecessors(List<StepWidget> steps) {
         for (StepWidget c : steps) {
-            c.updatePredecessor();
+            c.updatePredecessor(false);
         }
     }
 
     public void updateRelatedStepsPredecessors(Step targetStep, List<StepWidget> stepWidgets) {
         for (StepWidget stepWidget : stepWidgets) {
-            stepWidget.requestUpdatePredecessor(targetStep);
+            stepWidget.updateRelatedPredecessor(targetStep);
         }
     }
 

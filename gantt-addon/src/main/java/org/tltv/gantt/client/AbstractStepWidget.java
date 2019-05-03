@@ -1,7 +1,6 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.AbstractStep;
-import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;

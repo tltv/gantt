@@ -69,10 +69,10 @@ public class Step extends AbstractStep {
      * which implements {@link ArrowElement} interface.
      *
      * @param predecessor
-     *            Predecesor step
+     *            Predecessor step
      */
     public void setPredecessor(Step predecessor) {
-        this.predecessor = predecessor;
+        this.predecessor = (predecessor != null && predecessor.getUid() != null) ? predecessor : null;
     }
 
     /** Get unmodifiable list of sub steps in this step. */

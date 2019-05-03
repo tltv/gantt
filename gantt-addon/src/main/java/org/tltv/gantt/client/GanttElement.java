@@ -282,7 +282,7 @@ public class GanttElement implements Exportable, StepProvider {
     /** Updates all steps predecessor visualizations. */
     public void updateAllStepsPredecessors() {
         for (StepWidget s : getStepWidgets()) {
-            s.updatePredecessor();
+            s.updatePredecessor(true);
         }
     }
 
@@ -570,7 +570,7 @@ public class GanttElement implements Exportable, StepProvider {
         doSetSubSteps(s);
         w.updateWidth();
 
-        w.updatePredecessor();
+        w.updatePredecessor(false);
         internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
     }
 

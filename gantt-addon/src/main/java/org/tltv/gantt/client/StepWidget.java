@@ -88,33 +88,45 @@ public class StepWidget extends AbstractStepWidget {
         StepWidget.this.predecessorStepWidget = predecessorStepWidget;
     }
 
-    public void requestUpdatePredecessor(final Step sourceRelatedStep) {
+    public void updateRelatedPredecessor(final Step sourceRelatedStep) {
         if (getStep() != null && sourceRelatedStep.equals(getStep().getPredecessor())) {
-            updatePredecessor();
+            updatePredecessor(false);
         }
     }
 
-    public void updatePredecessor() {
+    public void updatePredecessor(boolean deferred) {
         createPredecessorElements();
 
         if (predecessorStepWidget == null) {
             return;
         }
 
+        if (deferred) {
+            drawArrowDeferred();
+        } else {
+            drawArrow();
+        }
+    }
+
+    private void drawArrowDeferred() {
         Scheduler.get().scheduleDeferred(new ScheduledCommand() {
             @Override
             public void execute() {
-                ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
-                        getBar());
-
-                predecessorArrow.setWidth(data.getWidth());
-                predecessorArrow.setHeight(data.getHeight());
-                predecessorArrow.setTop((int) data.getTop());
-                predecessorArrow.setLeft((int) data.getLeft());
-
-                predecessorArrow.draw(data);
+                drawArrow();
             }
         });
+    }
+
+    private void drawArrow() {
+        ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
+                getBar());
+
+        predecessorArrow.setWidth(data.getWidth());
+        predecessorArrow.setHeight(data.getHeight());
+        predecessorArrow.setTop((int) data.getTop());
+        predecessorArrow.setLeft((int) data.getLeft());
+
+        predecessorArrow.draw(data);
     }
 
     public ArrowElement createArrowWidget() {
@@ -222,18 +234,10 @@ public class StepWidget extends AbstractStepWidget {
     }
 
     public void updatePredecessorWidgetReference(Step step, StepProvider stepProvider) {
-
-        // check predecessor change and update widget reference if
-        // needed.
         Step predecessor = step.getPredecessor();
-        Step oldPredecessor = null;
-        if (getPredecessorStepWidget() != null) {
-            oldPredecessor = getPredecessorStepWidget().getStep();
-        }
-
-        if (predecessor != null && !predecessor.equals(oldPredecessor)) {
+        if (predecessor != null) {
             setPredecessorStepWidget(stepProvider.getStepWidget(predecessor));
-        } else if (predecessor == null) {
+        } else {
             setPredecessorStepWidget(null);
         }
     }
