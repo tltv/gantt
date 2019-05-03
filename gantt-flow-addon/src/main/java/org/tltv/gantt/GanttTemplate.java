@@ -113,7 +113,8 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
      * sub-step's owner is null or owner is same as target step.
      */
     public void moveSubStep(SubStep subStep, Step toStep) {
-        if (subStep == null || toStep == null || subStep.getOwner() == null || subStep.getOwner().equals(toStep)) {
+        if (subStep == null || toStep == null || subStep.getOwner() == null
+                || subStep.getOwner().getUid().equals(toStep.getUid())) {
             return;
         }
         removeSubStep(subStep);
