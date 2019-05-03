@@ -39,6 +39,8 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     protected ZoneId zoneId = ZoneId.systemDefault();
 
+    protected DateEncoder dateEncoder = new DateEncoder();
+
     public GanttTemplate(Settings initialSettings) {
         getModel().setSettings(initialSettings);
 
@@ -321,8 +323,8 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         long previousEndDate = (long) step.getEndDate();
         ZonedDateTime previousZonedStartDate = step.getStartZonedDateTime(getZoneId());
         ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
-        step.setStartDate(startDate);
-        step.setEndDate(endDate);
+        step.setStartDate(dateEncoder.encode(startDate));
+        step.setEndDate(dateEncoder.encode(endDate));
         log.debug("Moving step {} from [{} - {}] to [{} - {}]", stepUid, previousZonedStartDate, previousZonedEndDate,
                 step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()));
         int newStepIndex;
@@ -359,8 +361,8 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         long previousEndDate = (long) step.getEndDate();
         ZonedDateTime previousZonedStartDate = step.getStartZonedDateTime(getZoneId());
         ZonedDateTime previousZonedEndDate = step.getEndZonedDateTime(getZoneId());
-        step.setStartDate(startDate);
-        step.setEndDate(endDate);
+        step.setStartDate(dateEncoder.encode(startDate));
+        step.setEndDate(dateEncoder.encode(endDate));
         log.debug("Resizing step {} from [{} - {}] to [{} - {}]", stepUid, previousZonedStartDate, previousZonedEndDate,
                 step.getStartZonedDateTime(getZoneId()), step.getEndZonedDateTime(getZoneId()));
         resizeDatesByOwnerStep(step, previousStartDate, previousEndDate);
