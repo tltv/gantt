@@ -18,7 +18,9 @@ package org.tltv.gantt.demo;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -39,6 +41,7 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.charts.events.MouseEventDetails.MouseButton;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.contextmenu.MenuItem;
@@ -73,6 +76,8 @@ public class DemoUI extends Div {
 
     private final Gantt gantt;
 
+    private int year = LocalDateTime.now().getYear();
+
     public DemoUI() {
         setSizeFull();
 
@@ -83,8 +88,8 @@ public class DemoUI extends Div {
         stepA.setCaption("Step A");
         stepA.setDescription("Description of Step A");
         stepA.setBackgroundColor("#A8D946");
-        stepA.setStartZonedDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 29, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepA.setStartZonedDateTime(LocalDateTime.of(year, 1, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepA.setEndZonedDateTime(LocalDateTime.of(year, 1, 30, 0, 0, 0).atZone(getDefaultTimeZone()));
         stepA.setResizable(true);
         stepA.setMovable(true);
 
@@ -92,8 +97,8 @@ public class DemoUI extends Div {
         stepB.setUid("2"); // required unique step id
         stepB.setCaption("Step B");
         stepB.setDescription("Description of Step B");
-        stepB.setStartZonedDateTime(LocalDateTime.of(2017, 2, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepB.setEndZonedDateTime(LocalDateTime.of(2017, 2, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepB.setStartZonedDateTime(LocalDateTime.of(year, 2, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepB.setEndZonedDateTime(LocalDateTime.of(year, 2, 26, 0, 0, 0).atZone(getDefaultTimeZone()));
         stepB.setResizable(true);
         stepB.setMovable(true);
         stepB.setPredecessor(stepA);
@@ -102,8 +107,8 @@ public class DemoUI extends Div {
         stepC.setUid("3"); // required unique step id
         stepC.setCaption("Step C");
         stepC.setDescription("Description of Step C");
-        stepC.setStartZonedDateTime(LocalDateTime.of(2017, 3, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepC.setEndZonedDateTime(LocalDateTime.of(2017, 3, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepC.setStartZonedDateTime(LocalDateTime.of(year, 3, 1, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepC.setEndZonedDateTime(LocalDateTime.of(year, 3, 26, 0, 0, 0).atZone(getDefaultTimeZone()));
         stepC.setResizable(true);
         stepC.setMovable(true);
         stepC.setPredecessor(stepB);
@@ -112,8 +117,8 @@ public class DemoUI extends Div {
         stepD.setUid("4"); // required unique step id
         stepD.setCaption("Step D");
         stepD.setDescription("Description of Step D");
-        stepD.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
-        stepD.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
+        stepD.setStartZonedDateTime(LocalDateTime.of(year, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
+        stepD.setEndZonedDateTime(LocalDateTime.of(year, 1, 26, 0, 0, 0).atZone(getDefaultTimeZone()));
         stepD.setResizable(true);
         stepD.setMovable(true);
 
@@ -122,10 +127,10 @@ public class DemoUI extends Div {
         subStepA.setCaption("SubStep A");
         subStepA.setBackgroundColor("#A8D946");
         subStepA.setDescription("Description of SubStep A");
-        subStepA.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0,
+        subStepA.setStartZonedDateTime(LocalDateTime.of(year, 1, 15, 0, 0,
                 0).atZone(getDefaultTimeZone()));
-        subStepA.setEndZonedDateTime(LocalDateTime.of(2017, 1, 20, 23, 59,
-                59).atZone(getDefaultTimeZone()));
+        subStepA.setEndZonedDateTime(LocalDateTime.of(year, 1, 21, 0, 0,
+                0).atZone(getDefaultTimeZone()));
         subStepA.setResizable(true);
         subStepA.setMovable(true);
         subStepA.setOwner(stepD);
@@ -134,10 +139,10 @@ public class DemoUI extends Div {
         subStepB.setUid("6"); // required unique step id
         subStepB.setCaption("SubStep B");
         subStepB.setDescription("Description of SubStep B");
-        subStepB.setStartZonedDateTime(LocalDateTime.of(2017, 1, 21, 0, 0,
+        subStepB.setStartZonedDateTime(LocalDateTime.of(year, 1, 21, 0, 0,
                 0).atZone(getDefaultTimeZone()));
-        subStepB.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59,
-                59).atZone(getDefaultTimeZone()));
+        subStepB.setEndZonedDateTime(LocalDateTime.of(year, 1, 26, 0, 0,
+                0).atZone(getDefaultTimeZone()));
         subStepB.setResizable(true);
         subStepB.setMovable(true);
         subStepB.setOwner(stepD);
@@ -148,8 +153,8 @@ public class DemoUI extends Div {
         gantt.addStep(stepD);
         gantt.addSubSteps(subStepA, subStepB);
 
-        gantt.setStartDateTime(LocalDateTime.of(2017, 1, 1, 0, 0, 0));
-        gantt.setEndDateTime(LocalDateTime.of(2018, 1, 1, 0, 0, 0));
+        gantt.setStartDateTime(LocalDateTime.of(year, 1, 1, 0, 0, 0));
+        gantt.setEndDateTime(LocalDateTime.of(year + 1, 1, 1, 0, 0, 0));
         gantt.getSettings().setMovableStepsBetweenRows(true);
 
         final VerticalLayout layout = new VerticalLayout();
@@ -237,18 +242,6 @@ public class DemoUI extends Div {
         localeField.setValue(gantt.getLocale());
         localeField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(l -> gantt.setLocale(l)));
 
-        Button addNewStepBtn = new Button("Add new step", event -> {
-            Step step = new Step();
-            step.setUid("" + newId++); // required unique step id
-            step.setCaption("Step " + step.getUid());
-            step.setDescription("Description of Step " + step.getUid());
-            step.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
-            step.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
-            step.setResizable(true);
-            step.setMovable(true);
-            gantt.addStep(step);
-        });
-
         Button addNewSubStepBtn = new Button("Add new sub step", event -> {
             SubStep substep = new SubStep();
             substep.setUid("" + newId++); // required unique step id
@@ -262,12 +255,8 @@ public class DemoUI extends Div {
             gantt.addSubSteps(substep);
         });
 
-        Button changeStepCaption = new Button("Change step caption", event -> {
-            gantt.getStep(0).setCaption(gantt.getStep(0).getCaption() + "!");
-        });
-
         controls.add(resolutionField, startDateField, endDateField, localeField, timeZoneField);
-        controls.add(addNewStepBtn, addNewSubStepBtn, changeStepCaption);
+        controls.add(addNewSubStepBtn);
         return controls;
     }
 
@@ -315,6 +304,7 @@ public class DemoUI extends Div {
         if (step == null) {
             Step newStep = new Step();
             newStep.setCaption("New Step");
+            setDefaults(newStep);
             stepEditor.open(newStep, Operation.ADD);
         } else {
             stepEditor.open(step, Operation.EDIT);
@@ -325,10 +315,16 @@ public class DemoUI extends Div {
         if (substep == null) {
             SubStep newSubStep = new SubStep();
             newSubStep.setCaption("New sub step");
+            setDefaults(newSubStep);
             subStepEditor.open(newSubStep, Operation.ADD);
         } else {
             subStepEditor.open(substep, Operation.EDIT);
         }
+    }
+
+    private void setDefaults(GanttStep step) {
+        step.setStartZonedDateTime(ZonedDateTime.now(gantt.getZoneId()).truncatedTo(ChronoUnit.DAYS));
+        step.setEndZonedDateTime(step.getStartZonedDateTime(gantt.getZoneId()).plusDays(15));
     }
 
     public void saveUpdate(Step step,
@@ -399,13 +395,21 @@ public class DemoUI extends Div {
         private final BiConsumer<T, Operation> itemSaver;
         private final Consumer<T> itemDeleter;
 
-        private TextField captionName = new TextField();
+        private TextField captionField = new TextField();
+        private TextField descriptionField = new TextField();
+        private DateTimeField startDateTimeField = new DateTimeField("Start date", () -> gantt);
+        private DateTimeField endDateTimeField = new DateTimeField("End date", () -> gantt);
+
+        private TextField colorField = new TextField();
+        private Checkbox resizableField = new Checkbox();
+        private Checkbox movableField = new Checkbox();
 
         protected GanttStepEditor(String itemType,
                 BiConsumer<T, Operation> itemSaver, Consumer<T> itemDeleter) {
             this.itemType = itemType;
             this.itemSaver = itemSaver;
             this.itemDeleter = itemDeleter;
+            setWidth("500px");
 
             initTitle();
             initFormLayout();
@@ -414,16 +418,65 @@ public class DemoUI extends Div {
             setCloseOnOutsideClick(false);
 
             createCaptionField();
+            createDateFields();
+            createColorField();
+            createDescriptionField();
+            createResizableField();
+            createMovableField();
+        }
+
+        private void createResizableField() {
+            resizableField.setLabel("Resizable");
+            getFormLayout().add(resizableField);
+            getBinder().forField(resizableField)
+                    .bind(T::isResizable, T::setResizable);
+        }
+
+        private void createMovableField() {
+            movableField.setLabel("Movable");
+            getFormLayout().add(movableField);
+            getBinder().forField(movableField)
+                    .bind(T::isMovable, T::setMovable);
         }
 
         private void createCaptionField() {
-            captionName.setLabel("Caption");
-            captionName.setRequired(true);
-            getFormLayout().add(captionName);
+            captionField.setLabel("Caption");
+            captionField.setWidthFull();
+            getFormLayout().add(captionField);
 
-            getBinder().forField(captionName)
+            getBinder().forField(captionField)
                     .withConverter(String::trim, String::trim)
                     .bind(T::getCaption, T::setCaption);
+        }
+
+        private void createDescriptionField() {
+            descriptionField.setLabel("Description");
+            descriptionField.setWidthFull();
+            getFormLayout().add(descriptionField);
+
+            getBinder().forField(descriptionField)
+                    .withConverter(String::trim, String::trim)
+                    .bind(T::getDescription, T::setDescription);
+        }
+
+        private void createColorField() {
+            colorField.setLabel("Background color");
+            colorField.setWidthFull();
+            getFormLayout().add(colorField);
+
+            getBinder().forField(colorField)
+                    .withConverter(String::trim, String::trim)
+                    .bind(T::getBackgroundColor, T::setBackgroundColor);
+        }
+
+        private void createDateFields() {
+            getFormLayout().add(startDateTimeField);
+            getFormLayout().add(endDateTimeField);
+
+            getBinder().forField(startDateTimeField)
+                    .bind(T::getStartDate, T::setStartDate);
+            getBinder().forField(endDateTimeField)
+                    .bind(T::getEndDate, T::setEndDate);
         }
 
         private void initTitle() {
@@ -432,8 +485,10 @@ public class DemoUI extends Div {
 
         private void initFormLayout() {
             formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                    new FormLayout.ResponsiveStep("25em", 2));
+                    new FormLayout.ResponsiveStep("25em", 1));
+            formLayout.setWidthFull();
             Div div = new Div(formLayout);
+            div.setWidthFull();
             div.addClassName("has-padding");
             add(div);
         }
@@ -501,10 +556,5 @@ public class DemoUI extends Div {
             itemDeleter.accept(item);
             close();
         }
-
-        private void deleteConfirmed(T item) {
-            doDelete(item);
-        }
-
     }
 }

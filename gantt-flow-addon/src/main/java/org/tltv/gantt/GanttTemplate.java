@@ -25,6 +25,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
 import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.templatemodel.Encode;
 import com.vaadin.flow.templatemodel.Include;
 import com.vaadin.flow.templatemodel.TemplateModel;
 
@@ -81,17 +82,17 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     }
 
     public Step addStep(Step step) {
-        if (!contains(step)) {
-            getModel().getSteps().add(ensureUID(step));
+        if (!contains(ensureUID(step))) {
+            getModel().getSteps().add(step);
         }
         return step;
     }
 
     public void addStep(int index, Step step) {
-        if (contains(step)) {
+        if (contains(ensureUID(step))) {
             moveStep(index, step);
         } else {
-            getModel().getSteps().add(index, ensureUID(step));
+            getModel().getSteps().add(index, step);
         }
     }
 
@@ -276,8 +277,8 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
     }
 
     public boolean onAddSubStep(SubStep subStep) {
-        if (!contains(subStep)) {
-            return getModel().getSubSteps().add(ensureUID(subStep));
+        if (!contains(ensureUID(subStep))) {
+            return getModel().getSubSteps().add(subStep);
         }
         return false;
     }
@@ -471,7 +472,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         if (step == null) {
             return null;
         }
-        if (step.getUid() == null) {
+        if (step.getUid() == null || step.getUid().isEmpty()) {
             step.setUid(UUID.randomUUID().toString());
         }
         return step;
@@ -483,6 +484,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
         void setSettings(Settings settings);
 
+        @Encode(value = DateEncoder.class, path = "endDate")
         @Include({ "uid", "caption", "description", "captionMode", "styleName", "startDate", "endDate",
                 "backgroundColor", "progress", "showProgress", "resizable", "movable", "substep", "predecessor.uid" })
         List<Step> getSteps();
@@ -495,6 +497,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
          */
         // TODO consider moving substeps back to Step when Lists in Lists is
         // supported.
+        @Encode(value = DateEncoder.class, path = "endDate")
         @Include({ "uid", "caption", "description", "captionMode", "styleName", "startDate", "endDate",
                 "backgroundColor", "progress", "showProgress", "resizable", "movable", "substep", "owner.uid" })
         List<SubStep> getSubSteps();

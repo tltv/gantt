@@ -1,11 +1,19 @@
 package org.tltv.gantt;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Collection;
+import java.util.function.Supplier;
 
 import org.tltv.gantt.model.SubStep;
 
 import com.vaadin.flow.component.charts.events.MouseEventDetails;
 import com.vaadin.flow.component.charts.events.MouseEventDetails.MouseButton;
+import com.vaadin.flow.data.binder.Result;
+import com.vaadin.flow.data.binder.ValueContext;
+import com.vaadin.flow.data.converter.Converter;
 
 import elemental.json.JsonObject;
 
@@ -64,4 +72,72 @@ public class GanttUtil {
         }
         return max;
     }
+
+    public static Double toDouble(LocalDate date, Gantt gantt) {
+        return toDouble(date, gantt.getZoneId());
+    }
+
+    public static Double toDouble(LocalDate date, ZoneId zoneId) {
+        if (date == null) {
+            return null;
+        }
+        return (double) date.atStartOfDay(zoneId).toInstant().getEpochSecond() * 1000;
+    }
+
+    public static LocalDate toLocalDate(Double date, Gantt gantt) {
+        return toLocalDate(date, gantt.getZoneId());
+    }
+
+    public static LocalDate toLocalDate(Double date, ZoneId zoneId) {
+        if (date == null) {
+            return null;
+        }
+        return Instant.ofEpochMilli(date.longValue()).atZone(zoneId).toLocalDate();
+    }
+
+    public static Double toDouble(LocalDate date, LocalTime time, Gantt gantt) {
+        return toDouble(date, time, gantt.getZoneId());
+    }
+
+    public static Double toDouble(LocalDate date, LocalTime time, ZoneId zoneId) {
+        if (date == null || time == null) {
+            return null;
+        }
+        return (double) date.atStartOfDay(zoneId).with(time).toInstant().getEpochSecond() * 1000;
+    }
+
+    public static LocalTime toLocalTime(Double date, Gantt gantt) {
+        return toLocalTime(date, gantt.getZoneId());
+    }
+
+    public static LocalTime toLocalTime(Double date, ZoneId zoneId) {
+        if (date == null) {
+            return null;
+        }
+        LocalTime time = Instant.ofEpochMilli(date.longValue()).atZone(zoneId).toLocalTime();
+        return time;
+    }
+
+    public static class LocalDateToDoubleConverter implements Converter<LocalDate, Double> {
+
+        private Supplier<Gantt> ganttSupplier;
+
+        public LocalDateToDoubleConverter(Supplier<Gantt> ganttSupplier) {
+            this.ganttSupplier = ganttSupplier;
+        }
+
+        @Override
+        public Result<Double> convertToModel(LocalDate value, ValueContext context) {
+            if (value == null) {
+                return Result.ok(null);
+            }
+            return Result.ok(toDouble(value, ganttSupplier.get()));
+        }
+
+        @Override
+        public LocalDate convertToPresentation(Double value, ValueContext context) {
+            return toLocalDate(value, ganttSupplier.get());
+        }
+    }
+
 }

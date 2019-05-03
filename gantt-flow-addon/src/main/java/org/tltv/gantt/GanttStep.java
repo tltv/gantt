@@ -111,18 +111,30 @@ public abstract class GanttStep {
         this.movable = movable;
     }
 
+    /**
+     * Get inclusive start date and time time in milliseconds.
+     */
     public double getStartDate() {
         return startDate;
     }
 
+    /**
+     * Set inclusive start date and time in milliseconds.
+     */
     public void setStartDate(double startDate) {
         this.startDate = startDate;
     }
 
+    /**
+     * Get exclusive end date and time time in milliseconds.
+     */
     public double getEndDate() {
         return endDate;
     }
 
+    /**
+     * Set exclusive end date and time in milliseconds.
+     */
     public void setEndDate(double endDate) {
         this.endDate = endDate;
     }
