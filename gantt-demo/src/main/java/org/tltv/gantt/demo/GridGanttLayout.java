@@ -1,16 +1,15 @@
 package org.tltv.gantt.demo;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.tltv.gantt.Gantt;
-import org.tltv.gantt.client.shared.Step;
-
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.ui.Grid;
 import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.UI;
+import de.adito.aditoweb.vaadin.addons.gantt.Gantt;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GridGanttLayout extends HorizontalLayout implements GanttListener {
 

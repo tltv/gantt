@@ -1,8 +1,9 @@
 package org.tltv.gantt.demo;
 
-import org.tltv.gantt.client.shared.Step;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
 
-public interface GanttListener {
+public interface GanttListener
+{
 
     void stepModified(Step step);
 

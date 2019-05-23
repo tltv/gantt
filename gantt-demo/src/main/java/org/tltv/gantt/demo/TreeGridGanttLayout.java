@@ -1,13 +1,5 @@
 package org.tltv.gantt.demo;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.mutable.MutableInt;
-import org.tltv.gantt.Gantt;
-import org.tltv.gantt.client.shared.Step;
-
 import com.vaadin.data.TreeData;
 import com.vaadin.data.provider.TreeDataProvider;
 import com.vaadin.event.CollapseEvent;
@@ -19,6 +11,13 @@ import com.vaadin.ui.Grid.Column;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.TreeGrid;
 import com.vaadin.ui.UI;
+import de.adito.aditoweb.vaadin.addons.gantt.Gantt;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
+import org.apache.commons.lang3.mutable.MutableInt;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TreeGridGanttLayout extends HorizontalLayout implements GanttListener {
 

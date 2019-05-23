@@ -1,0 +1,14 @@
+<module>
+
+	<!-- Inherit DefaultWidgetSet -->
+	<inherits name="com.vaadin.DefaultWidgetSet" /> 
+
+	<replace-with class="de.adito.aditoweb.vaadin.addons.gantt.client.BgGridSvgElement">
+    	<when-type-is class="de.adito.aditoweb.vaadin.addons.gantt.client.BgGridCssElement" />
+    	<any>
+      		<when-property-is name="user.agent" value="safari"/>
+    	</any>
+  	</replace-with>
+  	
+	<!-- set-property name="user.agent" value="gecko1_8"/-->
+</module>

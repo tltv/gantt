@@ -1,12 +1,11 @@
 package org.tltv.gantt.demo.util;
 
-import org.tltv.gantt.Gantt;
-import org.tltv.gantt.demo.GridGanttLayout;
-import org.tltv.gantt.demo.TreeGridGanttLayout;
-
 import com.vaadin.ui.Component;
 import com.vaadin.ui.TabSheet;
 import com.vaadin.ui.TabSheet.Tab;
+import de.adito.aditoweb.vaadin.addons.gantt.Gantt;
+import org.tltv.gantt.demo.GridGanttLayout;
+import org.tltv.gantt.demo.TreeGridGanttLayout;
 
 public class UriFragmentWrapperFactory {
 
