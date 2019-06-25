@@ -1,4 +1,4 @@
-package org.tltv.gantt.demo;
+package de.adito.aditoweb.vaadin.addons.gantt.demo;
 
 import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
 

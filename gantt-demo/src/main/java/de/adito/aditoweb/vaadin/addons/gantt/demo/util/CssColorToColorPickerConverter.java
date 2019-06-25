@@ -1,4 +1,4 @@
-package org.tltv.gantt.demo.util;
+package de.adito.aditoweb.vaadin.addons.gantt.demo.util;
 
 import com.vaadin.data.Converter;
 import com.vaadin.data.Result;

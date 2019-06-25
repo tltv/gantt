@@ -55,7 +55,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.tltv.gantt</groupId>
+			<groupId>de.adito.aditoweb.vaadin.addons</groupId>
 			<artifactId>gantt-addon</artifactId>
 		</dependency>
 		<dependency>

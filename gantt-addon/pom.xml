@@ -94,7 +94,7 @@
 			   <extensions>true</extensions>
 			   <configuration>
 			       <instructions>
-			           <Export-Package>org.tltv.gantt.client,org.tltv.gantt.client.shared,org.tltv.gantt</Export-Package>
+			           <Export-Package>de.adito.aditoweb.vaadin.addons.gantt.client,de.adito.aditoweb.vaadin.addons.gantt.client.shared,de.adito.aditoweb.vaadin.addons.gantt</Export-Package>
 			           <Import-Package>!com.google.gwt.*,!com.vaadin.client.*,*</Import-Package>
 			       </instructions>
 			   </configuration>

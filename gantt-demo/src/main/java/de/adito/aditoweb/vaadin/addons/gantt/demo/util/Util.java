@@ -1,4 +1,4 @@
-package org.tltv.gantt.demo.util;
+package de.adito.aditoweb.vaadin.addons.gantt.demo.util;
 
 import java.util.Arrays;
 import java.util.Collection;

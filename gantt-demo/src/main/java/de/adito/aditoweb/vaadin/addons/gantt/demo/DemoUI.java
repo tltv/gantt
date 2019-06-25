@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.tltv.gantt.demo;
+package de.adito.aditoweb.vaadin.addons.gantt.demo;
 
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
@@ -39,9 +39,9 @@ import de.adito.aditoweb.vaadin.addons.gantt.client.shared.AbstractStep;
 import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Resolution;
 import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
 import de.adito.aditoweb.vaadin.addons.gantt.client.shared.SubStep;
-import org.tltv.gantt.demo.util.CssColorToColorPickerConverter;
-import org.tltv.gantt.demo.util.UriFragmentWrapperFactory;
-import org.tltv.gantt.demo.util.Util;
+import de.adito.aditoweb.vaadin.addons.gantt.demo.util.CssColorToColorPickerConverter;
+import de.adito.aditoweb.vaadin.addons.gantt.demo.util.UriFragmentWrapperFactory;
+import de.adito.aditoweb.vaadin.addons.gantt.demo.util.Util;
 
 import javax.servlet.annotation.WebServlet;
 import java.text.SimpleDateFormat;
@@ -55,7 +55,7 @@ public class DemoUI extends UI
 {
 
     @WebServlet(value = "/*", asyncSupported = true)
-    @VaadinServletConfiguration(productionMode = false, ui = DemoUI.class, widgetset = "org.adito.gantt.demo.DemoWidgetSet")
+    @VaadinServletConfiguration(productionMode = false, ui = DemoUI.class, widgetset = "de.adito.aditoweb.vaadin.addons.gantt.demo.WidgetSet")
     public static class Servlet extends VaadinServlet
     {
     }

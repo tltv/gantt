@@ -1,4 +1,4 @@
-package org.tltv.gantt.demo;
+package de.adito.aditoweb.vaadin.addons.gantt.demo;
 
 import com.vaadin.data.provider.ListDataProvider;
 import com.vaadin.ui.Grid;

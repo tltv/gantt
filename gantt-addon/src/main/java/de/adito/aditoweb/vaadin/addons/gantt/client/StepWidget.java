@@ -100,7 +100,7 @@ public class StepWidget extends AbstractStepWidget {
 
     public ArrowElement createArrowWidget() {
         SvgArrowWidget a = new SvgArrowWidget();
-        a.setReadOnly(isReadOnly());
+        a.setReadOnly(true);
         return a;
     }
 
@@ -130,7 +130,7 @@ public class StepWidget extends AbstractStepWidget {
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
         if (predecessorArrow != null) {
-            predecessorArrow.setReadOnly(readOnly);
+            predecessorArrow.setReadOnly(true);
         }
     }
 
