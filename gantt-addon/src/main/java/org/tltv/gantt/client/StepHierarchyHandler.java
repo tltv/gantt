@@ -34,9 +34,10 @@ public class StepHierarchyHandler {
         }
     }
 
-    public void updateRelatedStepsPredecessors(Step targetStep, List<StepWidget> stepWidgets) {
+    public void updateRelatedStepsPredecessors(StepWidget targetStepWidget, Step targetStep, boolean removed,
+            List<StepWidget> stepWidgets) {
         for (StepWidget stepWidget : stepWidgets) {
-            stepWidget.updateRelatedPredecessor(targetStep);
+            stepWidget.updateRelatedPredecessor(targetStepWidget, targetStep, removed);
         }
     }
 

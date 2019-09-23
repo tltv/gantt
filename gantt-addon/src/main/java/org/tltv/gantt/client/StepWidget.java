@@ -25,7 +25,9 @@ import org.tltv.gantt.client.shared.Step;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.DOM;
@@ -88,8 +90,13 @@ public class StepWidget extends AbstractStepWidget {
         StepWidget.this.predecessorStepWidget = predecessorStepWidget;
     }
 
-    public void updateRelatedPredecessor(final Step sourceRelatedStep) {
+    public void updateRelatedPredecessor(StepWidget sourceStepWidget, final Step sourceRelatedStep, boolean removed) {
         if (getStep() != null && sourceRelatedStep.equals(getStep().getPredecessor())) {
+            if (removed) {
+                predecessorStepWidget = null;
+            } else if (sourceStepWidget != null) {
+                predecessorStepWidget = sourceStepWidget;
+            }
             updatePredecessor(false);
         }
     }
@@ -97,7 +104,7 @@ public class StepWidget extends AbstractStepWidget {
     public void updatePredecessor(boolean deferred) {
         createPredecessorElements();
 
-        if (predecessorStepWidget == null) {
+        if (predecessorStepWidget == null && !deferred) {
             return;
         }
 
@@ -117,7 +124,24 @@ public class StepWidget extends AbstractStepWidget {
         });
     }
 
+    /* Draw arrow. return true, if redraw is not needed. */
     private void drawArrow() {
+        StepWidget predecessorStep = getPredecessorStepWidget();
+        if (predecessorStep == null) {
+            GWT.log("Predecessor step widget is null. StepWidget.drawArrow() can't draw arrow.");
+            return;
+        }
+        if (!isSet() || !predecessorStep.isSet()) {
+            Scheduler.get().scheduleFixedDelay(new RepeatingCommand() {
+                @Override
+                public boolean execute() {
+                    drawArrow();
+                    return false;
+                }
+            }, 50);
+            return;
+        }
+        
         ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
                 getBar());
 

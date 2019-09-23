@@ -394,6 +394,11 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     private void doAddSteps(List<Step> steps, int fromIndex) {
+        for (StepWidget sw : getStepWidgets()) {
+            // clearing calculated height will make sure that all predecessors
+            // are recalculated right.
+            sw.clearCalculatedHeight();
+        }
         int index = Math.max(0, fromIndex);
         for (Step s : steps) {
             doAddStep(s, index++);
@@ -455,7 +460,7 @@ public class GanttElement implements Exportable, StepProvider {
                 internalHandler.requestRemoveStep(stepWidget);
                 stepsMap.remove(stepWidget.getStep());
                 uidMap.remove(s.getUid());
-                internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
+                internalHandler.updateRelatedStepsPredecessors(stepWidget, s, true, getStepWidgets());
             }
         }
     }
@@ -571,7 +576,7 @@ public class GanttElement implements Exportable, StepProvider {
         w.updateWidth();
 
         w.updatePredecessor(false);
-        internalHandler.updateRelatedStepsPredecessors(s, getStepWidgets());
+        internalHandler.updateRelatedStepsPredecessors(w, s, false, getStepWidgets());
     }
 
     /**

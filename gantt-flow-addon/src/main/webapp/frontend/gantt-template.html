@@ -86,7 +86,7 @@
               if (g && changeRecord) {
                 changeRecord.indexSplices.forEach(function(s) {
       		        s.removed.forEach(function(step) {
-                    g.removeStep(step);
+                      g.removeStep(step);
       		          console.log(step.caption + ' was removed');
       		        });
       		        for (let i=0; i<s.addedCount; i++) {
@@ -96,6 +96,7 @@
       		          console.log('Step ' + step.caption + ' was added');
       		        }
       		      }, this);
+                g.updateAllStepsPredecessors();
               }
             }
 
