@@ -15,7 +15,6 @@
  */
 package org.tltv.gantt.demo;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -207,12 +206,12 @@ public class DemoUI extends Div {
         resolutionField.addValueChangeListener(e -> gantt.setResolution(e.getValue()));
 
         DatePicker startDateField = new DatePicker(
-                LocalDate.of(2017, 1, 1),
+                gantt.getStartDateTime().toLocalDate(),
                 e -> Optional.ofNullable(e.getValue()).ifPresent(date -> gantt.setStartDateTime(date.atStartOfDay())));
         startDateField.setLabel("Start date");
 
         DatePicker endDateField = new DatePicker(
-                LocalDate.of(2018, 1, 1),
+                gantt.getEndDateTime().toLocalDate(),
                 e -> Optional.ofNullable(e.getValue()).ifPresent(date -> gantt.setEndDateTime(date.atStartOfDay())));
         endDateField.setLabel("End date");
 
