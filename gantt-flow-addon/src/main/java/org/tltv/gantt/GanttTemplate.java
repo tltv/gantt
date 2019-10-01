@@ -115,13 +115,14 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
      * Moves sub-step to other step. Does nothing, if either is null, or
      * sub-step's owner is null or owner is same as target step.
      */
-    public void moveSubStep(SubStep subStep, Step toStep) {
+    public void moveSubStep(String oldStepUid, SubStep subStep, Step toStep) {
         if (subStep == null || toStep == null || subStep.getOwner() == null
-                || subStep.getOwner().getUid().equals(toStep.getUid())) {
+                || oldStepUid.equals(toStep.getUid())) {
             return;
         }
         removeSubStep(subStep);
         addSubStep(toStep, subStep);
+        refreshStep(oldStepUid);
     }
 
     public Step getStep(int index) {
@@ -337,7 +338,7 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
             } else {
                 log.debug("Moving substep {} from row index {} to {}", stepUid, previousStepIndex, newStepIndex);
                 // move sub-step to new owner
-                moveSubStep((SubStep) step, (Step) newStep);
+                moveSubStep(((SubStep) step).getOwner().getUid(), (SubStep) step, (Step) newStep);
             }
         } else {
             newStepIndex = previousStepIndex;
@@ -403,6 +404,34 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     public Registration addPredecessorChangeListener(ComponentEventListener<PredecessorChangeEvent> listener) {
         return getEventBus().addListener(PredecessorChangeEvent.class, listener);
+    }
+
+    /**
+     * Refresh given step and related owner/sub steps to be in sync with model.
+     */
+    public void refreshStepDates(GanttStep step) {
+        moveDatesByOwnerStep(step, (long) step.getStartDate(), (long) step.getEndDate());
+        adjustDatesByAbstractStep(step);
+    }
+
+    /**
+     * Refresh target step.
+     */
+    public void refreshStep(Step target) {
+        refreshStep(target.getUid());
+    }
+
+    /**
+     * Refresh target step by UID.
+     */
+    public void refreshStep(String targetUid) {
+        if (targetUid == null) {
+            return;
+        }
+        refreshStepDates(getStep(targetUid));
+        // refreshStep makes sure that target step is rendered correctly event
+        // when data was not changed.
+        getElement().callFunction("refreshStep", targetUid);
     }
 
     protected void moveDatesByOwnerStep(GanttStep step, long previousStartDate, long previousEndDate) {

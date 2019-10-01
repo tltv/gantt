@@ -128,7 +128,15 @@
                 });
       		    }
       			}
-
+			
+     		refreshStep(uid) {
+     			let g = this.firstChild.ganttElement;
+	   			let step = g.getStepByUid(uid);
+	   			if(!step) return;
+	   			this._fillStepWithSubSteps(step);
+	   			g.updateStep(step);
+			}
+			
             _stepChanged(step) {
               let g = this.firstChild.ganttElement;
               this._fillStepWithSubSteps(step);

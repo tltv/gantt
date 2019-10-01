@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.tltv.gantt.Gantt;
 import org.tltv.gantt.GanttStep;
 import org.tltv.gantt.model.Resolution;
@@ -72,7 +73,7 @@ public class DemoUI extends Div {
 
     private StepEditor stepEditor = new StepEditor(this::saveUpdate, this::deleteUpdate);
 
-    private SubStepEditor subStepEditor = new SubStepEditor(this::saveUpdate, this::deleteUpdate);
+    private SubStepEditor subStepEditor = new SubStepEditor(this::saveUpdateSubStep, this::deleteUpdate);
 
     private final Gantt gantt;
 
@@ -277,6 +278,9 @@ public class DemoUI extends Div {
         MenuItem createStepItem = menu.addItem("Create new step...");
         createStepItem.addClickListener(event -> openEditorForStep(null));
 
+        MenuItem createSubStepItem = menu.addItem("Create new sub step...");
+        createSubStepItem.addClickListener(event -> openEditorForSubStep(null));
+
         return menuBtn;
     }
 
@@ -316,9 +320,9 @@ public class DemoUI extends Div {
             SubStep newSubStep = new SubStep();
             newSubStep.setCaption("New sub step");
             setDefaults(newSubStep);
-            subStepEditor.open(newSubStep, Operation.ADD);
+            subStepEditor.open(newSubStep, Operation.ADD, gantt.getSteps());
         } else {
-            subStepEditor.open(substep, Operation.EDIT);
+            subStepEditor.open(substep, Operation.EDIT, gantt.getSteps());
         }
     }
 
@@ -327,13 +331,13 @@ public class DemoUI extends Div {
         step.setEndZonedDateTime(step.getStartZonedDateTime(gantt.getZoneId()).plusDays(15));
     }
 
-    public void saveUpdate(Step step,
+    public void saveUpdate(Pair<Step, String> stepAndOwner,
             Operation operation) {
         if (operation == operation.ADD) {
-            gantt.addStep(step);
-            Notification.show("Added step " + step.getCaption());
+            gantt.addStep(stepAndOwner.getKey());
+            Notification.show("Added step " + stepAndOwner.getKey().getCaption());
         } else {
-            Notification.show("Updated step " + step.getCaption());
+            Notification.show("Updated step " + stepAndOwner.getKey().getCaption());
         }
     }
 
@@ -342,14 +346,21 @@ public class DemoUI extends Div {
         Notification.show("Step " + step.getCaption() + " removed");
     }
 
-    public void saveUpdate(SubStep substep,
+    public void saveUpdateSubStep(Pair<SubStep, String> substepAndOwner,
             Operation operation) {
+        SubStep substep = substepAndOwner.getKey();
+        String oldOwnerUid = substepAndOwner.getValue();
         if (operation == operation.ADD) {
             gantt.addSubSteps(substep);
             Notification.show("Added substep " + substep.getCaption());
         } else {
             Notification.show("Updated substep " + substep.getCaption());
+            if (!oldOwnerUid.equals(substep.getOwner().getUid())) {
+                // refresh previous owner
+                gantt.moveSubStep(oldOwnerUid, substep, substep.getOwner());
+            }
         }
+        gantt.refreshStep(substep.getOwner().getUid());
     }
 
     public void deleteUpdate(SubStep substep) {
@@ -362,7 +373,7 @@ public class DemoUI extends Div {
         private Select<Step> predecessorField = new Select<>();
 
         public StepEditor(
-                BiConsumer<Step, Operation> itemSaver,
+                BiConsumer<Pair<Step, String>, Operation> itemSaver,
                 Consumer<Step> itemDeleter) {
             super("step", itemSaver, itemDeleter);
 
@@ -406,12 +417,56 @@ public class DemoUI extends Div {
 
     public class SubStepEditor extends GanttStepEditor<SubStep> {
 
+        private Select<Step> ownerField = new Select<>();
+
         public SubStepEditor(
-                BiConsumer<SubStep, Operation> itemSaver,
+                BiConsumer<Pair<SubStep, String>, Operation> itemSaver,
                 Consumer<SubStep> itemDeleter) {
             super("substep", itemSaver, itemDeleter);
+
+            createOwnerField();
         }
 
+        @Override
+        protected Step getOwnerStep() {
+            return getCurrentItem().getOwner();
+        }
+
+        public void open(SubStep item, Operation operation, List<Step> steps) {
+            List<Step> options = new ArrayList<>(steps);
+            options.removeIf(opt -> opt.getUid().equals(item.getUid()));
+            ownerField.setItems(options.stream().map(this::unproxyOwner).collect(Collectors.toList()));
+            super.open(item, operation);
+        }
+
+        private Step unproxyOwner(Step owner) {
+            Step step = unproxyOwnerRef(owner);
+            step.setCaption(owner.getCaption());
+            return step;
+        }
+
+        private Step unproxyOwnerRef(Step predecessor) {
+            if (predecessor == null) {
+                return null;
+            }
+            Step step = new Step();
+            step.setUid(predecessor.getUid());
+            return step;
+        }
+
+        private void createOwnerField() {
+            ownerField.setLabel("Owner");
+            ownerField.setWidthFull();
+            ownerField.setItemLabelGenerator(step -> Optional.ofNullable(step).map(Step::getCaption).orElse(""));
+            ownerField.setTextRenderer(Step::getCaption);
+            ownerField.setEmptySelectionAllowed(false);
+            ownerField.setRequiredIndicatorVisible(true);
+            getFormLayout().add(ownerField);
+
+            getBinder().forField(ownerField)
+                    .asRequired()
+                    .bind(substep -> unproxyOwnerRef(substep.getOwner()), SubStep::setOwner);
+        }
     }
 
     public class GanttStepEditor<T extends GanttStep> extends Dialog {
@@ -430,7 +485,7 @@ public class DemoUI extends Div {
         private T currentItem;
 
         private final String itemType;
-        private final BiConsumer<T, Operation> itemSaver;
+        private final BiConsumer<Pair<T, String>, Operation> itemSaver;
         private final Consumer<T> itemDeleter;
 
         private TextField captionField = new TextField();
@@ -443,7 +498,7 @@ public class DemoUI extends Div {
         private Checkbox movableField = new Checkbox();
 
         protected GanttStepEditor(String itemType,
-                BiConsumer<T, Operation> itemSaver, Consumer<T> itemDeleter) {
+                BiConsumer<Pair<T, String>, Operation> itemSaver, Consumer<T> itemDeleter) {
             this.itemType = itemType;
             this.itemSaver = itemSaver;
             this.itemDeleter = itemDeleter;
@@ -569,11 +624,17 @@ public class DemoUI extends Div {
             open();
         }
 
+        protected Step getOwnerStep() {
+            return (Step) currentItem;
+        }
+
         private void saveClicked(Operation operation) {
+            Step owner = getOwnerStep();
             boolean isValid = binder.writeBeanIfValid(currentItem);
 
             if (isValid) {
-                itemSaver.accept(currentItem, operation);
+                itemSaver.accept(Pair.of(currentItem, Optional.ofNullable(owner).map(Step::getUid).orElse(null)),
+                        operation);
                 close();
             } else {
                 BinderValidationStatus<T> status = binder.validate();
