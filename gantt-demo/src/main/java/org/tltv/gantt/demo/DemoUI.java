@@ -53,6 +53,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.BinderValidationStatus;
@@ -304,9 +305,9 @@ public class DemoUI extends Div {
             Step newStep = new Step();
             newStep.setCaption("New Step");
             setDefaults(newStep);
-            stepEditor.open(newStep, Operation.ADD);
+            stepEditor.open(newStep, Operation.ADD, gantt.getSteps());
         } else {
-            stepEditor.open(step, Operation.EDIT);
+            stepEditor.open(step, Operation.EDIT, gantt.getSteps());
         }
     }
 
@@ -358,10 +359,48 @@ public class DemoUI extends Div {
 
     public class StepEditor extends GanttStepEditor<Step> {
 
+        private Select<Step> predecessorField = new Select<>();
+
         public StepEditor(
                 BiConsumer<Step, Operation> itemSaver,
                 Consumer<Step> itemDeleter) {
             super("step", itemSaver, itemDeleter);
+
+            createPredecessorField();
+        }
+
+        public void open(Step item, Operation operation, List<Step> steps) {
+            List<Step> options = new ArrayList<>(steps);
+            options.removeIf(opt -> opt.getUid().equals(item.getUid()));
+            predecessorField.setItems(options.stream().map(this::unproxyPredecessor).collect(Collectors.toList()));
+            super.open(item, operation);
+        }
+
+        private Step unproxyPredecessor(Step predecessor) {
+            Step step = unproxyPredecessorRef(predecessor);
+            step.setCaption(predecessor.getCaption());
+            return step;
+        }
+
+        private Step unproxyPredecessorRef(Step predecessor) {
+            if (predecessor == null) {
+                return null;
+            }
+            Step step = new Step();
+            step.setUid(predecessor.getUid());
+            return step;
+        }
+
+        private void createPredecessorField() {
+            predecessorField.setLabel("Predecessor");
+            predecessorField.setWidthFull();
+            predecessorField.setItemLabelGenerator(step -> Optional.ofNullable(step).map(Step::getCaption).orElse(""));
+            predecessorField.setTextRenderer(Step::getCaption);
+            predecessorField.setEmptySelectionAllowed(true);
+            getFormLayout().add(predecessorField);
+
+            getBinder().forField(predecessorField)
+                    .bind(step -> unproxyPredecessorRef(step.getPredecessor()), Step::setPredecessor);
         }
     }
 
