@@ -41,11 +41,13 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     protected DateEncoder dateEncoder = new DateEncoder();
 
+    protected GanttWidget ganttWidget;
+
     public GanttTemplate(Settings initialSettings) {
         getModel().setSettings(initialSettings);
 
-        GanttWidget gantt = new GanttWidget();
-        getElement().appendChild(gantt.getElement());
+        ganttWidget = new GanttWidget();
+        getElement().appendChild(ganttWidget.getElement());
     }
 
     public ZoneId getZoneId() {
@@ -538,6 +540,12 @@ public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
         void setSubSteps(List<Step> subSteps);
 
         void setHeight(String height);
+
+        String getHeight();
+
+        void setWidth(String width);
+
+        String getWidth();
 
     }
 }

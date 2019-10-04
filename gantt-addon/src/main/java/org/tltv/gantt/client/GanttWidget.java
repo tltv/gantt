@@ -607,6 +607,11 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         return elem.$.ganttContent;
     }-*/;
 
+    public static native String getElementHeightVariable(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem.height;
+    }-*/;
+
     public Element getGanttContentElement() {
         return getInternalGanttContentElement(getGanttElement());
     }
@@ -919,14 +924,26 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         }
     }
 
+    private String getElementHeight() {
+        String height = getElementHeightVariable(getElement());
+        if (height == null) {
+            height = getElement().getStyle().getHeight();
+        }
+        if (height == null || "auto".equals(height) || height.length() == 0) {
+            return "";
+        }
+        return height;
+    }
+
     private void updateContainerHeight(int height) {
-        if (!"".equals(getElement().getStyle().getHeight())) {
+        if (!"".equals(getElementHeight())) {
+
             container.getStyle().setHeight(height - getTimelineHeight() - getHorizontalScrollbarSpacerHeight(),
                     Unit.PX);
         } else {
             // if the component has undefined height also set undefined
             // height to the container
-            container.getStyle().setHeight(-1, Unit.PX);
+            container.getStyle().clearHeight();
         }
     }
 

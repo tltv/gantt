@@ -313,9 +313,6 @@ public class GanttElement implements Exportable, StepProvider {
                     setTimeZoneId(state.timeZoneId);
                 }
 
-                getWidget().getElement().setAttribute("width", newState.width);
-                getWidget().getElement().setAttribute("height", newState.height);
-
                 getWidget().setResolution(state.resolution);
                 getWidget().setStartDate(Long.valueOf(state.getStartDate()));
                 getWidget().setEndDate(Long.valueOf(state.getEndDate()));

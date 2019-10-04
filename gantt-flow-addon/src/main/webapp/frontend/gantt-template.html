@@ -25,6 +25,7 @@
                 '_stepPropertiesChanged(steps.*)',
                 '_subStepPropertiesChanged(subSteps.*)',
                 '_heightChanged(height)',
+                '_widthChanged(width)',
       			  ]
       			}
 
@@ -34,11 +35,25 @@
             }
 
             _heightChanged(height) {
-              let g = this.firstChild.ganttElement;
-              if(g) {
-                g.height = this.height;
-                g.notifySizeChanged();
-              }
+            	const fc = this.firstChild;
+				Polymer.RenderStatus.beforeNextRender(fc, function() {
+					let g = fc.ganttElement;
+					if(g) {
+						fc.height = height;
+						g.notifyHeightChanged(true);
+					}
+				});
+            }
+            
+            _widthChanged(width) {
+            	const fc = this.firstChild;
+				Polymer.RenderStatus.beforeNextRender(fc, function() {
+					let g = fc.ganttElement;
+					if(g) {
+						fc.width = width;
+						g.notifyWidthChanged(true);
+					}
+				});
             }
 
             _onIronResize() {
@@ -196,8 +211,6 @@
 
       				// set data
       				let g = this.firstChild.ganttElement;
-
-              g.height = this.height;
 
       				if(this.settings) {
       					g.setState(this.settings);

@@ -243,21 +243,30 @@ public class DemoUI extends Div {
         localeField.setValue(gantt.getLocale());
         localeField.addValueChangeListener(e -> Optional.ofNullable(e.getValue()).ifPresent(l -> gantt.setLocale(l)));
 
-        Button addNewSubStepBtn = new Button("Add new sub step", event -> {
-            SubStep substep = new SubStep();
-            substep.setUid("" + newId++); // required unique step id
-            substep.setCaption("Step " + substep.getUid());
-            substep.setDescription("Description of SubStep " + substep.getUid());
-            substep.setStartZonedDateTime(LocalDateTime.of(2017, 1, 15, 0, 0, 0).atZone(getDefaultTimeZone()));
-            substep.setEndZonedDateTime(LocalDateTime.of(2017, 1, 25, 23, 59, 59).atZone(getDefaultTimeZone()));
-            substep.setResizable(true);
-            substep.setMovable(true);
-            substep.setOwner(gantt.getStep(0));
-            gantt.addSubSteps(substep);
+        Select<String> heightField = new Select<>("Full (100%)", "Fixed (500px)", "Auto");
+        heightField.setLabel("Height");
+        heightField.setEmptySelectionAllowed(false);
+        heightField.setValue("Auto");
+        heightField.addValueChangeListener(event -> {
+            if ("Full (100%)".equals(event.getValue())) {
+                gantt.setHeightFull();
+            } else if ("Auto".equals(event.getValue())) {
+                gantt.setHeight(null);
+            } else {
+                gantt.setHeight("500px");
+            }
         });
 
-        controls.add(resolutionField, startDateField, endDateField, localeField, timeZoneField);
-        controls.add(addNewSubStepBtn);
+        Button addStepButton = new Button("Add step");
+        addStepButton.addClickListener(event -> {
+            Step newStep = new Step();
+            newStep.setCaption("New Step");
+            setDefaults(newStep);
+            gantt.addStep(newStep);
+        });
+
+        controls.add(resolutionField, startDateField, endDateField, localeField, timeZoneField, heightField,
+                addStepButton);
         return controls;
     }
 

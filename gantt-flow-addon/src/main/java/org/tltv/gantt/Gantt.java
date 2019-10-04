@@ -57,6 +57,18 @@ public class Gantt extends GanttTemplate implements HasSize {
         updateLocaleData();
     }
 
+    @Override
+    public void setHeight(String height) {
+        HasSize.super.setHeight(height);
+        getModel().setHeight(height);
+    }
+
+    @Override
+    public void setWidth(String width) {
+        HasSize.super.setWidth(width);
+        getModel().setWidth(width);
+    }
+
     public LocalDateTime getStartDateTime() {
         return startDateTime;
     }
