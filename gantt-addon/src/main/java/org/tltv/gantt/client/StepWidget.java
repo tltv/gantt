@@ -53,7 +53,7 @@ public class StepWidget extends AbstractStepWidget {
         @Override
         public boolean onArrowChanged(boolean startingPointChanged, NativeEvent event) {
             Element target = GanttUtil.getElementFromPoint(getRootElement(gantt.getElement()),
-                    GanttUtil.getTouchOrMouseClientX(event), GanttUtil.getTouchOrMouseClientY(event));
+                    GanttUtil.getTouchOrMousePageX(event), GanttUtil.getTouchOrMouseClientY(event));
             if (target != null) {
                 return gantt.getRpc().onStepRelationSelected(StepWidget.this, startingPointChanged, target);
             }
@@ -141,7 +141,7 @@ public class StepWidget extends AbstractStepWidget {
             }, 50);
             return;
         }
-        
+
         ArrowPositionData data = new ArrowPositionData(getPredecessorStepWidget().getElement(),
                 getBar());
 

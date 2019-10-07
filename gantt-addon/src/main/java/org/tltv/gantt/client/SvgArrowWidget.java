@@ -16,8 +16,8 @@
 package org.tltv.gantt.client;
 
 import static org.tltv.gantt.client.SvgUtil.setAttributeNS;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageX;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageY;
 
 import org.tltv.gantt.client.shared.GanttUtil;
 
@@ -108,8 +108,8 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
                 event.preventDefault();
                 return; // multi-touch not supported
             }
-            pointerDownPoint = new Point(getTouchOrMouseClientX(event.getNativeEvent()),
-                    getTouchOrMouseClientY(event.getNativeEvent()));
+            pointerDownPoint = new Point(getTouchOrMousePageX(event.getNativeEvent()),
+                    getTouchOrMousePageY(event.getNativeEvent()));
             pendingPointerDownEvent = event.getNativeEvent();
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
         }
@@ -166,8 +166,8 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
                 return;
             }
             // do nothing, if touch position has not changed
-            if (!(pointerDownPoint.getX() == getTouchOrMouseClientX(event.getNativeEvent())
-                    && pointerDownPoint.getY() == getTouchOrMouseClientY(event.getNativeEvent()))) {
+            if (!(pointerDownPoint.getX() == getTouchOrMousePageX(event.getNativeEvent())
+                    && pointerDownPoint.getY() == getTouchOrMousePageY(event.getNativeEvent()))) {
                 pointerTouchStartedTimer.cancel();
                 handleMove(event.getNativeEvent());
             }
@@ -438,7 +438,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
         // selection.
         addMoveHandler();
 
-        capturePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
+        capturePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
         originalWidth = width;
         originalHeight = height;
     }
@@ -511,7 +511,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
     }
 
     protected void handleMove(NativeEvent event) {
-        Point movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
+        Point movePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
 
         updateMovingData(movePoint);
 

@@ -231,6 +231,32 @@ public class GanttUtil {
         }
     }
 
+    public static int getTouchOrMousePageX(NativeEvent event) {
+        if (isTouchEvent(event)) {
+            return event.getChangedTouches().get(0).getPageX();
+        } else {
+            return getElementPageX(event);
+        }
+    }
+
+    public static int getTouchOrMousePageY(NativeEvent event) {
+        if (isTouchEvent(event)) {
+            return event.getChangedTouches().get(0).getPageY();
+        } else {
+            return getElementPageY(event);
+        }
+    }
+
+    public static native int getElementPageX(NativeEvent event)
+    /*-{
+       return event.pageX;
+    }-*/;
+
+    public static native int getElementPageY(NativeEvent event)
+    /*-{
+       return event.pageY;
+    }-*/;
+
     public static native Element getElementFromPoint(Node shadowRoot, int clientX, int clientY)
     /*-{
         var el;
@@ -276,7 +302,7 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
@@ -286,7 +312,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-
+    
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -317,7 +343,7 @@ public class GanttUtil {
 
     public static native void whenReadyAndConnected(Function f, Element e)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (e.readyAndConnected) {
@@ -327,7 +353,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-
+    
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -335,7 +361,7 @@ public class GanttUtil {
               if (f) f();
           }
         }
-    
+
         if (e.readyAndConnected) {
             if (f) f(e);
         } else {
@@ -345,7 +371,7 @@ public class GanttUtil {
 
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-
+    
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {

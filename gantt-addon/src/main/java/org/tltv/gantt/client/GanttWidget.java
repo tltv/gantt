@@ -17,8 +17,8 @@
 package org.tltv.gantt.client;
 
 import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientX;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseClientY;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageX;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageY;
 
 import java.util.Collection;
 import java.util.Date;
@@ -212,6 +212,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     protected String capturePointWidthPercentage;
     protected double capturePointLeftPx;
     protected double capturePointTopPx;
+    protected double capturePointEventTopPx;
     protected double capturePointAbsTopPx;
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
@@ -393,8 +394,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
                 return; // multi-touch not supported
             }
             pendingPointerDownEvent = event.getNativeEvent();
-            capturePoint = new Point(getTouchOrMouseClientX(event.getNativeEvent()),
-                    getTouchOrMouseClientY(event.getNativeEvent()));
+            capturePoint = new Point(getTouchOrMousePageX(event.getNativeEvent()),
+                    getTouchOrMousePageY(event.getNativeEvent()));
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
             event.preventDefault();
         }
@@ -419,8 +420,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             if (capturePoint == null) {
                 return;
             }
-            movePoint = new Point(getTouchOrMouseClientX(event.getNativeEvent()),
-                    getTouchOrMouseClientY(event.getNativeEvent()));
+            movePoint = new Point(getTouchOrMousePageX(event.getNativeEvent()),
+                    getTouchOrMousePageY(event.getNativeEvent()));
 
             // do nothing, if touch position has not changed
             if (!(capturePoint.getX() == movePoint.getX() && capturePoint.getY() == movePoint.getY())) {
@@ -1675,8 +1676,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         }
 
         targetBarElement = bar;
-        capturePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
-        movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
+        capturePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
+        movePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
 
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
@@ -1735,7 +1736,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
                 // moving in progress
                 removeMovingStyles(bar);
                 if (moveInProgress) {
-                    moveCompleted(bar, getTouchOrMouseClientY(event), event);
+                    moveCompleted(bar, getTouchOrMousePageY(event), event);
                 } else {
                     resetBarPosition(bar);
                 }
@@ -1782,7 +1783,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     protected boolean onTouchOrMouseMove(NativeEvent event) {
         Element bar = getBar(event);
         if (bar != null) {
-            movePoint = new Point(getTouchOrMouseClientX(event), getTouchOrMouseClientY(event));
+            movePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
             showResizingPointer(bar, detectResizing(bar));
         }
 
@@ -1797,8 +1798,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         cancelDoubleClickDetection();
 
         // calculate delta x and y by original position and the current one.
-        double deltax = getTouchOrMouseClientX(event) - capturePoint.getX();
-        double deltay = getTouchOrMouseClientY(event) - capturePoint.getY();
+        double deltax = getTouchOrMousePageX(event) - capturePoint.getX();
+        double deltay = getTouchOrMousePageY(event) - capturePoint.getY();
 
         GWT.log("Position delta x: " + deltax + "px");
 
