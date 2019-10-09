@@ -247,6 +247,22 @@ public class GanttUtil {
         }
     }
 
+    public static int getTouchOrMouseX(NativeEvent event, Element scrollContainer) {
+        if (scrollContainer == null) {
+            return getTouchOrMousePageX(event);
+        } else {
+            return getTouchOrMousePageX(event) + scrollContainer.getScrollLeft();
+        }
+    }
+
+    public static int getTouchOrMouseY(NativeEvent event, Element scrollContainer) {
+        if (scrollContainer == null) {
+            return getTouchOrMousePageY(event);
+        } else {
+            return getTouchOrMousePageY(event) + scrollContainer.getScrollTop();
+        }
+    }
+
     public static native int getElementPageX(NativeEvent event)
     /*-{
        return event.pageX;
@@ -302,7 +318,7 @@ public class GanttUtil {
      */
     public static native void whenReady(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (@com.vaadin.polymer.Polymer::isRegisteredElement(*)(e) && e.readyAndConnected) {
@@ -312,7 +328,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -343,7 +359,7 @@ public class GanttUtil {
 
     public static native void whenReadyAndConnected(Function f, Element e)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (e.readyAndConnected) {
@@ -353,7 +369,7 @@ public class GanttUtil {
                 }
               }, delayms);
         }
-    
+
         function registered() {
           if (e) {
               nextTimeout(0);
@@ -361,7 +377,7 @@ public class GanttUtil {
               if (f) f();
           }
         }
-
+    
         if (e.readyAndConnected) {
             if (f) f(e);
         } else {
@@ -371,7 +387,7 @@ public class GanttUtil {
 
     public static native void deferred(Function f, Function<Boolean, ?> test)
     /*-{
-    
+
         function nextTimeout(delayms) {
            setTimeout(function() {
                 if (test()) {

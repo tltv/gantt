@@ -17,8 +17,8 @@
 package org.tltv.gantt.client;
 
 import static org.tltv.gantt.client.shared.GanttUtil.getBoundingClientRectWidth;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageX;
-import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMousePageY;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseX;
+import static org.tltv.gantt.client.shared.GanttUtil.getTouchOrMouseY;
 
 import java.util.Collection;
 import java.util.Date;
@@ -212,8 +212,6 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     protected String capturePointWidthPercentage;
     protected double capturePointLeftPx;
     protected double capturePointTopPx;
-    protected double capturePointEventTopPx;
-    protected double capturePointAbsTopPx;
     protected double capturePointWidthPx;
     protected String capturePointBgColor;
     protected Element targetBarElement;
@@ -394,8 +392,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
                 return; // multi-touch not supported
             }
             pendingPointerDownEvent = event.getNativeEvent();
-            capturePoint = new Point(getTouchOrMousePageX(event.getNativeEvent()),
-                    getTouchOrMousePageY(event.getNativeEvent()));
+            capturePoint = new Point(getTouchOrMouseX(event.getNativeEvent(), container),
+                    getTouchOrMouseY(event.getNativeEvent(), container));
             pointerTouchStartedTimer.schedule(POINTER_TOUCH_DETECTION_INTERVAL);
             event.preventDefault();
         }
@@ -420,8 +418,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             if (capturePoint == null) {
                 return;
             }
-            movePoint = new Point(getTouchOrMousePageX(event.getNativeEvent()),
-                    getTouchOrMousePageY(event.getNativeEvent()));
+            movePoint = new Point(getTouchOrMouseX(event.getNativeEvent(), container),
+                    getTouchOrMouseY(event.getNativeEvent(), container));
 
             // do nothing, if touch position has not changed
             if (!(capturePoint.getX() == movePoint.getX() && capturePoint.getY() == movePoint.getY())) {
@@ -1647,8 +1645,9 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         double deltay = y - capturePoint.getY();
         GWT.log("Position delta y: " + deltay + "px" + " capture point y is " + capturePoint.getY());
 
-        Element newPosition = findStepElement(bar, (int) capturePointAbsTopPx,
-                (int) (capturePointAbsTopPx + getElementHeightWithMargin(bar)), y, deltay);
+        Element newPosition = findStepElement(bar, (int) capturePointTopPx,
+                (int) (capturePointTopPx + getElementHeightWithMargin(bar)), y - getScrollContainer().getOffsetTop(),
+                deltay);
         internalMoveOrResizeCompleted(bar, newPosition, true, event);
     }
 
@@ -1676,14 +1675,13 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         }
 
         targetBarElement = bar;
-        capturePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
-        movePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
+        capturePoint = new Point(getTouchOrMouseX(event, container), getTouchOrMouseY(event, container));
+        movePoint = new Point(getTouchOrMouseX(event, container), getTouchOrMouseY(event, container));
 
         capturePointLeftPercentage = bar.getStyle().getProperty("left");
         capturePointWidthPercentage = bar.getStyle().getProperty("width");
         capturePointLeftPx = bar.getOffsetLeft();
         capturePointTopPx = bar.getOffsetTop();
-        capturePointAbsTopPx = bar.getAbsoluteTop();
         capturePointWidthPx = bar.getClientWidth();
         capturePointBgColor = bar.getStyle().getBackgroundColor();
 
@@ -1736,7 +1734,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
                 // moving in progress
                 removeMovingStyles(bar);
                 if (moveInProgress) {
-                    moveCompleted(bar, getTouchOrMousePageY(event), event);
+                    moveCompleted(bar, getTouchOrMouseY(event, container), event);
                 } else {
                     resetBarPosition(bar);
                 }
@@ -1783,7 +1781,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     protected boolean onTouchOrMouseMove(NativeEvent event) {
         Element bar = getBar(event);
         if (bar != null) {
-            movePoint = new Point(getTouchOrMousePageX(event), getTouchOrMousePageY(event));
+            movePoint = new Point(getTouchOrMouseX(event, container), getTouchOrMouseY(event, container));
             showResizingPointer(bar, detectResizing(bar));
         }
 
@@ -1798,8 +1796,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         cancelDoubleClickDetection();
 
         // calculate delta x and y by original position and the current one.
-        double deltax = getTouchOrMousePageX(event) - capturePoint.getX();
-        double deltay = getTouchOrMousePageY(event) - capturePoint.getY();
+        double deltax = getTouchOrMouseX(event, container) - capturePoint.getX();
+        double deltay = getTouchOrMouseY(event, container) - capturePoint.getY();
 
         GWT.log("Position delta x: " + deltax + "px");
 
@@ -1838,7 +1836,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
      * @param startFromBar
      *            Starting point element
      * @param newY
-     *            target y-axis position
+     *            target y-axis position (relative to scroll container)
      * @param deltay
      *            delta-y relative to starting point element.
      * @return Step element at y-axis position. May be same element as given
@@ -1861,7 +1859,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             i++;
             for (; i < content.getChildCount(); i++) {
                 barCanditate = Element.as(content.getChild(i));
-                if (isBetween(newY, barCanditate.getAbsoluteTop(), barCanditate.getAbsoluteBottom())) {
+                if (isBetween(newY, barCanditate.getOffsetTop(),
+                        (barCanditate.getOffsetTop() + barCanditate.getOffsetHeight()))) {
                     if (!subStep && i == (startIndex + 1)) {
                         // moving directly over the following step will be
                         // ignored (if not sub-step).
@@ -1874,7 +1873,8 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             i--;
             for (; i >= getAdditonalContentElementCount(); i--) {
                 barCanditate = Element.as(content.getChild(i));
-                if (isBetween(newY, barCanditate.getAbsoluteTop(), barCanditate.getAbsoluteBottom())) {
+                if (isBetween(newY, barCanditate.getOffsetTop(),
+                        (barCanditate.getOffsetTop() + barCanditate.getOffsetHeight()))) {
                     return barCanditate;
                 }
             }
@@ -2223,17 +2223,24 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
     }
 
     private boolean isResizingLeft(Element bar) {
-        if (movePoint.getX() <= (bar.getAbsoluteLeft() + RESIZE_WIDTH)) {
-            return true;
+        if (isSubBar(bar)) {
+            return movePoint.getX() <= (getScrollContainer().getOffsetLeft()
+                    + GanttUtil.getHost(bar.getParentNode()).getOffsetLeft() + bar.getOffsetLeft() + RESIZE_WIDTH);
         }
-        return false;
+        return movePoint.getX() <= (getScrollContainer().getOffsetLeft() + bar.getOffsetLeft() + RESIZE_WIDTH);
     }
 
     private boolean isResizingRight(Element bar) {
-        if (movePoint.getX() >= (bar.getAbsoluteRight() + -RESIZE_WIDTH)) {
-            return true;
+        if (isSubBar(bar)) {
+            return movePoint
+                    .getX() >= (getScrollContainer().getOffsetLeft()
+                            + GanttUtil.getHost(bar.getParentNode()).getOffsetLeft() + bar.getOffsetLeft()
+                            + bar.getOffsetWidth()
+                            + -RESIZE_WIDTH);
         }
-        return false;
+        return movePoint
+                .getX() >= (getScrollContainer().getOffsetLeft() + bar.getOffsetLeft() + bar.getOffsetWidth()
+                        + -RESIZE_WIDTH);
     }
 
     private void addResizingStyles(Element bar) {
@@ -2294,9 +2301,9 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             offsetY = parseSize(stepElement.getStyle().getTop(), "px");
         }
         double barTop = parseSize(bar.getStyle().getTop(), "px") + offsetY;
-        double movementFromTop = capturePointTopPx + offsetY + deltay;
+        double movementFromTop = capturePointTopPx + deltay;
         double deltaTop = movementFromTop - barTop;
-        double maxDeltaUp = capturePoint.getY() - capturePointAbsTopPx;
+        double maxDeltaUp = capturePoint.getY() - getScrollContainer().getOffsetTop() - capturePointTopPx;
         double maxDeltaDown = barHeight - maxDeltaUp;
 
         if (deltaTop <= (-1 * maxDeltaUp)) {
