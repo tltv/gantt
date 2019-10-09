@@ -1436,7 +1436,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     public native boolean isMsTouchSupported()
     /*-{
-       return !!(navigator.maxTouchPoints > 0);
+       return !('ontouchstart' in window) && !!(navigator.maxTouchPoints > 0);
     }-*/;
 
     /**
