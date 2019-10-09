@@ -405,6 +405,9 @@ public class GanttUtil {
         if(event.path) {
             return event.path[0];
         }
+        if(event.originalTarget) {
+            return event.originalTarget;
+        }
         return event.target;
     }-*/;
 

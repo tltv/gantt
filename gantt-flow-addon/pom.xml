@@ -12,7 +12,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<vaadin.version>13.0.3</vaadin.version>
+		<vaadin.version>13.0.13</vaadin.version>
 		
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -64,32 +64,12 @@
 	</dependencies>
 
 	<build>
-	
-		<resources>
-			<resource>
-				<directory>src/main/java</directory>
-			</resource>
-			<resource>
-				<directory>src/main/resources</directory>
-				<excludes>
-					<exclude>rebel.xml</exclude>
-				</excludes>
-			</resource>
-			<resource>
-				<directory>src/main/webapp</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-				<targetPath>META-INF/resources</targetPath>
-			</resource>
-		</resources>
-	
 		<plugins>
 
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
+                <version>3.1.0</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -113,20 +93,26 @@
 				<configuration>
 					<filesets>
 						<fileset>
-							<directory>${project.basedir}/src/main/webapp/frontend</directory>
+							<directory>${project.basedir}/src/main/resources/META-INF/resources/frontend</directory>
 							<includes>
 								<include>gantt-widget.html</include>
 								<include>*.nocache.js</include>
 							</includes>
 						</fileset>
 						<fileset>
-							<directory>${project.basedir}/src/main/webapp/frontend/elements</directory>
+							<directory>${project.basedir}/src/main/resources/META-INF/resources/frontend/elements</directory>
 							<includes>
 								<include>*.*</include>
 							</includes>
 						</fileset>
 						<fileset>
-							<directory>${project.basedir}/src/main/webapp</directory>
+							<directory>${project.basedir}/src/main/resources/META-INF/resources</directory>
+							<includes>
+								<include>*.cache.js</include>
+							</includes>
+						</fileset>
+						<fileset>
+							<directory>${project.basedir}/src/main/resources/META-INF/resources/frontend</directory>
 							<includes>
 								<include>*.cache.js</include>
 							</includes>
@@ -146,7 +132,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/frontend/</outputDirectory>
+							<outputDirectory>${project.basedir}/src/main/resources/META-INF/resources/frontend/</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/</directory>
@@ -165,7 +151,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/frontend/elements/</outputDirectory>
+							<outputDirectory>${project.basedir}/src/main/resources/META-INF/resources/frontend/elements/</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/elements</directory>
@@ -176,6 +162,7 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- copy *.cache.js file to META-INF/resources/ and META-INF/resources/frontend to make all browsers find it -->
 					<execution>
 						<id>copy-resources-3</id>
 						<phase>generate-resources</phase>
@@ -183,7 +170,25 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>${project.basedir}/src/main/webapp/</outputDirectory>
+							<outputDirectory>${project.basedir}/src/main/resources/META-INF/resources/</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/</directory>
+									<includes>
+										<include>*.cache.js</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-resources-4</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.basedir}/src/main/resources/META-INF/resources/frontend</outputDirectory>
 							<resources>
 								<resource>
 									<directory>${project.basedir}/../gantt-element/src/main/resources/org/tltv/gantt/public/</directory>
@@ -209,7 +214,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.6</version>
+                        <version>3.1.0</version>
                         <configuration>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
@@ -242,7 +247,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.10.4</version>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -255,6 +260,17 @@
                         <configuration>
                             <quiet>true</quiet>
                             <additionalparam>-Xdoclint:none</additionalparam>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.1.2</version>
+                        <configuration>
+                            <!-- Generated file that shouldn't be included in add-ons -->
+                            <excludes>
+                                <exclude>META-INF/VAADIN/config/flow-build-info.json</exclude>
+                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
