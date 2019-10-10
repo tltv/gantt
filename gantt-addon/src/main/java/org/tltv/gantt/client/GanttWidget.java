@@ -557,7 +557,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
             GanttUtil.log("Attempted to initialize GanttWidget that is already initialized");
             return; // already initialized
         }
-        getShadowRoot().insertAfter(timeline.getElement(), getShadowRoot().getFirstChild());
+        getShadowRoot().insertBefore(timeline.getElement(), getShadowRoot().getFirstChild());
         timeline.setParentElement(getElement());
 
         container = DivElement.as(getGanttContainerElement());
@@ -575,7 +575,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     public static native Element getRootElement(com.google.gwt.dom.client.Element elem)
     /*-{
-        return elem.root;
+        return elem.root?elem.root:elem;
     }-*/;
 
     public Element getShadowRoot() {
