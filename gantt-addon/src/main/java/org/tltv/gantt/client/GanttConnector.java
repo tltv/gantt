@@ -100,14 +100,38 @@ public class GanttConnector extends AbstractHasComponentsConnector {
         @Override
         public void run() {
             ganttDelegatingVerticalScroll = false;
+            synchronizeScrollByGanttValue();
+        }
+        
+        private void synchronizeScrollByGanttValue() {
+        	if (delegateScrollGridTarget != null) {
+        		int gridScrollPosition = Double.valueOf( delegateScrollGridTarget.getScrollTop() ).intValue();
+            	int ganttScrollTop = getWidget().getScrollContainer().getScrollTop();
+            	if( gridScrollPosition != ganttScrollTop ) {
+            		delegateScrollGridTarget.setScrollTop(ganttScrollTop);
+            	}
+            }  
         }
     };
+    
+    
 
     Timer scrollDelay = new Timer() {
 
         @Override
         public void run() {
             delegatingVerticalScroll = false;
+            synchronizeScrollByGridValue();
+        }
+        
+        private void synchronizeScrollByGridValue() {
+        	if (delegateScrollGridTarget != null) {
+        		int gridScrollPosition = Double.valueOf( delegateScrollGridTarget.getScrollTop() ).intValue();
+            	int ganttScrollTop = getWidget().getScrollContainer().getScrollTop();
+            	if( gridScrollPosition != ganttScrollTop ) {
+            		getWidget().getScrollContainer().setScrollTop(gridScrollPosition);
+            	}
+            }  
         }
     };
 
