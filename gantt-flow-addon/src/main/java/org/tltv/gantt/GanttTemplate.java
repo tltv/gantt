@@ -25,6 +25,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.polymertemplate.PolymerTemplate;
 import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.shared.ui.LoadMode;
 import com.vaadin.flow.templatemodel.Encode;
 import com.vaadin.flow.templatemodel.Include;
 import com.vaadin.flow.templatemodel.TemplateModel;
@@ -33,6 +34,7 @@ import elemental.json.JsonObject;
 
 @Tag("gantt-template")
 @HtmlImport("frontend://gantt-template.html")
+@HtmlImport(value = "frontend://gantt-lib.html", loadMode = LoadMode.LAZY)
 public class GanttTemplate extends PolymerTemplate<GanttTemplateModel> {
 
     private final Logger log = LoggerFactory.getLogger(GanttTemplate.class);

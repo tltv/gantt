@@ -554,6 +554,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
 
     void doInit() {
         if (container != null) {
+            GanttUtil.log("Attempted to initialize GanttWidget that is already initialized");
             return; // already initialized
         }
         getShadowRoot().insertAfter(timeline.getElement(), getShadowRoot().getFirstChild());
@@ -565,6 +566,7 @@ public class GanttWidget extends PolymerWidget implements HasEnabled, HasWidgets
         moveElement = DivElement.as(getMoveElement());
 
         scrollbarSpacer.getStyle().setHeight(AbstractNativeScrollbar.getNativeScrollbarHeight(), Unit.PX);
+        GanttUtil.log("GanttWidget initialized");
     }
 
     public Element getGanttElement() {

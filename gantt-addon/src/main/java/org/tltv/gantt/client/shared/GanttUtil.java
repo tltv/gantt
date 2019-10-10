@@ -426,4 +426,9 @@ public class GanttUtil {
         }
         return value;
     }
+
+    public static native Element log(String msg)
+    /*-{
+        console.log(msg);
+    }-*/;
 }

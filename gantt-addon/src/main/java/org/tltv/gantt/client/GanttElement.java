@@ -179,7 +179,7 @@ public class GanttElement implements Exportable, StepProvider {
         getWidget().ready(new Function<Object, Object>() {
             @Override
             public Object call(Object args) {
-                doInit();
+                doInitElement();
                 return null;
             }
         });
@@ -201,9 +201,7 @@ public class GanttElement implements Exportable, StepProvider {
         return getWidget().getGanttElement();
     }
 
-    void doInit() {
-        getWidget().doInit();
-
+    void doInitElement() {
         BrowserInfo info = BrowserInfo.get();
         getWidget().setBrowserInfo(info.isIE(), info.isChrome(), info.isSafari(), info.isWebkit(),
                 info.getBrowserMajorVersion());
