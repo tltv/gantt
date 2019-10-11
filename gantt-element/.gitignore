@@ -8,5 +8,3 @@
 /src/main/resources/org/tltv/gantt/public/package.json
 /src/main/resources/org/tltv/gantt/public/polymer.json
 /src/main/resources/org/tltv/gantt/public/package-lock.json
-/src/main/resources/org/tltv/gantt/public/*.cache.js
-/src/main/resources/org/tltv/gantt/public/*.nocache.js
