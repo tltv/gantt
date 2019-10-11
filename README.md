@@ -1,8 +1,6 @@
 # Gantt Chart for Flow
 
-Gantt is an UI component add-on created for Vaadin 8 Framework. This project creates gantt component for Flow based on web component (see 'polymer-impl' branch).
-
-You can read more about Gantt charts in general from here: http://en.wikipedia.org/wiki/Gantt_chart. 
+Gantt component for Flow (Vaadin Platform 13+) based on build-in GanttLib library which is exported from Gantt addon for Vaadin 8 (GWT).
 
 
 List of features that are supported:
@@ -16,12 +14,20 @@ List of features that are supported:
 * background grid
 * dynamically modifiable predecessor relations between steps
 * sub-steps
-* tooltips for steps
 * touch support
 
 Tested to work with following browsers: 
-* Chrome
+* Chrome, Firefox, Edge
+  
+IE11 will not be supported.
 
+
+Module descriptions  
+* gantt-addon - Gantt addon based on Vaadin 8 GWT
+* gantt-element - build-in Polymer element for Gantt
+* gantt-exporter - GWT exporter to generate GanttLib library for third-party usage (mainly for Flow addon)
+* gantt-flow-addon - Gantt Flow addon using GanttLib library
+* gantt-demo - Gantt Demo for Flow 
 
 ## Demo
 
@@ -29,18 +35,29 @@ Online demo (Vaadin 8) available @ http://tomivirtanen.app.fi/gantt-demo/
 
 Code can be found under /gantt-demo folder.
 
-Web component demo is not available in public yet.
+Flow demo is not available in public yet. Notice that feature set is a subset from Vaadin 8 version.
 
 ## Building and running demo
 
+Gantt Flow addon uses a Javascript library build from Gantt for Vaadin 8 using GWT (./gantt-addon). Library is pre-compiled to gantt-flow-addon module and it is not required to build it (notice that `mvn clean` in root removes pre-compiled files).
+ 
 * git clone <url of the Gantt repository>
-* mvn clean
+* cd gantt-flow-addon
 * mvn install
-* cd gantt-demo
+* cd ../gantt-demo
+* mvn clean install
 * mvn jetty:run
 
 To see the demo, navigate to http://localhost:8080/
- 
+
+To build and run also GanttLib library for gantt-flow-addon, follow these steps:
+* git clone <url of the Gantt repository>
+* mvn clean
+* mvn install
+* cd gantt-flow-addon
+* mvn clean install
+* cd ../gantt-demo
+* mvn jetty:run
 
 ## License & Author
 
