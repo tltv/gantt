@@ -241,14 +241,24 @@ public class GanttElement implements Exportable, StepProvider {
     }
 
     protected StepWidget findStepWidgetByElement(Element target) {
-        for (Widget w : getStepWidgets()) {
-            if (w.getElement().isOrHasChild(target)) {
-                if (w instanceof StepWidget) {
-                    return (StepWidget) w;
+        List<StepWidget> stepWidgets = getStepWidgets();
+        for (StepWidget w : stepWidgets) {
+            if (isOrHasChild(w, target)) {
+                return w;
+            }
+        }
+        for (StepWidget w : stepWidgets) {
+            for (SubStepWidget sw : w.getSubSteps()) {
+                if (isOrHasChild(sw, target)) {
+                    return w;
                 }
             }
         }
         return null;
+    }
+
+    private boolean isOrHasChild(AbstractStepWidget widget, Element target) {
+        return widget.getElement().isOrHasChild(target) || widget.getShadowRoot().isOrHasChild(target);
     }
 
     protected Map<Step, StepWidget> getStepsMap() {

@@ -231,7 +231,7 @@ public class SvgArrowWidget extends PolymerWidget implements ArrowElement {
 
     public static native Element getShadowRootElement(com.google.gwt.dom.client.Element elem)
     /*-{
-        return elem.root;
+        return elem.root?elem.root:elem;
     }-*/;
 
     public static native Element getInternalSvgELement(com.google.gwt.dom.client.Element elem)

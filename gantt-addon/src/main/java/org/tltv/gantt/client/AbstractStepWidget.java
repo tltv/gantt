@@ -1,6 +1,7 @@
 package org.tltv.gantt.client;
 
 import org.tltv.gantt.client.shared.AbstractStep;
+import org.tltv.gantt.client.shared.StepState;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
@@ -112,7 +113,12 @@ public class AbstractStepWidget extends PolymerWidget {
 
     public static native Element getRootElement(com.google.gwt.dom.client.Element elem)
     /*-{
-        return elem.root;
+        return elem.root?elem.root:elem;
+    }-*/;
+
+    public static native boolean hasStyleElement(com.google.gwt.dom.client.Element elem)
+    /*-{
+        return elem && elem.firstChild && elem.firstChild.tagName === 'STYLE';
     }-*/;
 
     public void setGantt(GanttWidget gantt, LocaleDataProvider localeDataProvider) {
@@ -259,7 +265,8 @@ public class AbstractStepWidget extends PolymerWidget {
     }
 
     protected int countNonSubStepChilds() {
-        return 1 /* <style> is first */ + ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
+        return (hasStyleElement(getShadowRoot()) ? 1 : 0)
+                + ((getBarCaption() != null && getBarCaption().hasParentElement()) ? 1 : 0)
                 + ((progressElement != null && progressElement.getElement().hasParentElement()) ? 1 : 0);
     }
 
