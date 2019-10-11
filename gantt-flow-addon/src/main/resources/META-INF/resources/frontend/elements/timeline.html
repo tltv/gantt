@@ -1,0 +1,29 @@
+<dom-module id="gantt-timeline">
+
+	<template strip-whitespace>
+		<style>
+			:host {
+				display: block;
+			}
+		</style>
+	</template>
+
+	<script>
+		class GanttTimeline extends Polymer.Element {
+			static get is() { return 'gantt-timeline'; }
+
+			static get properties() {
+				return {
+
+				};
+			}
+
+			connectedCallback() {
+				super.connectedCallback();
+				this.readyAndConnected = true;
+			}
+		}
+		customElements.define(GanttTimeline.is, GanttTimeline);
+	</script>
+
+</dom-module>
