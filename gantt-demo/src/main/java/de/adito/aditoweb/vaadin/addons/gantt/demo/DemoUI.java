@@ -218,6 +218,11 @@ public class DemoUI extends UI
         Step stepGroup = new Step("Cebit");
         stepGroup.setDescription("Description tooltip");
         stepGroup.setGroup(true);
+        stepGroup.setBackgroundColor("#145");
+        stepGroup.setForegroundColor("#145");
+        stepGroup.addStyleName("testphase sdf");
+        stepGroup.addStyleNames("sdddf", "dddd");
+        stepGroup.removeStyleNames("testphase sdf");
 
         Step step1 = new Step("First step");
         step1.setDescription("Description tooltip");
@@ -225,6 +230,7 @@ public class DemoUI extends UI
         cal.add(Calendar.WEEK_OF_MONTH, 2);
         step1.setEndDate(cal.getTime().getTime());
         step1.setPredecessor(stepGroup);
+        step1.setBackgroundColor("#44444");
 
         Step step2 = new Step("Verbunden mit First Step");
         step2.setDescription("Description tooltip for second step");
@@ -233,13 +239,17 @@ public class DemoUI extends UI
         cal.add(Calendar.WEEK_OF_MONTH, 4);
         step2.setEndDate(cal.getTime().getTime());
         step2.setPredecessor(step1);
+        step2.setBackgroundColor("#44444");
 
         Step step3 = new Step("Verbunden mit Root");
         cal.add(Calendar.DATE, 1);
         step3.setStartDate(cal.getTime().getTime());
         cal.add(Calendar.WEEK_OF_MONTH, 2);
         step3.setEndDate(cal.getTime().getTime());
+        step3.addStyleName("testphase sdf");
+        step3.setStyleName("tres");
         step3.setPredecessor(stepGroup);
+        step3.setBackgroundColor("#44444");
 
         Step step4 = new Step("Verbunden mit Root V2");
         cal.add(Calendar.DATE, 1);
@@ -247,6 +257,7 @@ public class DemoUI extends UI
         cal.add(Calendar.WEEK_OF_MONTH, 2);
         step4.setEndDate(cal.getTime().getTime());
         step4.setPredecessor(stepGroup);
+        step4.setBackgroundColor("#44444");
 
 //        Step stepWithSubSteps = new Step("Step with sub-steps");
 //        stepWithSubSteps.setDescription("Tooltip for Step with sub-steps");
@@ -1054,14 +1065,16 @@ public class DemoUI extends UI
         win.close();
     }
 
-    private SubStep addSubStep(final NativeSelect parentStepSelect, AbstractStep dataSource)
-    {
+    private SubStep addSubStep(final NativeSelect parentStepSelect, AbstractStep dataSource) {
         SubStep subStep = new SubStep();
         subStep.setCaption(dataSource.getCaption());
         subStep.setCaptionMode(dataSource.getCaptionMode());
         subStep.setStartDate(dataSource.getStartDate());
         subStep.setEndDate(dataSource.getEndDate());
         subStep.setBackgroundColor(dataSource.getBackgroundColor());
+        subStep.setForegroundColor(dataSource.getForegroundColor());
+        subStep.setStyleNames(dataSource.getStyleNames());
+        subStep.setRemoveStyleNames(dataSource.getRemoveStyleNames());
         subStep.setDescription(dataSource.getDescription());
         subStep.setProgress(dataSource.getProgress());
         subStep.setShowProgress(dataSource.isShowProgress());

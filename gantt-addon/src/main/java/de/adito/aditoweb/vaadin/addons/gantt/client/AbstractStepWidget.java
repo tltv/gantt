@@ -1,9 +1,5 @@
 package de.adito.aditoweb.vaadin.addons.gantt.client;
 
-import de.adito.aditoweb.vaadin.addons.gantt.client.shared.AbstractStep;
-import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
-import de.adito.aditoweb.vaadin.addons.gantt.client.shared.StepState;
-
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
@@ -11,6 +7,11 @@ import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Widget;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.AbstractStep;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.Step;
+import de.adito.aditoweb.vaadin.addons.gantt.client.shared.StepState;
+
+import java.util.ArrayList;
 
 public class AbstractStepWidget extends ComplexPanel {
 
@@ -22,6 +23,7 @@ public class AbstractStepWidget extends ComplexPanel {
     protected DivElement caption;
 
     protected String extraStyle;
+    protected ArrayList<String> extraStyles = new ArrayList<>();
     protected long start = -1;
     protected long end = -1;
 
@@ -71,7 +73,9 @@ public class AbstractStepWidget extends ComplexPanel {
     public void setStep(AbstractStep step) {
         this.step = step;
         updateBackground();
+        updateForeground();
         updateStyle();
+        updateStyles();
         updateHeight();
         updateCaption();
         updateProgress();
@@ -97,6 +101,10 @@ public class AbstractStepWidget extends ComplexPanel {
         getElement().getStyle().setBackgroundColor(step.getBackgroundColor());
     }
 
+    protected void updateForeground() {
+        getElement().getStyle().setColor(step.getForegroundColor());
+    }
+
     protected void updateStyle() {
         if (!isEmpty(step.getStyleName())) {
             if (!step.getStyleName().equals(extraStyle)) {
@@ -110,6 +118,39 @@ public class AbstractStepWidget extends ComplexPanel {
         } else if (!isEmpty(extraStyle)) {
             getElement().removeClassName(extraStyle);
             extraStyle = null;
+        }
+    }
+
+    protected void updateStyles() {
+        int sizeA = step.getStyleNames().size();
+        int sizeR = step.getRemoveStyleNames().size();
+        int size = (sizeA > sizeR ? sizeA : sizeR);
+        if (size > 0) {
+            for (int i = size - 1; i >= 0; i--) {
+                if (i < sizeA) {
+                    addStyleName(i);
+                }
+                if (i < sizeR) {
+                    removeStyleName(i);
+                }
+
+            }
+        }
+    }
+
+    private void addStyleName(int i) {
+        String styleName = step.getStyleNames().remove(i);
+        if (!extraStyles.contains(styleName)) {
+            getElement().addClassName(styleName);
+            extraStyles.add(styleName);
+        }
+    }
+
+    private void removeStyleName(int i) {
+        String styleName = step.getRemoveStyleNames().remove(i);
+        if (extraStyles.contains(styleName)) {
+            getElement().removeClassName(styleName);
+            extraStyles.remove(styleName);
         }
     }
 

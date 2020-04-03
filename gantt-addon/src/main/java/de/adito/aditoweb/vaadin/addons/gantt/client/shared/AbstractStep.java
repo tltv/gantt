@@ -16,6 +16,7 @@
 package de.adito.aditoweb.vaadin.addons.gantt.client.shared;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 
 public abstract class AbstractStep implements Serializable {
@@ -24,9 +25,12 @@ public abstract class AbstractStep implements Serializable {
     private String uid;
     private CaptionMode captionMode = CaptionMode.TEXT;
     private String styleName;
+    private ArrayList<String> styleNames = new ArrayList<>();
+    private ArrayList<String> removeStyleNames = new ArrayList<>();
     private String caption;
     private String description;
     private String backgroundColor = "#A8D9FF";
+    private String foregroundColor = "#ffffff";
     private int height;
     private double progress;
     private boolean showProgress;
@@ -107,6 +111,17 @@ public abstract class AbstractStep implements Serializable {
         this.backgroundColor = backgroundColor;
     }
 
+    public String getForegroundColor() {
+        return foregroundColor;
+    }
+
+    public void setForegroundColor(String foregroundColor) {
+        if (foregroundColor != null && !foregroundColor.trim().isEmpty() && !foregroundColor.trim().startsWith("#")) {
+            foregroundColor = "#" + foregroundColor;
+        }
+        this.foregroundColor = foregroundColor;
+    }
+
     public long getStartDate() {
         return startDate;
     }
@@ -153,6 +168,42 @@ public abstract class AbstractStep implements Serializable {
 
     public void setStyleName(String styleName) {
         this.styleName = styleName;
+    }
+
+    public ArrayList<String> getStyleNames() {
+        return styleNames;
+    }
+
+    public void setStyleNames(ArrayList<String> styleNames) {
+        this.styleNames = styleNames;
+    }
+
+    public void addStyleName(String style) {
+        styleNames.add(style);
+    }
+
+    public void addStyleNames(String... styles) {
+        for (String style : styles) {
+            addStyleName(style);
+        }
+    }
+
+    public ArrayList<String> getRemoveStyleNames() {
+        return removeStyleNames;
+    }
+
+    public void setRemoveStyleNames(ArrayList<String> removeStyleNames) {
+        this.removeStyleNames = removeStyleNames;
+    }
+
+    public void removeStyleName(String style) {
+        removeStyleNames.add(style);
+    }
+
+    public void removeStyleNames(String... styles) {
+        for (String style : styles) {
+            removeStyleName(style);
+        }
     }
 
     public String getDescription() {
