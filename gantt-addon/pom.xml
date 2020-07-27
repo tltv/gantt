@@ -36,7 +36,7 @@
 	<repositories>
 		<repository>
 			<id>vaadin-addons</id>
-			<url>http://maven.vaadin.com/vaadin-addons</url>
+			<url>https://maven.vaadin.com/vaadin-addons</url>
 		</repository>
 	</repositories>
 	
@@ -139,7 +139,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.4</version>
+				<version>3.0.0</version>
 				<executions>
 					<execution>
                         <id>attach-javadocs</id>
@@ -147,7 +147,10 @@
                                 <goal>jar</goal>
                             </goals>
                             <configuration>
-                                <additionalparam>-Xdoclint:none</additionalparam>
+                            	<source>8</source>
+                                <additionalOptions>
+                                	<additionalOption>-Xdoclint:none</additionalOption>
+                                </additionalOptions>
                             </configuration>
                     </execution>
 				</executions>
@@ -222,7 +225,7 @@
 			<repositories>
 				<repository>
 					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
+					<url>https://maven.vaadin.com/vaadin-prereleases</url>
 				</repository>
 				<repository>
 					<id>vaadin-snapshots</id>
@@ -238,7 +241,7 @@
 			<pluginRepositories>
 				<pluginRepository>
 					<id>vaadin-prereleases</id>
-					<url>http://maven.vaadin.com/vaadin-prereleases</url>
+					<url>https://maven.vaadin.com/vaadin-prereleases</url>
 				</pluginRepository>
 				<pluginRepository>
 					<id>vaadin-snapshots</id>
