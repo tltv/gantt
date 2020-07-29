@@ -682,8 +682,7 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
         timeline.setNoticeVerticalScrollbarWidth(isContentOverflowingVertically());
         timeline.update(resolution, startDate, endDate, firstDayOfRange, firstHourOfRange, localeDataProvider);
         setContentMinWidth(timeline.getMinWidth());
-        updateContainerStyle();
-        updateContentWidth();
+        internalHandleWidthChange();
 
         updateStepWidths(steps);
 
@@ -853,8 +852,8 @@ public class GanttWidget extends ComplexPanel implements HasEnabled, HasWidgets 
 
     protected void internalHandleWidthChange() {
         timeline.updateWidths();
-        updateContainerStyle();
         updateContentWidth();
+        updateContainerStyle();
     }
 
     /**
