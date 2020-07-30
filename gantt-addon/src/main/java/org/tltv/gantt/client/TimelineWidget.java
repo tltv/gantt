@@ -628,12 +628,7 @@ public class TimelineWidget extends Widget {
      * current resolution.
      */
     private double calculateDayOrHourResolutionBlockWidthPx(int blockCount) {
-        double dayOrHourWidthPx = Math.round(resolutionDiv.getClientWidth() / blockCount);
-        while ((resolutionDiv.getClientWidth() % (blockCount * dayOrHourWidthPx)) >= blockCount) {
-            dayOrHourWidthPx++;
-        }
-
-        return dayOrHourWidthPx;
+    	return Math.round( ( resolutionDiv.getClientWidth()*10000 ) / blockCount) / 10000d;
     }
 
     /*
